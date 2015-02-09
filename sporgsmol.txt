@@ -1,5 +1,19 @@
-pattern units?
+1)
+r1={au,ua,gc,cg,gu,ug,ga,ag}
+r1~p1
+hvad vil reglerne sige? 
 
-unit bp? length 20-30bp
+2)
+hvilke bogstaver er tilladt, complimenter omvendt i loops, 
+hvilke standard regler er der?
+Eventuelt har han noget GODT matriale der kan bruges til dette?
+
+3)
+input data: skal det være input via en åben stream (giver dette mening med
+kæmpe data filer?) eller skal inputet bare være muligt over command istedet
+for i en fil for sig selv?
+
+anden mulighed kunne være at brugeren vælger hvilken type det skal være
 
 
+4) weight matrix?
