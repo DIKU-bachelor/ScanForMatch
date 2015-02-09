@@ -1,0 +1,42 @@
+#!/usr/bin/env perl
+
+# usage: testit dna_patterns dna_input_file prot_pats prot_input output
+
+($#ARGV == 4) ||
+    die "usage: testit dna_pat dna_in prot_pat prot_in > output";
+
+if (-e $ARGV[4]) {
+	system "/bin/rm $ARGV[4]";
+}
+
+open(PAT,"<$ARGV[0]") || die "could not open DNA patterns";
+while ($_ = <PAT>)
+{
+    open(TMP,">tmp.pat.$$");
+    print TMP $_;
+    close(TMP);
+    open(TMP,">>$ARGV[4]");
+    print TMP "=====================\n$_\n\n";
+    close(TMP);
+    system "./scan_for_matches tmp.pat.$$ < $ARGV[1] >> $ARGV[4]";
+}
+close(PAT);
+
+open(TMP,">>$ARGV[4]");
+print TMP "==========<<<< Protein Matches >>>>==========\n";
+close(TMP);
+
+open(PAT,"<$ARGV[2]") || die "could not open protein patterns";
+while ($_ = <PAT>)
+{
+    open(TMP,">tmp.pat.$$");
+    print TMP $_;
+    close(TMP);
+    open(TMP,">>$ARGV[4]");
+    print TMP "=====================\n$_\n\n";
+    close(TMP);
+    system "./scan_for_matches -p tmp.pat.$$ < $ARGV[3] >> $ARGV[4]";
+}
+close(PAT);
+
+system "/bin/rm tmp.pat.$$";

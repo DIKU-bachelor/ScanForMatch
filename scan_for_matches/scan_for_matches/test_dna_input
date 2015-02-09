@@ -1,0 +1,10 @@
+>tst1  Everything after the space following the id is ignored
+acgtacguaaccggttaaccgguuacgtacgu
+>tst2
+ACGTACGUAAC
+CGGTTAACCGG
+UUACGTACGU
+>tst3
+nnnnaaaaaaaaaaaaaaaaaaaa
+>tst4
+AGGCCGGTCACGGAAAGGTCAAGATCGGAAGAGCACACGTTTGAACTCCA
