@@ -1,0 +1,4 @@
+ACG 0...4 any(HQD) 1...3 notany(HK)
+ACGL[1,0,0] 0...4 any(HQD) 1...3 notany(HK)
+p1=0...4 any(HQD) 1...3 notany(HK) p1
+CGXXYWG[1,0,0]

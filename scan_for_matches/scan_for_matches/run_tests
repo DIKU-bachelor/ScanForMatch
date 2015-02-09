@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ $# -ne 1 ] ; then
+	echo "Usage: $0 output-file" 1>&2
+	exit 1
+fi
+
+./testit test_dna_patterns test_dna_input test_prot_patterns test_prot_input $1

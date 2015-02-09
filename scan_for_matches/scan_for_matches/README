@@ -1,0 +1,552 @@
+                          scan_for_matches:
+
+    A Program to Scan Nucleotide or Protein Sequences for Matching Patterns
+
+                        Ross Overbeek
+                        MCS
+                        Argonne National Laboratory
+                        Argonne, IL 60439
+                        USA
+
+Scan_for_matches is a utility that we have written to search for
+patterns in DNA and protein sequences.  I wrote most of the code,
+although David Joerg and Morgan Price wrote sections of an
+earlier version.  The whole notion of pattern matching has a rich
+history, and we borrowed liberally from many sources.  However, it is
+worth noting that we were strongly influenced by the elegant tools
+developed and distributed by David Searls.  My intent is to make the
+existing tool available to anyone in the research community that might
+find it useful.
+
+Getting Started:
+
+    The distribution should contain at least the following programs:
+
+                README                  -     This document
+                ggpunit.c               -     One of the two source files
+                scan_for_matches.c      -     The second source file
+                
+                run_tests               -     A perl script to test things
+                show_hits               -     A handy perl script
+                test_dna_input          -     Test sequences for DNA
+                test_dna_patterns       -     Test patterns for DNA scan
+                test_output             -     Desired output from test
+                test_prot_input         -     Test protein sequences
+                test_prot_patterns      -     Test patterns for proteins
+                testit                  -     a perl script used for test
+
+
+    Only the first three files are required.  The others are useful,
+    but only if you have Perl installed on your system.  If you do
+    have Perl, I suggest that you type
+        
+                which perl
+
+    to find out where it installed.  On my system, I get the following
+    response:
+        
+                clone% which perl
+                /usr/local/bin/perl
+
+    indicating that Perl is installed in /usr/local/bin.  Anyway, once
+    you know where it is installed, edit the first line of files 
+
+        testit
+        show_hits
+
+    replacing /usr/local/bin/perl with the appropriate location.  I
+    will assume that you can do this, although it is not critical (it
+    is needed only to test the installation and to use the "show_hits"
+    utility).  Perl is not required to actually install and run
+    scan_for_matches. 
+
+    If you do not have Perl, I suggest you get it and install it (it
+    is a wonderful utility).  Information about Perl and how to get it
+    can be found in the book "Programming Perl" by Larry Wall and
+    Randall L. Schwartz, published by O'Reilly & Associates, Inc.
+
+    To get started, you will need to compile the program.   I do this
+    using 
+
+        gcc -O -o scan_for_matches  ggpunit.c scan_for_matches.c
+
+    If you do not use GNU C, use 
+
+        cc -O -DCC -o scan_for_matches  ggpunit.c scan_for_matches.c
+
+    which works on my Sun.  
+
+    Once you have compiled scan_for_matches, you can verify that it
+    works with
+
+        clone% run_tests tmp
+        clone% diff tmp test_output
+
+    You may get a few strange lines of the sort
+
+        clone% run_tests tmp
+        rm: tmp: No such file or directory
+        clone% diff tmp test_output
+
+    These should cause no concern.  However, if the "diff" shows that
+    tmp and test_output are different, contact me (you have a
+    problem). 
+
+    You should now be able to use scan_for_matches by following the
+    instructions given below (which is all the normal user should have
+    to understand, once things are installed properly).
+
+ ==============================================================
+
+How to run scan_for_matches:
+
+    To run the program, you type need to create two files
+
+    1.  the first file contains the pattern you wish to scan for; I'll
+        call this file pat_file in what follows (but any name is ok)
+
+    2.  the second file contains a set of sequences to scan.  These
+        should be in "fasta format".  Just look at the contents of
+        test_dna_input to see examples of this format.  Basically,
+        each sequence begins with a line of the form
+
+           >sequence_id
+
+        and is followed by one or more lines containing the sequence.
+
+    Once these files have been created, you just use
+
+        scan_for_matches pat_file < input_file
+
+    to scan all of the input sequences for the given pattern.  As an
+    example, suppose that pat_file contains a single line of the form
+
+                p1=4...7 3...8 ~p1
+
+    Then,
+
+                scan_for_matches pat_file < test_dna_input
+
+    should produce two "hits".  When I run this on my machine, I get
+
+        clone% scan_for_matches pat_file < test_dna_input
+        >tst1:[6,27]
+        cguaacc ggttaacc gguuacg 
+        >tst2:[6,27]
+        CGUAACC GGTTAACC GGUUACG 
+        clone% 
+
+Simple Patterns Built by Matching Ranges and Reverse Complements
+
+    Let me first explain this simple pattern:
+                
+                p1=4...7 3...8 ~p1
+
+    The pattern consists of three "pattern units" separated by spaces.
+    The first pattern unit is
+
+                p1=4...7
+
+    which means "match 4 to 7 characters and call them p1".  The
+    second pattern unit is
+
+                3...8
+
+    which means "then match 3 to 8 characters".  The last pattern unit
+    is 
+                ~p1
+
+    which means "match the reverse complement of p1".  The first
+    reported hit is shown as
+
+        >tst1:[6,27]
+        cguaacc ggttaacc gguuacg 
+
+    which states that characters 6 through 27 of sequence tst1 were
+    matched.  "cguaac" matched the first pattern unit, "ggttaacc" the
+    second, and "gguuacg" the third.  This is an example of a common
+    type of pattern used to search for sections of DNA or RNA that
+    would fold into a hairpin loop.
+
+Searching Both Strands
+
+    Now for a short aside: scan_for_matches only searched the
+    sequences in the input file; it did not search the opposite
+    strand.  With a pattern of the sort we just used, there is not
+    need o search the opposite strand.  However, it is normally the
+    case that you will wish to search both the sequence and the
+    opposite strand (i.e., the reverse complement of the sequence).
+    To do that, you would just use the "-c" command line.  For example,
+
+        scan_for_matches -c pat_file < test_dna_input
+
+    Hits on the opposite strand will show a beginning location greater
+    than te end location of the match.
+
+Defining Pairing Rules and Allowing Mismatches, Insertions, and Deletions
+
+    Let us stop now and ask "What additional features would one need to
+    really find the kinds of loop structures that characterize tRNAs,
+    rRNAs, and so forth?"  I can immediately think of two:
+
+        a) you will need to be able to allow non-standard pairings
+           (those other than G-C and A-U), and
+
+        b) you will need to be able to tolerate some number of
+           mismatches and bulges.
+        
+    Let me first show you how to handle non-standard "rules for
+    pairing in reverse complements".  Consider the following pattern,
+    which I show as two line (you may use as many lines as you like in
+    forming a pattern, although you can only break a pattern at points
+    where space would be legal):
+
+            r1={au,ua,gc,cg,gu,ug,ga,ag} 
+            p1=2...3 0...4 p2=2...5 1...5 r1~p2 0...4 ~p1        
+
+    The first "pattern unit" does not actually match anything; rather,
+    it defines a "pairing rule" in which standard pairings are
+    allowed, as well as G-A and A-G (in case you wondered, Us and Ts
+    and upper and lower case can be used interchangably; for example
+    r1={AT,UA,gc,cg} could be used to define the "standard rule" for
+    pairings).  The second line consists of six pattern units which
+    may be interpreted as follows:
+
+            p1=2...3     match 2 or 3 characters (call it p1)
+            0...4        match 0 to 4 characters
+            p2=2...5     match 2 to 5 characters (call it p2)
+            1...5        match 1 to 5 characters
+            r1~p2        match the reverse complement of p2,
+                            allowing G-A and A-G pairs
+            0...4        match 0 to 4 characters        
+            ~p1          match the reverse complement of p1
+                            allowing only G-C, C-G, A-T, and T-A pairs
+
+    Thus, r1~p2 means "match the reverse complement of p2 using rule r1".
+
+    Now let us consider the issue of tolerating mismatches and bulges.
+    You may add a "qualifier" to the pattern unit that gives the
+    tolerable number of "mismatches, deletions, and insertions".
+    Thus,
+                p1=10...10 3...8 ~p1[1,2,1]
+
+    means that the third pattern unit must match 10 characters,
+    allowing one "mismatch" (a pairing other than G-C, C-G, A-T, or
+    T-A), two deletions (a deletion is a character that occurs in p1,
+    but has been "deleted" from the string matched by ~p1), and one
+    insertion (an "insertion" is a character that occurs in the string
+    matched by ~p1, but not for which no corresponding character
+    occurs in p1).  In this case, the pattern would match
+
+              ACGTACGTAC GGGGGGGG GCGTTACCT
+
+    which is, you must admit, a fairly weak loop.  It is common to
+    allow mismatches, but you will find yourself using insertions and
+    deletions much more rarely.  In any event, you should note that
+    allowing mismatches, insertions, and deletions does force the
+    program to try many additional possible pairings, so it does slow
+    things down a bit.
+
+How Patterns Are Matched
+
+    Now is as good a time as any to discuss the basic flow of control
+    when matching patterns.  Recall that a "pattern" is a sequence of
+    "pattern units".  Suppose that the pattern units were
+
+        u1 u2 u3 u4 ... un
+
+    The scan of a sequence S begins by setting the current position
+    to 1.  Then, an attempt is made to match u1 starting at the
+    current position.  Each attempt to match a pattern unit can
+    succeed or fail.  If it succeeds, then an attempt is made to match
+    the next unit.  If it fails, then an attempt is made to find an
+    alternative match for the immediately preceding pattern unit.  If
+    this succeeds, then we proceed forward again to the next unit.  If
+    it fails we go back to the preceding unit.  This process is called
+    "backtracking".  If there are no previous units, then the current
+    position is incremented by one, and everything starts again.  This
+    proceeds until either the current position goes past the end of
+    the sequence or all of the pattern units succeed.  On success,
+    scan_for_matches reports the "hit", the current position is set
+    just past the hit, and an attempt is made to find another hit.
+    If you wish to see overlapping hits, use the "-o 1" flag.  If it
+    is set the current position is not moved past the match, and you 
+    get all of the alternative hits.
+
+    If you wish to limit the scan to simply finding a maximum of, say,
+    10 hits, you can use the -n option (-n 10 would set the limit to
+    10 reported hits).  For example,
+
+        scan_for_matches -c -n 1 pat_file < test_dna_input
+
+    would search for just the first hit (and would stop searching the
+    current sequences or any that follow in the input file).
+
+Searching for repeats:
+
+    In the last section, I discussed almost all of the details
+    required to allow you to look for repeats.  Consider the following
+    set of patterns:
+
+        p1=6...6 3...8 p1   (find exact 6 character repeat separated
+                             by to 8 characters)
+
+        p1=6...6 3..8 p1[1,0,0]   (allow one mismatch)
+
+        p1=3...3 p1[1,0,0] p1[1,0,0] p1[1,0,0]  
+                            (match 12 characters that are the remains
+                             of a 3-character sequence occurring 4 times)
+                
+        p1=4...8 0...3 p2=6...8 p1 0...3 p2
+                            (This would match things like
+
+                                ATCT G TCTTT ATCT TG TCTTT
+                            )
+
+Searching for particular sequences:
+
+    Occasionally, one wishes to match a specific, known sequence.
+    In such a case, you can just give the sequence (along with an
+    optional statement of the allowable mismatches, insertions, and
+    deletions).  Thus,
+
+        p1=6...8 GAGA ~p1    (match a hairpin with GAGA as the loop)
+        RRRRYYYY             (match 4 purines followed by 4 pyrimidines)
+        TATAA[1,0,0]         (match TATAA, allowing 1 mismatch)
+        
+
+Matches against a "weight matrix":
+
+    I will conclude my examples of the types of pattern units
+    available for matching against nucleotide sequences by discussing a
+    crude implemetation of matching using a "weight matrix".  While I
+    am less than overwhelmed with the syntax that I chose, I think that
+    the reader should be aware that I was thinking of generating
+    patterns containing such pattern units automatically from
+    alignments (and did not really plan on typing such things in by
+    hand very often).  Anyway, suppose that you wanted to match a
+    sequence of eight characters.  The "consensus" of these eight
+    characters is GRCACCGS, but the actual "frequencies of occurrence"
+    are given in the matrix below.  Thus, the first character is an A
+    16% the time and a G 84% of the time.  The second is an A 57% of
+    the time, a C 10% of the time, a G 29% of the time, and a T 4% of
+    the time.  
+
+             C1     C2    C3    C4   C5    C6    C7    C8
+    
+       A     16     57     0    95    0    18     0     0
+
+       C      0     10    80     0  100    60     0    50
+
+       G     84     29     0     0    0    20   100    50
+
+       T      0      4    20     5    0     2     0     0   
+
+    
+    One could use the following pattern unit to search for inexact
+    matches related to such a "weight matrix":
+
+        {(16,0,84,0),(57,10,29,4),(0,80,0,20),(95,0,0,5),
+         (0,100,0,0),(18,60,20,2),(0,0,100,0),(0,50,50,0)} > 450
+
+    This pattern unit will attempt to match exactly eight characters.
+    For each character in the sequence, the entry in the corresponding
+    tuple is added to an accumulated sum.  If the sum is greater than
+    450, the match succeeds; else it fails.
+
+
+    Recently, this feature was upgraded to allow ranges.  Thus,
+
+  600 >  {(16,0,84,0),(57,10,29,4),(0,80,0,20),(95,0,0,5),
+         (0,100,0,0),(18,60,20,2),(0,0,100,0),(0,50,50,0)} > 450
+
+    will work, as well.
+
+Allowing Alternatives:
+
+    Very occasionally, you may wish to allow alternative pattern units
+    (i.e., "match either A or B").  You can do this using something
+    like
+
+                ( GAGA | GCGCA)
+
+    which says "match either GAGA or GCGCA".  You may take
+    alternatives of a list of pattern units, for example
+
+        (p1=3...3 3...8 ~p1 | p1=5...5 4...4 ~p1 GGG)
+
+    would match one of two sequences of pattern units.  There is one
+    clumsy aspect of the syntax: to match a list of alternatives, you
+    need to fully the request.  Thus,
+
+        (GAGA | (GCGCA | TTCGA))
+
+    would be needed to try the three alternatives.
+
+
+One Minor Extension
+
+    Sometimes a pattern will contain a sequence of distinct ranges,
+    and you might wish to limit the sum of the lengths of the matched
+    subsequences.   For example, suppose that you basically wanted to
+    match something like
+
+    ARRYYTT p1=0...5 GCA[1,0,0] p2=1...6 ~p1 4...8 ~p2 p3=4...10 CCT
+
+    but that the sum of the lengths of p1, p2, and p3 must not exceed
+    eight characters.  To do this, you could add 
+
+        length(p1+p2+p3) < 9
+
+    as the last pattern unit.  It will just succeed or fail (but does
+    not actually match any characters in the sequence).
+    
+
+Matching Protein Sequences
+
+    Suppose that the input file contains protein sequences.  In this
+    case, you must invoke scan_for_matches with the "-p" option.  You
+    cannot use aspects of the language that relate directly to
+    nucleotide sequences (e.g., the -c command line option or pattern
+    constructs referring to the reverse complement of a previously
+    matched unit).  
+
+    You also have two additional constructs that allow you to match
+    either "one of a set of amino acids" or "any amino acid other than
+    those a given set".  For example,
+
+        p1=0...4 any(HQD) 1...3 notany(HK) p1
+
+    would successfully match a string like
+
+           YWV D AA C YWV
+
+
+Using the show_hits Utility
+
+    When viewing a large set of complex matches, you might find it
+    convenient to post-process the scan_for_matches output to get a
+    more readable version.  We provide a simple post-processor called
+    "show_hits".  To see its effect, just pipe the output of a
+    scan_for_matches into show_hits:
+
+     Normal Output:
+
+        clone% scan_for_matches -c pat_file < tmp
+        >tst1:[1,28]
+        gtacguaacc  ggttaac cgguuacgtac 
+        >tst1:[28,1]
+        gtacgtaacc  ggttaac cggttacgtac 
+        >tst2:[2,31]
+        CGTACGUAAC C GGTTAACC GGUUACGTACG 
+        >tst2:[31,2]
+        CGTACGTAAC C GGTTAACC GGTTACGTACG 
+        >tst3:[3,32]
+        gtacguaacc g gttaactt cgguuacgtac 
+        >tst3:[32,3]
+        gtacgtaacc g aagttaac cggttacgtac 
+
+     Piped Through show_hits:
+    
+        clone% scan_for_matches -c pat_file < tmp | show_hits
+        tst1:[1,28]:  gtacguaacc   ggttaac  cgguuacgtac
+        tst1:[28,1]:  gtacgtaacc   ggttaac  cggttacgtac
+        tst2:[2,31]:  CGTACGUAAC C GGTTAACC GGUUACGTACG
+        tst2:[31,2]:  CGTACGTAAC C GGTTAACC GGTTACGTACG
+        tst3:[3,32]:  gtacguaacc g gttaactt cgguuacgtac
+        tst3:[32,3]:  gtacgtaacc g aagttaac cggttacgtac
+        clone% 
+
+
+    Optionally, you can specify which of the "fields" in the matches
+    you wish to sort on, and show_hits will sort them.  The field
+    numbers start with 0.  So, you might get something like
+
+        clone% scan_for_matches -c pat_file < tmp | show_hits 2 1
+        tst2:[2,31]:  CGTACGUAAC C GGTTAACC GGUUACGTACG
+        tst2:[31,2]:  CGTACGTAAC C GGTTAACC GGTTACGTACG
+        tst3:[32,3]:  gtacgtaacc g aagttaac cggttacgtac
+        tst1:[1,28]:  gtacguaacc   ggttaac  cgguuacgtac
+        tst1:[28,1]:  gtacgtaacc   ggttaac  cggttacgtac
+        tst3:[3,32]:  gtacguaacc g gttaactt cgguuacgtac
+        clone% 
+
+    In this case, the hits have been sorted on fields 2 and 1 (that is,
+    the third and second matched subfields).
+
+    show_hits is just one possible little post-processor, and you
+    might well wish to write a customized one for yourself.
+
+
+Reducing the Cost of a Search
+
+    The scan_for_matches utility uses a fairly simple search, and may
+    consume large amounts of CPU time for complex patterns.  Someday,
+    I may decide to optimize the code.  However, until then, let me
+    mention one useful technique.  
+
+    When you have a complex pattern that includes a number of varying
+    ranges, imprecise matches, and so forth, it is useful to
+    "pipeline" matches.  That is, form a simpler pattern that can be
+    used to scan through a large database extracting sections that
+    might be matched by the more complex pattern.  Let me illustrate
+    with a short example.  Suppose that you really wished to match the
+    pattern 
+
+    p1=3...5 0...8 ~p1[1,1,0] p2=6...7 3...6 AGC 3...5 RYGC ~p2[1,0,0]
+
+    In this case, the pattern units AGC 3...5 RYGC can be used to rapidly
+    constrain the overall search.  You can preprocess the overall
+    database using the pattern:
+
+          31...31 AGC 3...5 RYGC 7...7
+
+    Put the complex pattern in pat_file1 and the simpler pattern in
+    pat_file2.  Then use,
+
+	scan_for_matches -c pat_file2 < nucleotide_database |
+        scan_for_matches pat_file1
+
+    The output will show things like
+
+    >seqid:[232,280][2,47]
+    matches pieces
+
+    Then, the actual section of the sequence that was matched can be
+    easily computed as [233,278] (remember, the positions start from
+    1, not 0).
+
+    Let me finally add, you should do a few short experiments to see
+    whether or not such pipelining actually improves performance -- it
+    is not always obvious where the time is going, and I have
+    sometimes found that the added complexity of pipelining actually
+    slowed things up.  It gets its best improvements when there are
+    exact matches of more than just a few characters that can be
+    rapidly used to eliminate large sections of the database.
+=============
+
+Additions:
+
+Feb 9, 1995:   the pattern units ^ and $ now work as in normal regular
+	       expressions.  That is
+
+			TTF $
+
+	       matches only TTF at the end of the string and 
+
+		        ^ TTF 
+
+	       matches only an initial TTF
+
+               The pattern unit 
+
+			<p1
+
+	       matches the reverse of the string named p1.  That is,
+	       if p1 matched GCAT, then <p1 would match TACG.  Thus,
+
+		   p1=6...6 <p1
+
+               matches a real palindrome (not the biologically common
+	       meaning of "reverse complement")
+
