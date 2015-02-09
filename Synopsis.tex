@@ -1,0 +1,81 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1.0 in]{geometry}
+\addtolength{\topmargin}{.25in}
+\usepackage[utf8x]{inputenc}  
+\usepackage{amsmath}
+\usepackage{calc}
+\usepackage{array}
+\usepackage{amssymb}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{upquote}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\usepackage{hyperref}
+\newcommand{\Green}{\tikz\draw[green,fill=green] (0,0) circle (1 ex);}
+\newcommand{\Lime }{\tikz\draw[brown,fill=brown] (0,0) circle (1 ex);}
+\newcommand{\Blue}{\tikz\draw[blue,fill=blue] (0,0) circle (1 ex);}
+\newcommand{\Yellow}{\tikz\draw[yellow,fill=yellow] (0,0) circle (1 ex);}
+\newcommand{\Red}{\tikz\draw[red,fill=red] (0,0) circle (1 ex);}
+\renewcommand*\contentsname{Indholdsfortegnelse}
+\definecolor{listinggray}{gray}{0.9}
+\usepackage{listings}
+\lstset{
+	language=,
+	literate=
+		{æ}{{\ae}}1
+		{ø}{{\o}}1
+		{å}{{\aa}}1
+		{Æ}{{\AE}}1
+		{Ø}{{\O}}1
+		{Å}{{\AA}}1,
+	backgroundcolor=\color{listinggray},
+	tabsize=3,
+	rulecolor=,
+	basicstyle=\scriptsize,
+	upquote=true,
+	aboveskip={1.5\baselineskip},
+	columns=fixed,
+	showstringspaces=false,
+	extendedchars=true,
+	breaklines=true,
+	prebreak =\raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+	frame=single,
+	showtabs=false,
+	showspaces=false,
+	showstringspaces=false,
+	identifierstyle=\ttfamily,
+	keywordstyle=\color[rgb]{0,0,1},
+	commentstyle=\color[rgb]{0.133,0.545,0.133},
+	stringstyle=\color[rgb]{0.627,0.126,0.941},
+}
+\begin{document}
+\begin{titlepage}
+\begin{center}
+
+\textsc{\Large Bachelor Thesis \\[0.3cm]}
+\HRule \\[0.4cm]
+{ \LARGE \bfseries Synopsis \\ Optimized pattern matching in genomic data}\\[0.4cm]
+\HRule \\[1.2cm]
+\textsc{\large Martin Westh Petersen - mqt967 \\ Kasper Myrtue - vkl275}\\[1.0cm]
+\end{center}
+\begin{center}
+\vfill
+{\large 23. Februar 2015}
+\end{center}
+\end{titlepage}
+\section{Problem definition}
+Is it possible create a program with the same functionality as scan\_for\_matches, but with an average increase in 
+performance of at least 50\% for patterns that consists of more than 1 pattern unit?
+\section{Limitations}
+
+\section{Motive}
+Pattern matching functionality for strings in genomic data is very useful, 
+but requires a good performance due to huge amounts of data. 
+Scan\_for\_matches serves this purpose, but has never been formally analyzed with respect to complexity and 
+performance and the code is poorly documented and hard to read. A significant increase in performance is also possible
+(as the author noted himself in the README file in the source package). These optimizations are the foundation for
+this project.
+
+
+\end{document}
