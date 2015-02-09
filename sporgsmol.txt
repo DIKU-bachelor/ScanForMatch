@@ -1,1 +1,5 @@
-Hej dette er en test
+pattern units?
+
+unit bp? length 20-30bp
+
+
