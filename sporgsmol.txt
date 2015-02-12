@@ -17,3 +17,7 @@ anden mulighed kunne vÃ¦re at brugeren vÃ¦lger hvilken type det skal vÃ¦re
 
 
 4) weight matrix?
+
+5) Må vi skrive programmet på ny, eller skal vi "fixe" det eksisterende?
+
+

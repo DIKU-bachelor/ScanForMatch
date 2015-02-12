@@ -7,6 +7,7 @@
 \usepackage{array}
 \usepackage{amssymb}
 \usepackage{tikz}
+\usepackage{pgfgantt}
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{upquote}
@@ -53,9 +54,9 @@
 \begin{titlepage}
 \begin{center}
 
-\textsc{\Large Bachelor Thesis \\[0.3cm]}
+\textsc{\Large Bachelor Thesis \\ Optimized pattern matching in genomic data\\[0.3cm]}
 \HRule \\[0.4cm]
-{ \LARGE \bfseries Synopsis \\ Optimized pattern matching in genomic data}\\[0.4cm]
+{ \LARGE \bfseries Synopsis}\\[0.4cm]
 \HRule \\[1.2cm]
 \textsc{\large Martin Westh Petersen - mqt967 \\ Kasper Myrtue - vkl275}\\[1.0cm]
 \end{center}
@@ -65,17 +66,54 @@
 \end{center}
 \end{titlepage}
 \section{Problem definition}
-Is it possible create a program with the same functionality as scan\_for\_matches, but with an average increase in 
-performance of at least 50\% for patterns that consists of more than 1 pattern unit?
+Is it possible create a program with the same core functionality as scan\_for\_mathces, but with an guaranteed equal or
+increased performance every time?
 \section{Limitations}
-
+We will be implementing the core functionality of scan\_for\_matches which we define as follows: \\ 
+\begin{itemize}
+\item Constructing literal pattern unit (e.g. "AGUUG") that are used for finding a specific sub-sequence in the 
+database sequence.
+\item Constructing ambiguous pattern units (e.g. "4..8") that match any sub-sequence with a possibility for a 
+flexible range.
+\item Defining variables for referencing pattern units (e.g. "p1=5..6") that can be used 
+to find related patterns that are unknown before search (e.g. p1=5..6 p1[1,0,0])
+\item Combining pattern units to a full pattern that is the full search criteria when scanning the database sequence.
+\item Allowing any pattern unit a specified number of insertions, deletion and mismatches (e.g. "AGGUAAA[2,0,3]").
+\item The $\sim$ symbol can be inserted in front of any pattern unit to indicate that we are looking for the reversed
+complement of that pattern unit.
+\end{itemize}
+Beside these already existing features, we will be implementing a more optimized way of searching for matches, given
+complex patterns consisting of multiple pattern units. E.g. the order of which the different pattern units are searched
+can be optimized to increase performance instead of going through the pattern units from one end to the other. \\ \\
+In case of excess time, secondary features may be implemented: \\
+\begin{itemize}
+\item Logical "or" between patterns (e.g. "(AUUG | AGGG)") that matches either of the sub-sequences.
+\item A possibility for defining custom "pairing rules" (e.g. "r1={au,ua,gc,cg,ga,ag}") that can be used for 
+for defining allowances when comparing a reversed complement pattern unit (e.g. "r1$\sim$p1").
+\item An analysis of the complexity and guaranteed running time of the program.
+\end{itemize}
+Every feature from scan\_for\_mathces beyond what has been mentioned will not be implemented.
 \section{Motive}
 Pattern matching functionality for strings in genomic data is very useful, 
 but requires a good performance due to huge amounts of data. 
-Scan\_for\_matches serves this purpose, but has never been formally analyzed with respect to complexity and 
-performance and the code is poorly documented and hard to read. A significant increase in performance is also possible
-(as the author noted himself in the README file in the source package). These optimizations are the foundation for
-this project.
+Scan\_for\_matches serves this purpose, but big improvements in performance can be made.
+On top that, the code is poorly documented, lacks version control and the code is hard to read and maintain.
+\section{Tasks and schedule}
 
+\begin{ganttchart}[
+hgrid=true,
+vgrid={*9{white},*1{blue},*6{white},*1{red}}
+]{1}{18}
+\gantttitle{2015}{18} \\
+\gantttitlelist{7,...,24}{1} \\
+%\ganttmilestone{Midway report}{10} \ganttnewline
+%\ganttmilestone{Final report}{17} \ganttnewline
+\ganttbar{Research}{1}{4} \\
+\ganttbar{Design}{2}{8} \\
+\ganttbar{Implementation}{4}{15} \\
+\ganttbar{Testing}{11}{15} \\
+\ganttbar{Documentation}{4}{15} \\
+\ganttbar{Report}{2}{17} \\
+\end{ganttchart}
 
 \end{document}
