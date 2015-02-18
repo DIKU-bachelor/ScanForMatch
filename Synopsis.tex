@@ -100,6 +100,8 @@ Scan\_for\_matches serves this purpose, but big improvements in performance can 
 On top that, the code is poorly documented, lacks version control and the code is hard to read and maintain.
 \section{Tasks and schedule}
 
+\begin{figure}
+\caption{gantchart of our schedule. The blue line indicates midway report, the red line indicates the final report.}
 \begin{ganttchart}[
 hgrid=true,
 vgrid={*9{white},*1{blue},*6{white},*1{red}}
@@ -115,5 +117,16 @@ vgrid={*9{white},*1{blue},*6{white},*1{red}}
 \ganttbar{Documentation}{4}{15} \\
 \ganttbar{Report}{2}{17} \\
 \end{ganttchart}
+\end{figure}
+
+\begin{itemize}
+\item How to load data effectively into the pattern searcher
+\item How to store data effectively when searching for a pattern
+\item How to output data in the most useful way for further use
+\item How to input patterns (commandline library for python or other)
+\item What makes Scan\_for\_matches so effective
+\item Is parallelism a valid approach for this type of search
+\item design a string search for specific strings
+\end{itemize}
 
 \end{document}
