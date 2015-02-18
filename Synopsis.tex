@@ -87,6 +87,8 @@ complex patterns consisting of multiple pattern units. E.g. the order of which t
 can be optimized to increase performance instead of going through the pattern units from one end to the other. \\ \\
 In case of excess time, secondary features may be implemented: 
 \begin{itemize}
+\item Is it possible to optimize the backtracking algorithm for string search, so that the order of the possibilities 
+tried regarding insertions, deletion and mismatches results in a conclusion faster.
 \item Logical "or" between patterns (e.g. "(AUUG $|$ AGGG)") that matches either of the sub-sequences.
 \item A possibility for defining custom "pairing rules" (e.g. "r1={au,ua,gc,cg,ga,ag}") that can be used for 
 for defining allowances when comparing a reversed complement pattern unit (e.g. "r1$\sim$p1").
@@ -99,41 +101,59 @@ but requires a good performance due to huge amounts of data.
 Scan\_for\_matches serves this purpose, but big improvements in performance can be made.
 On top that, the code is poorly documented, lacks version control and the code is hard to read and maintain.
 \section{Tasks and schedule}
-
-\begin{figure}
-\caption{gantchart of our schedule. The blue line indicates midway report, the red line indicates the final report.}
 Below is a list of the tasks that this project consists of:
 \begin{itemize}
+\item \textbf{Research} 
+\begin{enumerate}
 \item Why is scan\_for\_matches fast despite the use of a backtracking algorithm? This research task is about 
 reading and understanding the vital parts of the scan\_for\_matches code so that we understand the overall
 ideas and algorithms, and can reuse them if needed.
+\item How should the interface be improved to best suit the users. E.g. Should the program be started and
+patterns specified in a command-line manner or reading of files? How should the output be displayed or stored?
+\item What functionality should be focused on implementing. This task ensures that the most important functionality is 
+identified, so a proper prioritization can be made.
+\item Researching what methods and algorithms for string-handling that exists, and exploring different options for 
+choosing a programming language to work with.
+\end{enumerate}
+\item \textbf{Analysis}
+\begin{enumerate}
+\item Choosing a language for implementation.
+\item Figuring out the overall methods and algorithms that we are going the use.
+\item Deciding on how the user interface should work, e.g. how will patterns, input and output be provided, displayed 
+and/or stored.
+\end{enumerate}
+\item \textbf{Design}
+\begin{enumerate}
+\item Designing the overall structure of the program.
+\end{enumerate}
+\item \textbf{Implementation}
+\begin{enumerate}
+\item First prototype that can search the database sequence for a single literal pattern unit and provide the output.
+\item Second prototype allows ambiguous patterns with flexible length, and the possibility of combining pattern units
+into one single pattern.
+\item Third prototype includes all the 6 core functions defined earlier.
+\item The fourth prototype will include the optimized order of searching for the different pattern units.
+\end{enumerate}
+\item \textbf{Testing}
+\begin{enumerate}
+\item A thorough test of our implementation on the given data to verify that each of the implemented features work
+\item Testing the running time of both simple and complex patterns with the original scan\_for\_matches against our
+implementation.
+\end{enumerate}
+\item \textbf{Documentation} - The documentation will start being written when we start the implementation period
+and finish before final report is due. It will consist of the comments written in the code and a user guide provided 
+together with the program.
+\item \textbf{Report}
+\begin{enumerate}
+\item Midway report
+\item Final report
+\end{enumerate}
 \end{itemize}
+Figure 1 shows our schedule for the project, with the the implementation period consisting of the 4 different milestone
+prototypes of the program. The midway report and final report is shown as dots in the bottom.
 \begin{figure}[h!]
-\begin{ganttchart}[
-hgrid=true,
-vgrid={*9{white},*1{blue},*6{white},*1{red}}
-]{1}{18}
-\gantttitle{2015}{18} \\
-\gantttitlelist{7,...,24}{1} \\
-%\ganttmilestone{Midway report}{10} \ganttnewline
-%\ganttmilestone{Final report}{17} \ganttnewline
-\ganttbar{Research}{1}{4} \\
-\ganttbar{Design}{2}{8} \\
-\ganttbar{Implementation}{4}{15} \\
-\ganttbar{Testing}{11}{15} \\
-\ganttbar{Documentation}{4}{15} \\
-\ganttbar{Report}{2}{17} \\
-\end{ganttchart}
+\includegraphics[scale=0.7]{gantt.png}
 \caption{Schedule}
 \end{figure}
 
-\begin{itemize}
-\item How to load data effectively into the pattern searcher
-\item How to store data effectively when searching for a pattern
-\item How to output data in the most useful way for further use
-\item How to input patterns (commandline library for python or other)
-\item What makes Scan\_for\_matches so effective
-\item Is parallelism a valid approach for this type of search
-\item design a string search for specific strings
-\end{itemize}
 \end{document}
