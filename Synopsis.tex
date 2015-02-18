@@ -66,31 +66,31 @@
 \end{center}
 \end{titlepage}
 \section{Problem definition}
-Is it possible create a program with the same core functionality as scan\_for\_mathces, but with an guaranteed equal or
+Is it possible create a program with the same core functionality as scan\_for\_mathces, but with an equal or
 increased performance every time?
 \section{Limitations}
-We will be implementing the core functionality of scan\_for\_matches which we define as follows: \\ 
+We will be implementing the core functionality of scan\_for\_matches which we define as follows:
 \begin{itemize}
-\item Constructing literal pattern unit (e.g. "AGUUG") that are used for finding a specific sub-sequence in the 
+\item Constructing literal pattern units (e.g. "AGUUG") that are used for finding a specific sub-sequence in the 
 database sequence.
 \item Constructing ambiguous pattern units (e.g. "4..8") that match any sub-sequence with a possibility for a 
 flexible range.
+\item Combining pattern units to a full pattern that defines the full search criteria when scanning the database sequence.
+\item Allowing any pattern unit a specified number of insertions, deletion and mismatches (e.g. "AGGUAAA[2,0,3]").
 \item Defining variables for referencing pattern units (e.g. "p1=5..6") that can be used 
 to find related patterns that are unknown before search (e.g. p1=5..6 p1[1,0,0])
-\item Combining pattern units to a full pattern that is the full search criteria when scanning the database sequence.
-\item Allowing any pattern unit a specified number of insertions, deletion and mismatches (e.g. "AGGUAAA[2,0,3]").
 \item The $\sim$ symbol can be inserted in front of any pattern unit to indicate that we are looking for the reversed
 complement of that pattern unit.
 \end{itemize}
 Beside these already existing features, we will be implementing a more optimized way of searching for matches, given
 complex patterns consisting of multiple pattern units. E.g. the order of which the different pattern units are searched
 can be optimized to increase performance instead of going through the pattern units from one end to the other. \\ \\
-In case of excess time, secondary features may be implemented: \\
+In case of excess time, secondary features may be implemented: 
 \begin{itemize}
-\item Logical "or" between patterns (e.g. "(AUUG | AGGG)") that matches either of the sub-sequences.
+\item Logical "or" between patterns (e.g. "(AUUG $|$ AGGG)") that matches either of the sub-sequences.
 \item A possibility for defining custom "pairing rules" (e.g. "r1={au,ua,gc,cg,ga,ag}") that can be used for 
 for defining allowances when comparing a reversed complement pattern unit (e.g. "r1$\sim$p1").
-\item An analysis of the complexity and guaranteed running time of the program.
+\item An analysis of the complexity and running time of the program.
 \end{itemize}
 Every feature from scan\_for\_mathces beyond what has been mentioned will not be implemented.
 \section{Motive}
@@ -102,6 +102,13 @@ On top that, the code is poorly documented, lacks version control and the code i
 
 \begin{figure}
 \caption{gantchart of our schedule. The blue line indicates midway report, the red line indicates the final report.}
+Below is a list of the tasks that this project consists of:
+\begin{itemize}
+\item Why is scan\_for\_matches fast despite the use of a backtracking algorithm? This research task is about 
+reading and understanding the vital parts of the scan\_for\_matches code so that we understand the overall
+ideas and algorithms, and can reuse them if needed.
+\end{itemize}
+\begin{figure}[h!]
 \begin{ganttchart}[
 hgrid=true,
 vgrid={*9{white},*1{blue},*6{white},*1{red}}
@@ -117,6 +124,7 @@ vgrid={*9{white},*1{blue},*6{white},*1{red}}
 \ganttbar{Documentation}{4}{15} \\
 \ganttbar{Report}{2}{17} \\
 \end{ganttchart}
+\caption{Schedule}
 \end{figure}
 
 \begin{itemize}
@@ -128,5 +136,4 @@ vgrid={*9{white},*1{blue},*6{white},*1{red}}
 \item Is parallelism a valid approach for this type of search
 \item design a string search for specific strings
 \end{itemize}
-
 \end{document}
