@@ -68,37 +68,27 @@
 \section{Problem definition}
 Is it possible to re-implement/modify scan\_for\_mathces, so that it has an equal or
 increased performance? \\ \\
-As a minimum, our product will contain the following features:
+Our program will contain the following core features from scan\_for\_matches:
 \begin{itemize}
 \item Constructing literal pattern units (e.g. "AGUUG") that are used for finding a specific sub-sequence in the 
 database sequence.
-\item Allowing for wildcards (e.g. "AGWUUG" where "W" matches multiple other bases).
+\item Allowing wildcards (e.g. "AGWUUG" where "W" matches multiple other bases).
 \item Allowing any pattern unit a specified number of insertions, deletion and mismatches (e.g. "AGGUAAA[2,0,3]").
-\end{itemize}
-In order for our program to meet in the minimum requirements for the users, the following core features will also be needed.
-If time allows, as many as possible will be implemented as well.
-\begin{itemize}
 \item Constructing ambiguous pattern units (e.g. "4..8") that match any sub-sequence with a possibility for a 
 flexible range.
 \item Combining pattern units to a full pattern that defines the full search criteria when scanning the database sequence.
+(E.g. "AUUA  4..8  AUCCUCCC[2,1,0] each pattern unit separated by a space).
 \item Defining variables for referencing pattern units (e.g. "p1=5..6") that can be used 
 to find related patterns that are unknown before search (e.g. p1=5..6 p1[1,0,0])
-\item The $\sim$ symbol can be inserted in front of any pattern unit to indicate that we are looking for the reversed
+\item The $\sim$ symbol can be inserted in front of any pattern unit to indicate that we are looking for the reverse
 complement of that pattern unit.
-\item A more optimized way of searching for matches, given
-complex patterns consisting of multiple pattern units. E.g. the order of which the different pattern units are searched
-can be optimized to increase performance instead of going through the pattern units from one end to the other. 
+\item An optimized order of which the different pattern units are searched, instead of going through the pattern units
+from one end to the other. This optimization should speed up the search, especially with complex patterns.
 \end{itemize}
 \section{Limitations}
-In order to specify our focus area, we have some limitations we will not be giving time to:
-\begin{itemize}
-	\item Testing with users (E.g. biologists at the university or other potential users of the program).
-	\item Looking at other tools for dna, rna pattern matching (E.g. grep or other tools).
-\end{itemize}
 \begin{flushleft}
 In case of excess time, secondary features may be implemented: 
 \end{flushleft}
-
 
 \begin{itemize}
 \item Is it possible to optimize the backtracking algorithm for string search, so that the order of the possibilities 
@@ -108,15 +98,24 @@ tried regarding insertions, deletion and mismatches results in a conclusion fast
 for defining allowances when comparing a reversed complement pattern unit (e.g. "r1$\sim$p1").
 \item An analysis of the complexity and running time of the program.
 \end{itemize}
+\begin{flushleft}
+We will not do the following tasks:
+\end{flushleft}
+
+\begin{itemize}
+	\item Testing with users (E.g. biologists at the university or other potential users of the program).
+	\item Looking at other tools for dna, rna pattern matching (E.g. grep or other tools).
+\end{itemize}
 Other features from scan\_for\_mathces beyond what has been mentioned will not be implemented.
 
 
 \section{Motivation}
-Pattern matching functionality for strings in genomic data is unavoidable, 
-but requires a good performance due to huge amounts of data. 
+Pattern matching functionality is essential and unavoidable when looking through genomic data such as DNA or RNA, 
+for example in order to identify DNA from a known organism/animal.
+Huge amounts of data makes it extremely inefficient to manually find these patterns, so there's a need for clever
+and efficient software to do this. \\ \\
 Scan\_for\_matches serves this purpose, but big improvements in performance can be made.
 On top that, the code is poorly documented, lacks version control and the code is hard to read and maintain.
-
 
 \section{Tasks and schedule}
 Below is a list of the tasks that this project consists of:
@@ -125,38 +124,38 @@ Below is a list of the tasks that this project consists of:
 \begin{enumerate}
 \item Why is scan\_for\_matches fast despite the use of a backtracking algorithm? This research task is about 
 reading and understanding the vital parts of the scan\_for\_matches code so that we understand the overall
-ideas and algorithms, and can reuse them if needed.
+ideas and algorithms, and can reuse as much of the good parts as possible.
 \item How should the interface be improved to best suit the users? E.g. Should the program be started and
 patterns specified in a command-line manner or reading of files? How should the output be displayed or stored?
 \item What functionality should we be focused on implementing. This task ensures that the most important functionality is 
 identified, so a proper prioritization can be made. This task is already completed and the result is shown as the list
 of primary features and the list of secondary features.
-\item Researching what methods and algorithms for string-handling that exists, and exploring different options for 
-choosing a programming language to work with.
 \end{enumerate}
 \item \textbf{Analysis}
 \begin{enumerate}
 \item Choosing a language for implementation. (It will probably be C or C++).
-\item Figuring out the overall methods and algorithms that we are going the use.
+\item Figuring out the overall methods and algorithms that we are going the use. How much code can be reused and
+what will need to be re-implemented.
 \item Deciding on how the user interface should work, e.g. how will patterns, input and output be provided, displayed 
 and/or stored.
 \end{enumerate}
 \item \textbf{Design}
 \begin{enumerate}
-\item Designing the overall structure of the program.
+\item Designing the overall structure of the program. This phase is of course completely dependent on the result
+of the analysis phase. At this point it will be more clear to which degree we will simply modify scan\_for\_mathces
+or make a full re-implementation or (most likely) somewhere in between.
 \end{enumerate}
 \item \textbf{Implementation}
 \begin{enumerate}
-\item First prototype that can search the database sequence for a single literal pattern unit and provide the output.
-\item Second prototype allows searching with a allowed number of mismatches, insertions, and deletions.
+\item First prototype/milestone can search the database sequence for a single literal pattern unit and provide the output.
+\item Second prototype allows searching with an allowed number of mismatches, insertions, and deletions.
 \item In the event that the second prototype lives up to all expectations, third prototype includes 2 more functionalities from the list given in the problem definition.
 \item In the event that the third prototype lives up to all expectations, the fourth prototype will include the rest of the core functionality from the problem definition.
 \end{enumerate}
 \item \textbf{Testing}
 \begin{enumerate}
-\item A thorough test of our implementation on the given data to verify that each of the implemented features work
-\item Testing the running time of both simple and complex patterns with the original scan\_for\_matches against our
-implementation.
+\item A thorough test of our implementation on the given data to verify that each of the implemented features work.
+\item Bench marking the running time of the original scan\_for\_mathces against our modified implementation.
 \end{enumerate}
 \item \textbf{Documentation} - The documentation will start being written when we start the implementation period
 and finish before final report is due. It will consist of the comments written in the code and a user guide provided 
@@ -169,6 +168,10 @@ together with the program.
 \end{itemize}
 Figure 1 shows our schedule for the project, with the the implementation period consisting of the 4 different milestone
 prototypes of the program. The midway report and final report is shown as dots in the bottom.
+The design phase shown in the figure refers to the overall ideas of design. We will re-iterate the choice of design
+along with the implementation. Same argument goes for the testing phase. Testing on a smaller scale will be an
+integrated part of the implementation.
+ \newpage
 \begin{figure}[h!]
 \includegraphics[scale=0.7]{gantt.PNG}
 \caption{Schedule}

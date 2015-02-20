@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><project name="Untitled Gantt Project" company="" webLink="http://" view-date="2015-02-09" view-index="0" gantt-divider-location="353" resource-divider-location="300" version="2.7" locale="da_DK">
+<?xml version="1.0" encoding="UTF-8"?><project name="Untitled Gantt Project" company="" webLink="http://" view-date="2015-02-09" view-index="0" gantt-divider-location="353" resource-divider-location="300" version="2.7" locale="da">
     <description/>
     <view zooming-state="default:7" id="gantt-chart">
         <field id="tpd3" name="Navn" width="57" order="0"/>
@@ -36,7 +36,7 @@
             <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
         </taskproperties>
         <task id="0" name="Research" color="#00ff00" meeting="false" start="2015-02-09" duration="16" complete="0" expand="true"/>
-        <task id="2" name="Analyse" color="#009900" meeting="false" start="2015-02-18" duration="11" complete="0" expand="true"/>
+        <task id="2" name="Analyse" color="#009900" meeting="false" start="2015-02-18" duration="18" complete="0" expand="true"/>
         <task id="4" name="Design" color="#006600" meeting="false" start="2015-02-25" duration="19" complete="0" expand="true"/>
         <task id="5" name="Implementation" color="#ff0000" meeting="false" start="2015-03-05" duration="43" complete="0" expand="true">
             <task id="18" name="Prototype 1" color="#ffff00" meeting="false" start="2015-03-05" duration="13" complete="0" expand="true"/>

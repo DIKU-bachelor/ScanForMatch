@@ -22,9 +22,3 @@ Timeplan
 DONE    - redefinere hvad prototyperne handler om
 !!! C++
 
-
-string search
-insertions, deletions, mismatches
-4..8
-p1=??? ~p1
-
