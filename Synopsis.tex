@@ -7,7 +7,7 @@
 \usepackage{array}
 \usepackage{amssymb}
 \usepackage{tikz}
-\usepackage{pgfgantt}
+%\usepackage{pgfgantt}
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{upquote}
@@ -90,7 +90,16 @@ complex patterns consisting of multiple pattern units. E.g. the order of which t
 can be optimized to increase performance instead of going through the pattern units from one end to the other. 
 \end{itemize}
 \section{Limitations}
+In order to specify our focus area, we have some limitations we will not be giving time to:
+\begin{itemize}
+	\item Testing with users (E.g. biologists at the university or other potential users of the program).
+	\item Looking at other tools for dna, rna pattern matching (E.g. grep or other tools).
+\end{itemize}
+\begin{flushleft}
 In case of excess time, secondary features may be implemented: 
+\end{flushleft}
+
+
 \begin{itemize}
 \item Is it possible to optimize the backtracking algorithm for string search, so that the order of the possibilities 
 tried regarding insertions, deletion and mismatches results in a conclusion faster.
@@ -99,12 +108,16 @@ tried regarding insertions, deletion and mismatches results in a conclusion fast
 for defining allowances when comparing a reversed complement pattern unit (e.g. "r1$\sim$p1").
 \item An analysis of the complexity and running time of the program.
 \end{itemize}
-Every feature from scan\_for\_mathces beyond what has been mentioned will not be implemented.
-\section{Motive}
-Pattern matching functionality for strings in genomic data is very useful, 
+Other features from scan\_for\_mathces beyond what has been mentioned will not be implemented.
+
+
+\section{Motivation}
+Pattern matching functionality for strings in genomic data is unavoidable, 
 but requires a good performance due to huge amounts of data. 
 Scan\_for\_matches serves this purpose, but big improvements in performance can be made.
 On top that, the code is poorly documented, lacks version control and the code is hard to read and maintain.
+
+
 \section{Tasks and schedule}
 Below is a list of the tasks that this project consists of:
 \begin{itemize}
@@ -135,10 +148,9 @@ and/or stored.
 \item \textbf{Implementation}
 \begin{enumerate}
 \item First prototype that can search the database sequence for a single literal pattern unit and provide the output.
-\item Second prototype allows ambiguous patterns with flexible length, and the possibility of combining pattern units
-into one single pattern.
-\item Third prototype includes all the 6 core functions defined earlier.
-\item The fourth prototype will include the optimized order of searching for the different pattern units.
+\item Second prototype allows searching with a allowed number of mismatches, insertions, and deletions.
+\item In the event that the second prototype lives up to all expectations, third prototype includes 2 more functionalities from the list given in the problem definition.
+\item In the event that the third prototype lives up to all expectations, the fourth prototype will include the rest of the core functionality from the problem definition.
 \end{enumerate}
 \item \textbf{Testing}
 \begin{enumerate}
@@ -158,7 +170,7 @@ together with the program.
 Figure 1 shows our schedule for the project, with the the implementation period consisting of the 4 different milestone
 prototypes of the program. The midway report and final report is shown as dots in the bottom.
 \begin{figure}[h!]
-\includegraphics[scale=0.7]{gantt.png}
+\includegraphics[scale=0.7]{gantt.PNG}
 \caption{Schedule}
 \end{figure}
 
