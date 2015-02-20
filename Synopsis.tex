@@ -66,25 +66,30 @@
 \end{center}
 \end{titlepage}
 \section{Problem definition}
-Is it possible create a program with the same core functionality as scan\_for\_mathces, but with an equal or
-increased performance every time?
-\section{Limitations}
-We will be implementing the core functionality of scan\_for\_matches which we define as follows:
+Is it possible to re-implement/modify scan\_for\_mathces, so that it has an equal or
+increased performance? \\ \\
+As a minimum, our product will contain the following features:
 \begin{itemize}
 \item Constructing literal pattern units (e.g. "AGUUG") that are used for finding a specific sub-sequence in the 
 database sequence.
+\item Allowing for wildcards (e.g. "AGWUUG" where "W" matches multiple other bases).
+\item Allowing any pattern unit a specified number of insertions, deletion and mismatches (e.g. "AGGUAAA[2,0,3]").
+\end{itemize}
+In order for our program to meet in the minimum requirements for the users, the following core features will also be needed.
+If time allows, as many as possible will be implemented as well.
+\begin{itemize}
 \item Constructing ambiguous pattern units (e.g. "4..8") that match any sub-sequence with a possibility for a 
 flexible range.
 \item Combining pattern units to a full pattern that defines the full search criteria when scanning the database sequence.
-\item Allowing any pattern unit a specified number of insertions, deletion and mismatches (e.g. "AGGUAAA[2,0,3]").
 \item Defining variables for referencing pattern units (e.g. "p1=5..6") that can be used 
 to find related patterns that are unknown before search (e.g. p1=5..6 p1[1,0,0])
 \item The $\sim$ symbol can be inserted in front of any pattern unit to indicate that we are looking for the reversed
 complement of that pattern unit.
-\end{itemize}
-Beside these already existing features, we will be implementing a more optimized way of searching for matches, given
+\item A more optimized way of searching for matches, given
 complex patterns consisting of multiple pattern units. E.g. the order of which the different pattern units are searched
-can be optimized to increase performance instead of going through the pattern units from one end to the other. \\ \\
+can be optimized to increase performance instead of going through the pattern units from one end to the other. 
+\end{itemize}
+\section{Limitations}
 In case of excess time, secondary features may be implemented: 
 \begin{itemize}
 \item Is it possible to optimize the backtracking algorithm for string search, so that the order of the possibilities 
@@ -108,16 +113,17 @@ Below is a list of the tasks that this project consists of:
 \item Why is scan\_for\_matches fast despite the use of a backtracking algorithm? This research task is about 
 reading and understanding the vital parts of the scan\_for\_matches code so that we understand the overall
 ideas and algorithms, and can reuse them if needed.
-\item How should the interface be improved to best suit the users. E.g. Should the program be started and
+\item How should the interface be improved to best suit the users? E.g. Should the program be started and
 patterns specified in a command-line manner or reading of files? How should the output be displayed or stored?
-\item What functionality should be focused on implementing. This task ensures that the most important functionality is 
-identified, so a proper prioritization can be made.
+\item What functionality should we be focused on implementing. This task ensures that the most important functionality is 
+identified, so a proper prioritization can be made. This task is already completed and the result is shown as the list
+of primary features and the list of secondary features.
 \item Researching what methods and algorithms for string-handling that exists, and exploring different options for 
 choosing a programming language to work with.
 \end{enumerate}
 \item \textbf{Analysis}
 \begin{enumerate}
-\item Choosing a language for implementation.
+\item Choosing a language for implementation. (It will probably be C or C++).
 \item Figuring out the overall methods and algorithms that we are going the use.
 \item Deciding on how the user interface should work, e.g. how will patterns, input and output be provided, displayed 
 and/or stored.
