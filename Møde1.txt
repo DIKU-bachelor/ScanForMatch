@@ -1,0 +1,30 @@
+Afgrænsning
+	- teste med brugere
+	- Kigger ikke på grep eller andre pattern værktøjer
+
+Motivation
+	- Interesse for bio
+
+Problem definition
+	- wildcards, ambigouity codes!!!
+	- Fjern nogle features (for stor opgave)
+	- Blanding af re-implementation og de-obfuscating
+
+Motive -> Motivation
+	- Very usefull -> unavoidable (omformulér)
+
+Analyse
+	- Længere tid
+	- Læs kode og tegn interaktionsdiagram
+
+Timeplan
+	- Testing flygtig størrelse
+
+!!! C++
+
+
+string search
+insertions, deletions, mismatches
+4..8
+p1=??? ~p1
+
