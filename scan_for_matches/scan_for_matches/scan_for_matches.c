@@ -234,12 +234,12 @@ char *argv[];
 	   (got_gt && (fscanf(stdin,"%s",id) == 1))))
     {
 /*	printf("processing %s\n",id); */
-        while (getc(stdin) != '\n')
+        while (getc(stdin) != '\n')             /* SPRINGER ID LINJEN OVER OG GÅR TIL NÆSTE */
 	  ;
 	for (p=data; ((i = getc(stdin)) != -1) && (i != '>');)
 	{
 	    if ((i != ' ') && (i != '\n'))
-	      *(p++) = i;
+	      *(p++) = i;                           /* SEKVENSEN BLIVER LÆST IND I p OG data */
 	}
 	if (i == '>')
 	    got_gt = 1;
@@ -248,10 +248,10 @@ char *argv[];
 
         *p=0;
 
-	for (i=0; (i < ig_index) && (strcmp(ignore[i],id) != 0); i++)
+	for (i=0; (i < ig_index) && (strcmp(ignore[i],id) != 0); i++)   /* PRØVER AT ID'ET I IGNORE LISTEN */
 	    ;
 	
-        if (i == ig_index)
+        if (i == ig_index)            /* HVIS ID'ET IKKE SKAL IGNORERES */
 	{
 	    if (!protein)
 		comp_data(data,cdata);
