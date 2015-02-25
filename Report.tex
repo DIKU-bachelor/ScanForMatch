@@ -180,24 +180,9 @@ The smart result of this comparing algorithm is that you only need to compare on
 \item The bit wise "and" operation: 0001 \& 1101 = 0001
 \item The result is then compared with A again to see if the compare was successful
 \end{itemize}
- 
 In order to use this he has converted both the data and the pattern with the conversion\_table. \\
 \section{Design}
-\subsection{Optimization}
-\subsubsection{Skip length}
-At first the pattern is matched against the database sequence as usual with different orders of mismatches, insertions and
-deletions if necessary. This particular match (with a specific starting char in the DB-sequence SR) continues until
-the N chars from SR to SR + N in the DB-string are read, and the different letters counted, where N is the length of the
-pattern. The letters in the pattern are also counted. We now have 2 lists. One contains the different letters and number
-of occurrences in the pattern (patlist), and one contains the number of occurrences of letters of the DB-string in interval
-(SR, SR + len(pattern)) (datlist). The length of patter is increased with allowed  \\ \\
-Say there is not match in this first run. Normally we would increment the SR counter and try again, but instead we
-increment SR, and update the datlist with the new letters. If the number of a specific letter in the pattern exceeds the
-number of allowed mismathces + insertions
 \subsection{Program structure}
-
-
-\section{Program structure}
 A list of actions our program should do in order to execute a pattern search:
 \begin{itemize}
 \item Read and parse the input line. E.g. "scanFM 'ATTGCCCC[0,1,2]' 'data.txt'". Possibility of writing "$->$ 'output.txt'"
@@ -215,7 +200,34 @@ If the search for each PUNIT returns True the match is saved.
 Types of PUNITs that we need
 \begin{itemize}
 \item EXACT - A PUNIT of this type consists of either of the letters 'A', 'C', 'G' and 'T' or any number of the wildcards.
-\item  
 \end{itemize}
+
+\subsection{Optimization}
+\subsubsection{Skip length}
+The pattern is matched against the database sequence as usual with different orders of mismatches, insertions and
+deletions if necessary, however it stores the amount of occurrences of each letter in a list, in the interval
+(SR, SR + length(pattern) + insertions) (datlist). 
+It also stores the amount of occurrences of letters in the pattern (patlist). \\ \\
+Say there is not match in this first run. Normally we would increment the SR counter and try again, but instead we
+increment SR, and update the datlist with the new letters (the old first letter is decremented and the new letter in the
+end of the string in incremented in datlist). For any letter, if the number of occurrences in patlist p subtracted the
+number of allowed mismatches and deletions still is bigger than the number of occurrences of that letter in dalist, there is no 
+possible match between these 2 strings, in that particular search can be skipped. (Only subtract deletions if the last letter
+in the DB-subsequence is not the letter being checked.) Pseudo algorithm would be as follows: 
+\begin{enumerate}
+\item In the first search, count the number of occurrences of each letter in pattern (put them in patlist) 
+and DB-subsequence being checked, i.e. interval(SR, SR + length(pattern) + max\_insertions (put them in datlist)
+; Pattern match the two strings; if succes goto 6;
+\item SR++
+\item Update letter occurrences in datlist
+\item for each letter lt: if ((patlist[lt] - max\_mismatch) - (max\_deletions - 
+NumberOfLet(lt, interval(ER - max\_deletions, ER))) $>$ datlist[lt] then goto 2;
+\item Pattern match the 2 strings; goto 2;
+\item DONE
+\end{enumerate}
+Here's an example. Suppose the DB-sequence is "$<$something before$>$ACCCTTT$<$something after$>$" and the pattern we're
+looking for is "ATTTTTT[2,0,3]" (2 mismatches, 3 deletions.) For the letter "T" the check in 4 would be: \\
+((6 - 2) - (3 - NumberOfLet("T", "TTT")) = ((6 - 2) - (3 - 3)) = 4. 4 is bigger than datlist("T") = 3 so there is no
+possible match.
 
 \end{document}
