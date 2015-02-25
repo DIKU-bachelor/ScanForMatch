@@ -71,15 +71,114 @@
 
 \section{Analysis}
 \subsection{Scan For Matches}
-In order to understand what is good from Scan for matches we needed to understand some code segments and the overall structure of the program, simply put we came to understand this flow in the code:
+In order to understand what is good from Scan for matches we needed to understand some code segments and the overall structure of the program, simply put we came to understand this flow in the code: \\
 \begin{tikzpicture}
-  [node distance=1cm and 2cm] 
-  \node[label=above:A]  (A)                        {(1)};
-  \node[label=above:B1] (B1) [above right= of A]   {($m+1$)};
-  \node[label=above:B2] (B2) [below right= of A]   {($m+1$)};
-  \node[label=above:C]  (C)  [below right= of B1]  {($2m-1$)};
-\end{tikzpicture}
+  [->,node distance=2cm and 2cm,main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\Large\bfseries}] 
+  \node[main node]  	(ScanForMatches)                        {Scan For Matches};
+  \node[main node] 	(Parser) [below= of ScanForMatches]   {Parser};
+  \node[main node] 	(PUnit) [right= of Parser]   {PUnit};
+  \node[main node]  	(PatternMatch)  [below= of Parser]  {PatterMatches};
+  \node[main node]	(PUnit1)		[right= of PatternMatch] {First PUnit};
+  \node[main node]	(PUnit2)		[below= of PUnit1] {Secound PUnit};
+  \node[main node]	(PUnitn)		[below= of PUnit2] {n'th PUnit};
+  \node[main node]	(Result1)		[right= of PUnit1] {Result};
+  \node[main node]	(Result2)		[right= of PUnit2] {Result};
+  \node[main node]	(Resultn)		[right= of PUnitn] {Result};
+  \node[]			(toNextHit)		[below= of PatternMatch] {};
+  \node[	]			(to2NextHit)		[below= of toNextHit] {};
+  \node[main node]	(NextHit)		[below= of to2NextHit] {Next Hit};
+  \node[main node]	(Return)			[below= of NextHit] {Return Results};
+  
+  
+  \path[every node/.style={font=\sffamily\small}]
+    (ScanForMatches) 	edge node [left] {} (Parser)
+    (Parser) 			edge node [left] {} (PUnit)
+        					edge node [left] {} (PatternMatch)
+    (PatternMatch) 		edge node [left] {} (PUnit1)
+    						edge [bend right] node [left] {End og file} (Return)
+    (PUnit1) 			edge node [left] {} (Result1)
+    (PUnit2)				edge node [left] {} (Result2)
+    (PUnitn)				edge node [left] {} (Resultn)
+    (Result1)			edge node [left] {SUCCESS} (PUnit2)
+    						edge [bend right] node [below] {BACKTRACK} (PatternMatch)
+    (Result2)			edge node [above] {SUCCESS} (PUnitn)
+    						edge node [right] {BACKTRACK} (PUnit1)
+    (Resultn)			edge node [below] {SUCCESS} (NextHit)
+        					edge node [below] {BACKTRACK} (PUnit2)
+    (NextHit)			edge node [right] {Not end of file} (PatternMatch)
+        					edge node [right] {end of file} (Return)
+    ;
+    
 
+\end{tikzpicture} \\
+This shows how Scan\_For\_Match uses a backtrack algorithm to search trough the data. When ever a PUnit fails it calls BACKTRACK, a case in the function patternMatch in Scan\_For\_Match. \\
+
+We have found certain structures he uses to solve different functionality problems, in order to harvest these structures to achieve the same fast runtime in the base cases of the program (e.g. exact match for bases or the like) we need to understand them:
+
+\subsection{Ambiguous bases}
+In Scan\_For\_Match in order to compare strings of bases he needs to be able to compare with bases that can mean different other bases, (e.g. n is way to write (A or C or T or G), and m is a way of writing (A or C)) this is done by converting all bases to words of 4 bit. This makes it possible to use bit wise and to compare bases. \\
+in order to do this we need to define the different bases as 1 bit being true (e.g. A = 0001, C = 0010 ....) this makes it possible for ambiguous bases to say which bases it consists of. In Scan\_For\_Match he has made a conversion table for this:
+\begin{lstlisting}
+int build_conversion_tables()
+{
+    int the_char;
+
+    for (the_char=0; the_char < 256; the_char++) {
+        switch(tolower(the_char)) {
+          case 'a': punit_to_code[the_char] = A_BIT; break;
+          case 'c': punit_to_code[the_char] = C_BIT; break;
+          case 'g': punit_to_code[the_char] = G_BIT; break;
+          case 't': punit_to_code[the_char] = T_BIT; break;
+          case 'u': punit_to_code[the_char] = T_BIT; break;
+          case 'm': punit_to_code[the_char] = (A_BIT | C_BIT); break;
+          case 'r': punit_to_code[the_char] = (A_BIT | G_BIT); break;
+          case 'w': punit_to_code[the_char] = (A_BIT | T_BIT); break;
+          case 's': punit_to_code[the_char] = (C_BIT | G_BIT); break;
+          case 'y': punit_to_code[the_char] = (C_BIT | T_BIT); break;
+          case 'k': punit_to_code[the_char] = (G_BIT | T_BIT); break;
+          case 'b': punit_to_code[the_char] = (C_BIT | G_BIT | T_BIT); break;
+          case 'd': punit_to_code[the_char] = (A_BIT | G_BIT | T_BIT); break;
+          case 'h': punit_to_code[the_char] = (A_BIT | C_BIT | T_BIT); break;
+          case 'v': punit_to_code[the_char] = (A_BIT | C_BIT | G_BIT); break;
+          case 'n': punit_to_code[the_char] = (A_BIT | C_BIT | G_BIT | T_BIT); break;
+          default:
+            punit_to_code[the_char] = 0;
+            break;
+        }
+        if (punit_to_code[the_char] & A_BIT)
+            punit_to_code[the_char] |= T_BIT << 4;
+        if (punit_to_code[the_char] & C_BIT)
+            punit_to_code[the_char] |= G_BIT << 4;
+        if (punit_to_code[the_char] & G_BIT)
+            punit_to_code[the_char] |= C_BIT << 4;
+        if (punit_to_code[the_char] & T_BIT)
+            punit_to_code[the_char] |= A_BIT << 4;
+    }
+...
+\end{lstlisting}
+
+This makes him able to use bit wise and to determine a match in the following way:
+\begin{lstlisting}
+#define KnownChar(C)  (punit_sequence_type == PEPTIDE ? 1 : known_char[(C)])
+
+#define Matches(C1,C2) (punit_sequence_type == PEPTIDE ? \
+                        ((C1 == C2) || (C2 == 'X')): \
+                        (KnownChar((C1) & 15) && ((((C1) & 15) & ((C2) & 15)) == (C1 & 15))))
+
+\end{lstlisting}
+In the code segment above C1 is a character from the data and C2 is a character from the pattern given. In the case where it is not PEPTIDE (PEPTIDE being not DNA) he starts by checking that the data character is a allowed base, if this is true and the two characters being bit wise "and" compared results in the same word taken from the data, it returns true. 
+
+When he grabs the two characters to compare, he doesn't just get 4bits in order to make sure it is only the 4bits he is interested in, that gets compared he bit wise "and" them with 15. This makes all other than the last 4 bits go to 0 because 15 is 4 ones in end of the Bite.
+
+The smart result of this comparing algorithm is that you only need to compare once even though the pattern can have multiple different ambiguous bases. It will always return the base from the data if the ambiguous base contains the base from the data. example: \\
+\begin{itemize}
+\item The base from the data is: A (0001)
+\item The ambiguous base from the pattern is: D (A or T or G) 1101
+\item The bit wise "and" operation: 0001 \& 1101 = 0001
+\item The result is then compared with A again to see if the compare was successful
+\end{itemize}
+ 
+In order to use this he has converted both the data and the pattern with the conversion\_table. \\
 
 \section{Program structure}
 A list of actions our program should do in order to execute a pattern search:
