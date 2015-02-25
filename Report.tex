@@ -67,9 +67,13 @@
 {\large 20. April 2015}
 \end{center}
 \end{titlepage}
-\tableofcontents
+\tableofcontents \newpage
 
 \section{Analysis}
+\section{Loose\_match}
+All possibilities are tried out using mismatches, insertions, deletions in that order to accept chars that don't match.
+When all mismatches, insertions and deletions are used, and we still encounter a mismatch, the stack is popped, to
+try a different order of the mismatches, insertions and deletions tried.
 \subsection{Scan For Matches}
 In order to understand what is good from Scan for matches we needed to understand some code segments and the overall structure of the program, simply put we came to understand this flow in the code:
 \begin{tikzpicture}
@@ -80,8 +84,19 @@ In order to understand what is good from Scan for matches we needed to understan
   \node[label=above:C]  (C)  [below right= of B1]  {($2m-1$)};
 \end{tikzpicture}
 
-
-\section{Program structure}
+\section{Design}
+\subsection{Optimization}
+\subsubsection{Skip length}
+At first the pattern is matched against the database sequence as usual with different orders of mismatches, insertions and
+deletions if necessary. This particular match (with a specific starting char in the DB-sequence SR) continues until
+the N chars from SR to SR + N in the DB-string are read, and the different letters counted, where N is the length of the
+pattern. The letters in the pattern are also counted. We now have 2 lists. One contains the different letters and number
+of occurrences in the pattern (patlist), and one contains the number of occurrences of letters of the DB-string in interval
+(SR, SR + len(pattern)) (datlist). The length of patter is increased with allowed  \\ \\
+Say there is not match in this first run. Normally we would increment the SR counter and try again, but instead we
+increment SR, and update the datlist with the new letters. If the number of a specific letter in the pattern exceeds the
+number of allowed mismathces + insertions
+\subsection{Program structure}
 A list of actions our program should do in order to execute a pattern search:
 \begin{itemize}
 \item Read and parse the input line. E.g. "scanFM 'ATTGCCCC[0,1,2]' 'data.txt'". Possibility of writing "$->$ 'output.txt'"
@@ -101,4 +116,5 @@ Types of PUNITs that we need
 \item EXACT - A PUNIT of this type consists of either of the letters 'A', 'C', 'G' and 'T' or any number of the wildcards.
 \item  
 \end{itemize}
+
 \end{document}

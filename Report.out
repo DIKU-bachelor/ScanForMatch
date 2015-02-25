@@ -1,6 +1,7 @@
-<<<<<<< HEAD
-\BOOKMARK [1][-]{section.1}{Analysis}{}
-\BOOKMARK [2][-]{subsection.1.1}{Scan For Matches}{section.1}
-=======
-\BOOKMARK [1][-]{section.1}{Program structure}{}% 1
->>>>>>> f284d9668dc3c07a92db95dfdfeee37a4e12bd3d
+\BOOKMARK [1][-]{section.1}{Analysis}{}% 1
+\BOOKMARK [1][-]{section.2}{Loose\137match}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Scan For Matches}{section.2}% 3
+\BOOKMARK [1][-]{section.3}{Design}{}% 4
+\BOOKMARK [2][-]{subsection.3.1}{Optimization}{section.3}% 5
+\BOOKMARK [3][-]{subsubsection.3.1.1}{Skip length}{subsection.3.1}% 6
+\BOOKMARK [2][-]{subsection.3.2}{Program structure}{section.3}% 7

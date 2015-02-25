@@ -1454,7 +1454,7 @@ int first;
 	break;
 
       case RANGE_PUNIT:
-        if ((SR + (i=CR->info.range.min-1)) <= ER)
+        if ((SR + (i=CR->info.range.min-1)) <= ER)    /* ER DER PLADS TIL MINIMUMSLÆNGDEN AF VORES PUNIT */
         {
             CR->hit = SR;
             SR += i+1;
@@ -2082,9 +2082,9 @@ int compl_flag,rule_set;
     }
 
     /* special-case for ins=del=0 */
-    if ((max_ins == 0) && (max_del == 0))
+    if ((max_ins == 0) && (max_del == 0))   /* HVIS INGEN INS ELLER DEL */
     {
-        if (one_len > two_len)
+        if (one_len > two_len)              /* HVIS DER IKKE ER PLADS TIL VORES PUNIT */
         {
             return 0;
         }
