@@ -1481,13 +1481,13 @@ int first;
             ln = CR->info.exact.len - 1;
             while (SR <= last)
             {
-                if (Matches(*SR,*p1))
+                if (Matches(*SR,*p1))     /* FØRSTE CHAR MATCH */
                 {
                     p2 = SR+1; p3 = p1+1;
-                    for (i=ln; i && Matches(*p2,*p3); i--,p3++,p2++)
+                    for (i=ln; i && Matches(*p2,*p3); i--,p3++,p2++)  /* FORSØGER AT MATCHE HELT FÆRDIG */
                         ;
                     if (!i)
-                        break;
+                        break;      /* HVIS FULDSTÆNDIG MATCH, TÆL IKKE FORTSÆT MED AT MATCHE NÆSTE PATTERN */
                 }
                 SR++;
             }
