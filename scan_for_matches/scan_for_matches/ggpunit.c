@@ -1487,7 +1487,7 @@ int first;
                     for (i=ln; i && Matches(*p2,*p3); i--,p3++,p2++)  /* FORSØGER AT MATCHE HELT FÆRDIG */
                         ;
                     if (!i)
-                        break;      /* HVIS FULDSTÆNDIG MATCH, TÆL IKKE FORTSÆT MED AT MATCHE NÆSTE PATTERN */
+                        break;      /* HVIS FULDSTÆNDIGt MATCH, TÆL IKKE FORTSÆT MED AT MATCHE NÆSTE PATTERN */
                 }
                 SR++;
             }

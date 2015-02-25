@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 \contentsline {section}{\numberline {1}Analysis}{1}{section.1}
 \contentsline {subsection}{\numberline {1.1}Scan For Matches}{1}{subsection.1.1}
+=======
+\contentsline {section}{\numberline {1}Program structure}{1}{section.1}
+>>>>>>> f284d9668dc3c07a92db95dfdfeee37a4e12bd3d
