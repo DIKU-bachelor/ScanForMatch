@@ -7,6 +7,8 @@
 \usepackage{array}
 \usepackage{amssymb}
 \usepackage{tikz}
+\usetikzlibrary{arrows}
+\usetikzlibrary{positioning}
 %\usepackage{pgfgantt}
 \usepackage{hyperref}
 \usepackage{graphicx}
@@ -22,7 +24,7 @@
 \definecolor{listinggray}{gray}{0.9}
 \usepackage{listings}
 \lstset{
-	language=,
+	language=C,
 	literate=
 		{æ}{{\ae}}1
 		{ø}{{\o}}1
@@ -66,5 +68,15 @@
 \end{center}
 \end{titlepage}
 \tableofcontents
+\section{Analysis}
+\subsection{Scan For Matches}
+In order to understand what is good from Scan for matches we needed to understand some code segments and the overall structure of the program, simply put we came to understand this flow in the code:
+\begin{tikzpicture}
+  [node distance=1cm and 2cm] 
+  \node[label=above:A]  (A)                        {(1)};
+  \node[label=above:B1] (B1) [above right= of A]   {($m+1$)};
+  \node[label=above:B2] (B2) [below right= of A]   {($m+1$)};
+  \node[label=above:C]  (C)  [below right= of B1]  {($2m-1$)};
+\end{tikzpicture}
 
 \end{document}
