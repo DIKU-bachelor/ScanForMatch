@@ -10,6 +10,8 @@ class exact: public punit {
   int del;
   int mis;
   int flex;
+  public:
+    exact(int l, int i, int d, int m, int f, char* in_code, char* in_prev);
 }
 
 
