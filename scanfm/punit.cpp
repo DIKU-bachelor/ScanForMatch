@@ -1,11 +1,12 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
 #include "punit.h"
 
 
-char punit_to_code[256];
-char code_to_punit[256];
-int initialized=0;
+int initialized = 1;
 
-char known_char_i[16] = {0,1,1,0,1,0,0,0,1,0,0,0,0,0,0,0};
+bool known_char_i[16] = {0,1,1,0,1,0,0,0,1,0,0,0,0,0,0,0};
 char known_char_index[16] =
                  {-1,0,1,-1,2,-1,-1,-1,3,-1,-1,-1,-1,-1,-1,-1};
 
@@ -121,60 +122,81 @@ int build_conversion_tables()
     return(0);
 }
 
-/* set and get mlen(match length), code (bases from the pattern), 
-*  prev(previous location from the data)*/
-void punit::set_mlen(int l){
-    mlen = len;
-}
-
-void punit::set_code(char* c){
+Punit::Punit(int l, char* c, char* p){
+    mlen = l;
     code = c;
-}
-
-void punit::set_prev(char* p){
     prev = p;
 }
 
-int punit::get_mlen(void){
+/* set and get mlen(match length), code (bases from the pattern), 
+*  prev(previous location from the data)*/
+void Punit::set_mlen(int l){
+    mlen = l;
+}
+
+void Punit::set_code(char* c){
+    code = c;
+}
+
+void Punit::set_prev(char* p){
+    prev = p;
+}
+
+int Punit::get_mlen(void){
     return mlen;
 }
 
-char* punit::get_code(void){
+char* Punit::get_code(void){
     return code;
 }
 
-char* punit::get_prev(void){
+char* Punit::get_prev(void){
     return prev;
 }
-bool known_char(char* C) {
-    return (known_char_i[(C)]);
+char Punit::known_char(char C) {
+    return (known_char_i[(unsigned char)C]);
 }
 
 /* checks if a data base corresponds to a pattern base */
-bool punit::matches(char* C1, char* C2) {
-     return (KnownChar((C1) & 15) && ((((C1) & 15) & ((C2) & 15)) == 
+bool Punit::matches(char C1, char C2) {
+     return (known_char((C1) & 15) && ((((C1) & 15) & ((C2) & 15)) == 
             (C1 & 15)));
 }
 
 
 
 /* exact constructer used by the parser */
-exact::exact(int l, int i, int d, int m, int f, char* in_code, char* in_prev){
-    len = l;
+Exact::Exact(int l, char* c, char* p, int le, 
+             int i, int d, int m, int f) : Punit(l, c, p){
+    len = le;
     ins = i;
     del = d;
     mis = m;
     flex = f;
-    set_code(in_code);
-    set_prev(in_prev);
-    set_mlen(0);
 }
 
 
 
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
-char* exact::search(char* start){
-    
+char* Exact::search(char* start){   
     return start;
+}
+
+
+int main()
+{
+    int ins = 1;
+    int del = 2;
+    int mis = 3;
+    int flex = ins + del + mis;
+    int mlen = 0;
+    int len = 10;
+    char pattern[] = "AAAACAACAC";
+    char data[] = "CCCCCCCCCCCCCCCCAAAACAACACAAAAAAAAAAAAAAAA";
+
+    Exact exact = Exact(mlen, &pattern[0], &data[0], 
+                            len, ins, del, mis, flex);
+    printf("first data letter: %c \n", *(exact.get_code()));
+    return 0;
 }
