@@ -4,15 +4,6 @@
 
 #include "punit.h"
 
-class exact: public punit {
-  int len;
-  int ins;
-  int del;
-  int mis;
-  int flex;
-  public:
-    exact(int l, int i, int d, int m, int f, char* in_code, char* in_prev);
-}
 
 
 

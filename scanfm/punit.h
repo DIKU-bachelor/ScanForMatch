@@ -1,4 +1,8 @@
+char punit_to_code[256];
+char code_to_punit[256];
+int initialized;
 
+int build_conversion_tables(void);
 
 class punit {
   int mlen;
@@ -21,4 +25,26 @@ class punit {
     char* get_code(void);
     /*get data location, prev */
     char* get_prev(void);
+
+    bool known_char(char* C);
+
+    /* Match 2 given bases with eachother using the converted bit type*/
+    bool Matches(char* C1, char* C2);
 }
+
+
+
+
+
+/* punit exact inherites from punit, is used to search for a litteral
+*  in the data */
+class exact: public punit {
+  int len;
+  int ins;
+  int del;
+  int mis;
+  int flex;
+  public:
+    exact(int l, int i, int d, int m, int f, char* in_code, char* in_prev);
+}
+
