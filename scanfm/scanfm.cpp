@@ -42,6 +42,7 @@ list<Punit> parse(string text) {
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
+    /* Checks if the Punit is an exact */
     int count = 0;
     for (int i = 0; i < (*it).length(); i++) {
       if (find(known_chars.begin(), known_chars.end(), toupper((*it)[i])) == known_chars.end()) {
@@ -49,7 +50,12 @@ list<Punit> parse(string text) {
       }
       count++;
     }
+    /* Converting to _BIT chars */
     if (count == (*it).length()) {
+      char* conv_code = (char*)malloc(1000*sizeof(char));
+      for(int i = 0; i < (*it).length(); i++){
+        conv_code[i] = punit_to_code[tolower((*it)[i])];
+      }
       Exact ex ((int) (*it).length(), (*it).c_str(), 0, 0, 0, 0);
       pat_list.push_back(ex);
     }
@@ -67,8 +73,10 @@ int main(int argc, char* argv[]) {
   }
   cout << "Pattern input: "<< sdata << '\n';
   string text = sdata;
-  list<Punit> pat_list = parse(text);
+/*  list<Punit> pat_list = parse(text);
   for (list<Punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
-    cout << (*it).code << '\n';
-  }
+    if (Exact ex = dynamic_cast<Exact>((*it)) {
+      cout << ex.code << "and length: " << ex.len << "\n";
+    }
+  }*/
 }

@@ -1,7 +1,8 @@
 #ifndef PUNIT_H
 #define PUNIT_H
 
-
+extern char punit_to_code[256];
+extern char code_to_punit[256];
 
 int build_conversion_tables(void);
 

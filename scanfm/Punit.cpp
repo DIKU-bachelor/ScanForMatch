@@ -69,7 +69,7 @@ int build_conversion_tables()
 
     for (the_char=0; the_char < 256; the_char++) {
         switch(tolower(the_char)) {
-          case 'a': punit_to_code[the_char] = A_BIT;printf("hello"); break;
+          case 'a': punit_to_code[the_char] = A_BIT; break;
           case 'c': punit_to_code[the_char] = C_BIT; break;
           case 'g': punit_to_code[the_char] = G_BIT; break;
           case 't': punit_to_code[the_char] = T_BIT; break;
