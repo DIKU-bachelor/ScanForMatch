@@ -62,7 +62,7 @@ char* Exact::search(char* start){
   int i;
   char* p1 = code;
   char* p2 = prev;
-  for( i = len; i && matches(*start, *p1); i--, p1++, p2++){
+  for( i = len; i && matches(*p2, *p1); i--, p1++, p2++){
     mlen++;
   }
   if(len == mlen){
@@ -178,36 +178,4 @@ int build_conversion_tables()
     initialized=1;
     return(0);
 }
-/*int main()
-{
-    int ins = 1;
-    int del = 2;
-    int mis = 3;
-    int flex = ins + del + mis;
-    int mlen = 0;
-    int len = 10;
-    char pattern[] = "CAAACAACAC";
-    char data[] = "CCCCCCCCCCCCCCCCAAAACAACACAAAAAAAAAAAAAAAA";
-    char* mPattern;
-    char* mData;
-    build_conversion_tables();
-    mData = (char*)malloc(1000*sizeof(char));
-    mPattern = (char*)malloc(1000*sizeof(char));
-    int i;
-    for(i = 0; i < len; i++){
-        mPattern[i] = punit_to_code[tolower(pattern[i])];
-        printf("mP: %i \n", (unsigned int)mPattern[i]);
-    }
-    
-    Exact exact = Exact(mlen, &mPattern[0], &data[0], 
-                            len, ins, del, mis, flex);
-    for(i = 0; i < 30; i ++) {
-        mData[i] = punit_to_code[tolower(data[i])];
-        if(exact.matches(mData[i], mPattern[i])){
-            printf("yes! %i \n", i);
-        }
-    }
-    printf("first data letter: %i \n", *((unsigned int*)exact.get_code()));
-    return 0;
-}*/
 

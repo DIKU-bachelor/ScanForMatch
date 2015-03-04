@@ -63,6 +63,39 @@ list<Punit> parse(string text) {
   return pat_list; 
 }
 
+int test_exact()
+{
+    int len = 10;
+    char pattern[] = "CAAACAACAC";
+    char data[] = "AACAAACAACACAAAAAAAAAAAAAAAA";
+    char* mPattern;
+    char* mData;
+    build_conversion_tables();
+    mData = (char*)malloc(1000*sizeof(char));
+    mPattern = (char*)malloc(1000*sizeof(char));
+    int i;
+    for(i = 0; i < len; i++){
+        mPattern[i] = punit_to_code[pattern[i]];
+    }
+    
+    for(i = 0; i < 30; i ++) {
+        mData[i] = punit_to_code[data[i]];
+    }
+    Exact exact = Exact(len, mPattern, 
+                        0, 0, 0, 0);
+    char* hit;
+    int d; 
+    for(d = 0; d < 5; d++){
+      exact.mlen = 0;
+      hit = exact.search(mData + d);
+      if(hit != NULL) {
+        printf("first data letter:%c number: %i \n", *hit, d);
+      } else {
+       printf("failed\n");
+      }
+    }
+    return 0;
+}
 
 int main(int argc, char* argv[]) {
   ifstream fpp (argv[1]);
@@ -73,6 +106,8 @@ int main(int argc, char* argv[]) {
   }
   cout << "Pattern input: "<< sdata << '\n';
   string text = sdata;
+
+  return test_exact();
 /*  list<Punit> pat_list = parse(text);
   for (list<Punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
     if (Exact ex = dynamic_cast<Exact>((*it)) {
