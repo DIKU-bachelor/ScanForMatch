@@ -34,7 +34,28 @@ class Exact: public Punit {
     int del;
     int mis;
     int flex;
+    /* current insertions, deletions, and mismatches */
+    int c_ins;
+    int c_del;
+    int c_mis;
+    int c_flex;
+    void stack_next(struct stackent st,int nxtE, int N, 
+                       char* p1, char* d1, int one_len,
+                       int two_len);
     Exact(int le, char* c, int i, int d, int m, int f);
+    void reset(void);
+    char* search(char* start);
+};
+
+
+/* punit range inherites from punit, is used to jump in the data e.g
+*  6..8 jumps from 6 to 8 charecters
+*  in the data */
+class Range: public Punit {
+  public:
+    int len;
+    int width;
+    Range(int le, char* c, int w);
     void reset(void);
     char* search(char* start);
 };

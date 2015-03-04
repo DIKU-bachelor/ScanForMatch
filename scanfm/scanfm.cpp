@@ -70,7 +70,6 @@ int test_exact()
     char data[] = "AACAAACAACACAAAAAAAAAAAAAAAA";
     char* mPattern;
     char* mData;
-    build_conversion_tables();
     mData = (char*)malloc(1000*sizeof(char));
     mPattern = (char*)malloc(1000*sizeof(char));
     int i;
@@ -96,9 +95,29 @@ int test_exact()
     }
     return 0;
 }
+/* unit test that range returns the right pointer after jump */
+int test_range() {
+    int len = 6;
+    int width = 4;
+    char data[] = "AACAAACAACACAAAAAAAAAAAAAAAA";
+    char* mData;
+    mData = (char*)malloc(1000*sizeof(char));
+    int i;
+    for(i = 0; i < 30; i ++) {
+        mData[i] = punit_to_code[data[i]];
+    }
+    Range range = Range(len, NULL, 
+                        width);
+    char* next;
+    for(i = 0; i < 10; i++){
+      next = range.search(mData);
+    }
+}
+
 
 int main(int argc, char* argv[]) {
   ifstream fpp (argv[1]);
+  build_conversion_tables();
   char* data = new char[fsize];
   char* sdata = data;
   while (fpp.get(*data)) {
@@ -107,7 +126,7 @@ int main(int argc, char* argv[]) {
   cout << "Pattern input: "<< sdata << '\n';
   string text = sdata;
 
-  return test_exact();
+  return test_range();
 /*  list<Punit> pat_list = parse(text);
   for (list<Punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
     if (Exact ex = dynamic_cast<Exact>((*it)) {
