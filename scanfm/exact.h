@@ -10,7 +10,7 @@ class exact: public punit {
   int del;
   int mis;
   int flex;
-}
+};
 
 
 
