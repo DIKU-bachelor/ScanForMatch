@@ -8,9 +8,9 @@ int build_conversion_tables(void);
 class Punit {
   public:
     int mlen;
-    const char* code;
+    char* code;
     char* prev;
-    Punit(const char* c);
+    Punit(char* c);
     /* If start is NULL, the previous search failed, and this search starts at prev.
        If start is not NULL, prev in this punit is set to start and is initialized */
     virtual char* search(char* start);
@@ -33,7 +33,7 @@ class Exact: public Punit {
     int del;
     int mis;
     int flex;
-    Exact(int le, const char* c, int i, int d, int m, int f);
+    Exact(int le, char* c, int i, int d, int m, int f);
     void reset(void);
     char* search(char* start);
 };

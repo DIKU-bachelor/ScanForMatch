@@ -20,7 +20,7 @@ char known_char_index[16] =
 #define T_BIT 0x08              /* char bitfield */
 
 
-Punit::Punit(const char* c){
+Punit::Punit(char* c){
     mlen = 0;
     code = c;
 }
@@ -42,7 +42,7 @@ bool Punit::matches(char C1, char C2) {
 
 
 /* exact constructer used by the parser */
-Exact::Exact(int le, const char* c, 
+Exact::Exact(int le, char* c, 
              int i, int d, int m, int f) : Punit(c){
     len = le;
     ins = i;
@@ -55,8 +55,20 @@ Exact::Exact(int le, const char* c,
 
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
-char* Exact::search(char* start){   
-    return start;
+char* Exact::search(char* start){
+  if(start != NULL) {
+    prev = start;
+  }
+  int i;
+  char* p1 = code;
+  char* p2 = prev;
+  for( i = len; i && matches(*start, *p1); i--, p1++, p2++){
+    mlen++;
+  }
+  if(len == mlen){
+    return prev + mlen + 1;
+  }
+  return NULL;
 }
 
 void Exact::reset(void) {
