@@ -56,7 +56,7 @@ list<Punit> parse(string text) {
       for(int i = 0; i < (*it).length(); i++){
         conv_code[i] = punit_to_code[tolower((*it)[i])];
       }
-      Exact ex ((int) (*it).length(), (*it).c_str(), 0, 0, 0, 0);
+      Exact ex ((int) (*it).length(), conv_code, 0, 0, 0, 0);
       pat_list.push_back(ex);
     }
   }
