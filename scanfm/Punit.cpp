@@ -20,6 +20,48 @@ char known_char_index[16] =
 #define T_BIT 0x08              /* char bitfield */
 
 
+Punit::Punit(const char* c){
+    mlen = 0;
+    code = c;
+}
+
+void Punit::reset(void) {}
+
+char* Punit::search(char* start) {}
+
+char Punit::known_char(char C) {
+    return (known_char_i[(unsigned char)C]);
+}
+
+/* checks if a data base corresponds to a pattern base */
+bool Punit::matches(char C1, char C2) {
+     return (known_char((C1) & 15) && ((((C1) & 15) & ((C2) & 15)) == 
+            (C1 & 15)));
+}
+
+
+
+/* exact constructer used by the parser */
+Exact::Exact(int le, const char* c, 
+             int i, int d, int m, int f) : Punit(c){
+    len = le;
+    ins = i;
+    del = d;
+    mis = m;
+    flex = f;
+}
+
+
+
+/* If start is NULL, the previous search failed, and this search starts at prev.
+   If start is not NULL, prev in this punit is set to start and is initialized */
+char* Exact::search(char* start){   
+    return start;
+}
+
+void Exact::reset(void) {
+  mlen = 0;
+}
 
 int build_conversion_tables()
 {
@@ -124,50 +166,6 @@ int build_conversion_tables()
     initialized=1;
     return(0);
 }
-
-Punit::Punit(const char* c){
-    mlen = 0;
-    code = c;
-}
-
-void Punit::reset(void) {}
-
-char* Punit::search(char* start) {}
-
-char Punit::known_char(char C) {
-    return (known_char_i[(unsigned char)C]);
-}
-
-/* checks if a data base corresponds to a pattern base */
-bool Punit::matches(char C1, char C2) {
-     return (known_char((C1) & 15) && ((((C1) & 15) & ((C2) & 15)) == 
-            (C1 & 15)));
-}
-
-
-
-/* exact constructer used by the parser */
-Exact::Exact(int le, const char* c, 
-             int i, int d, int m, int f) : Punit(c){
-    len = le;
-    ins = i;
-    del = d;
-    mis = m;
-    flex = f;
-}
-
-
-
-/* If start is NULL, the previous search failed, and this search starts at prev.
-   If start is not NULL, prev in this punit is set to start and is initialized */
-char* Exact::search(char* start){   
-    return start;
-}
-
-void Exact::reset(void) {
-  mlen = 0;
-}
-
 /*int main()
 {
     int ins = 1;
