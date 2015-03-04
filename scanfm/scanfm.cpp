@@ -1,4 +1,4 @@
-#include "punit.h"
+#include "Punit.h"
 #include <fstream>
 #include <iostream>
 #include "stdio.h"
@@ -35,11 +35,10 @@ list<string> split_str(string text, const char del) {
   return pat_list;
 }
 
-
 /* Parses text to find pattern units and returns a list of these */
-list<punit> parse(string text) {
+list<Punit> parse(string text) {
   list<string> split_text = split_str(text, ' ');
-  list<punit> pat_list;
+  list<Punit> pat_list;
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
@@ -51,7 +50,7 @@ list<punit> parse(string text) {
       count++;
     }
     if (count == (*it).length()) {
-      exact ex ((int) (*it).length(), (*it).c_str(), 0, 0, 0, 0);
+      Exact ex ((int) (*it).length(), (*it).c_str(), 0, 0, 0, 0);
       pat_list.push_back(ex);
     }
   }
@@ -68,8 +67,8 @@ int main(int argc, char* argv[]) {
   }
   cout << "Pattern input: "<< sdata << '\n';
   string text = sdata;
-  list<punit> pat_list = parse(text);
-  for (list<punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
-    cout << (*it).code << " of length: " << (*it).len;
+  list<Punit> pat_list = parse(text);
+  for (list<Punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
+    cout << (*it).code << '\n';
   }
 }
