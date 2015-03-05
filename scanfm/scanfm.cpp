@@ -4,11 +4,14 @@
 #include "stdio.h"
 #include "ctype.h"
 #include <list>
+#include <cstring>
+#include <typeinfo>
 #include <string>
 #include <algorithm>
 using namespace std;
 
 #define fsize 250000000
+#define patsize 1000
 
 /* Splits text into substrings by delimiter del and returns a list of these */
 list<string> split_str(string text, const char del) {
@@ -36,9 +39,9 @@ list<string> split_str(string text, const char del) {
 }
 
 /* Parses text to find pattern units and returns a list of these */
-list<Punit> parse(string text) {
+list<Punit*> parse(string text) {
   list<string> split_text = split_str(text, ' ');
-  list<Punit> pat_list;
+  list<Punit*> pat_list;
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
@@ -56,27 +59,69 @@ list<Punit> parse(string text) {
       for(int i = 0; i < (*it).length(); i++){
         conv_code[i] = punit_to_code[tolower((*it)[i])];
       }
-      Exact ex ((int) (*it).length(), conv_code, 0, 0, 0, 0);
+      Exact* ex = new Exact((int) (*it).length(), conv_code, 0, 0, 0, 0);  
       pat_list.push_back(ex);
     }
   }
   return pat_list; 
 }
 
+/* Looks through the data string to find pattern specified in list pat_list */
+list<char*> pattern_match(list<Punit*> pat_list, char* data) {
+  list<Punit*>::iterator it = pat_list.begin();
+  char* nxt_start = data;
+  int backtrack;
+  while (true) {
+    nxt_start = (*it).search(nxt_start);
+    if ((*nxt_start) == NULL) {
+      nxt_start = (*it).prev;
+      backtrack = 1
+    }
+  }
+}
+
 
 int main(int argc, char* argv[]) {
-  ifstream fpp (argv[1]);
+  int arg = 0;
+  /* Skip until -p flag */
+  while (strcmp(argv[arg], "-p") != 0) {
+    if (arg > argc) {
+      cout << "ERROR: missing -p flag\n";
+      return -1;
+    }
+    arg++;
+  }
+  arg++;
+  char* pats = new char[patsize];
+  char* spats = pats;
+  int index = 0;
+
+  /* Read all of the pattern */
+  while (strcmp(argv[arg], "-d") != 0) {
+    int i = 0;
+    while (argv[arg][i] != '\0') {
+      pats[index++] = argv[arg][i++];
+    }
+    pats[index++] = ' ';
+    if (++arg == argc) {
+      cout << "ERROR: missing -d flag" << "\n";
+      return -1;
+    }
+  }
+  pats[index++] = '\0';
+  list<Punit*> pat_list = parse(pats);
+
+  /* Read the datafile */
+  ifstream fp (argv[++arg]);
+  if (fp == 0) {
+    cout << "ERROR: No such file: " << argv[arg] << "\n";
+    return -1;
+  }
+  
   char* data = new char[fsize];
   char* sdata = data;
-  while (fpp.get(*data)) {
+  while (fp.get(*data)) {
     data++;
   }
-  cout << "Pattern input: "<< sdata << '\n';
-  string text = sdata;
-/*  list<Punit> pat_list = parse(text);
-  for (list<Punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
-    if (Exact ex = dynamic_cast<Exact>((*it)) {
-      cout << ex.code << "and length: " << ex.len << "\n";
-    }
-  }*/
+  list<char*> mathces = pattern_match(pat_list, sdata);
 }

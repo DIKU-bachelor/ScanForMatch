@@ -1,8 +1,9 @@
 #include <stdlib.h>
+#include <iostream>
 #include <stdio.h>
 #include <ctype.h>
 #include "Punit.h"
-
+using namespace std;
 
 int initialized = 1;
 char punit_to_code[256];
@@ -27,7 +28,9 @@ Punit::Punit(char* c){
 
 void Punit::reset(void) {}
 
-char* Punit::search(char* start) {}
+char* Punit::search(char* start) {
+  cout << "OASIDJOSIDJ";
+}
 
 char Punit::known_char(char C) {
     return (known_char_i[(unsigned char)C]);
@@ -54,9 +57,12 @@ Exact::Exact(int le, char* c,
 
 
 /* If start is NULL, the previous search failed, and this search starts at prev.
-   If start is not NULL, prev in this punit is set to start and is initialized */
+   If start is not NULL, prev in this punit is set to start and is initialized */ 
 char* Exact::search(char* start){
-  if(start != NULL) {
+  cout << "TEST";
+  return start;
+}
+/*  if(start != NULL) {
     prev = start;
   }
   int i;
@@ -69,7 +75,7 @@ char* Exact::search(char* start){
     return prev + mlen + 1;
   }
   return NULL;
-}
+}*/
 
 void Exact::reset(void) {
   mlen = 0;
