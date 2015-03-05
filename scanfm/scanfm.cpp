@@ -72,11 +72,12 @@ list<char*> pattern_match(list<Punit*> pat_list, char* data) {
   char* nxt_start = data;
   int backtrack;
   while (true) {
-    nxt_start = (*it).search(nxt_start);
-    if ((*nxt_start) == NULL) {
-      nxt_start = (*it).prev;
-      backtrack = 1
+    nxt_start = (*it)->search(nxt_start);
+    if (*nxt_start) {
+      backtrack = 1;
+      continue;
     }
+    backtrack = 0;
   }
 }
 
@@ -123,5 +124,5 @@ int main(int argc, char* argv[]) {
   while (fp.get(*data)) {
     data++;
   }
-  list<char*> mathces = pattern_match(pat_list, sdata);
+/*  list<char*> mathces = pattern_match(pat_list, sdata);*/
 }

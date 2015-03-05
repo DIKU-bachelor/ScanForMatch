@@ -59,23 +59,20 @@ Exact::Exact(int le, char* c,
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */ 
 char* Exact::search(char* start){
-  cout << "TEST";
-  return start;
-}
-/*  if(start != NULL) {
+  if(start != NULL) {
     prev = start;
   }
   int i;
   char* p1 = code;
   char* p2 = prev;
-  for( i = len; i && matches(*start, *p1); i--, p1++, p2++){
+  for(i = len; i && matches(*start, *p1); i--, p1++, p2++){
     mlen++;
   }
   if(len == mlen){
     return prev + mlen + 1;
   }
   return NULL;
-}*/
+}
 
 void Exact::reset(void) {
   mlen = 0;
