@@ -39,9 +39,9 @@ class Exact: public Punit {
     int c_del;
     int c_mis;
     int c_flex;
-    void stack_next(struct stackent st,int nxtE, int N, 
+/*    void stack_next(struct stackent st,int nxtE, int N, 
                        char* p1, char* d1, int one_len,
-                       int two_len);
+                       int two_len);*/
     Exact(int le, char* c, int i, int d, int m, int f);
     void reset(void);
     char* search(char* start);

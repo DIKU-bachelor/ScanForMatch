@@ -1,8 +1,9 @@
 #include <stdlib.h>
+#include <iostream>
 #include <stdio.h>
 #include <ctype.h>
 #include "Punit.h"
-
+using namespace std;
 
 int initialized = 1;
 char punit_to_code[256];
@@ -14,7 +15,7 @@ struct stackent {
   int n1,n2;
   int mis,ins,del;
   int next_choice;
-}
+};
 
 bool known_char_i[16] = {0,1,1,0,1,0,0,0,1,0,0,0,0,0,0,0};
 char known_char_index[16] =
@@ -34,7 +35,9 @@ Punit::Punit(char* c){
 
 void Punit::reset(void) {}
 
-char* Punit::search(char* start) {}
+char* Punit::search(char* start) {
+  cout << "OASIDJOSIDJ";
+}
 
 char Punit::known_char(char C) {
     return (known_char_i[(unsigned char)C]);
@@ -61,8 +64,9 @@ Exact::Exact(int le, char* c,
     c_mis = mis;
     c_flex = flex;
 }
-
-void Exact::stack_next(struct stackent st,int nxtE, int N, 
+/* FUNCTION TO MISMATCHES INSERTIONS DELETIONS (kan udkommenteres hvis den ikke
+compiler*/
+/*void Exact::stack_next(struct stackent st,int nxtE, int N, 
                        char* p1, char* d1, int one_len,
                        int two_len) {
   st[nxtE].p1=p1; 
@@ -73,8 +77,8 @@ void Exact::stack_next(struct stackent st,int nxtE, int N,
   st[nxtE].ins=c_ins; 
   st[nxtE].del=c_del; 
   st[nxtE++].next_choice=N;
-}
-
+}*/
+/* FUNCTION TO MISMATCHES INSERTIONS DELETIONS
 #define Pop                                                 \
             one_data = stack[nxtent].p1;                    \
             two_data = stack[nxtent].p2;                    \
@@ -91,13 +95,14 @@ void Exact::stack_next(struct stackent st,int nxtE, int N,
             }                                               \
             else                                            \
                 goto del_char;
-
+*/
 /* If start is NULL, the previous search failed, and this search starts at prev.
-   If start is not NULL, prev in this punit is set to start and is initialized */
+   If start is not NULL, prev in this punit is set to start and is initialized */ 
 char* Exact::search(char* start){
   if(start != NULL) {
     prev = start;
   }
+/* MISMATCHES INSERTIONS DELETIONS CODE
   if(flex == 0){
     int i;
     char* p1 = code;
@@ -109,17 +114,17 @@ char* Exact::search(char* start){
       return prev + mlen + 1;
     }
   } else{
-/* loose_match from scan_for_match    
-unsigned char *one_data = pattern, *two_data = data;
-int one_len, two_len;
-int *match_range;
-*/
+// loose_match from scan_for_match    
+//unsigned char *one_data = pattern, *two_data = data;
+//int one_len, two_len;
+//int *match_range;
+
     int i, nxtent;
     stackent* stack = (stackent*)malloc(sizeof(stackent)*100);
 
 
 
-    /* special-case for ins=del=0 */
+    // special-case for ins=del=0 
     if ((c_ins == 0) && (c_del == 0))
     {
         if (one_len > two_len)
@@ -192,8 +197,14 @@ int *match_range;
     }
     return NULL;
 }
+*/
+  int i;
+  char* p1 = code;
+  char* p2 = prev;
+  for(i = len; i && matches(*start, *p1); i--, p1++, p2++){
+    mlen++;
   }
-  return NULL
+  return NULL;
 }
 
 void Exact::reset(void) {
