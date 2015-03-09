@@ -102,18 +102,22 @@ char* Exact::search(char* start){
   if(start != NULL) {
     prev = start;
   }
-/* MISMATCHES INSERTIONS DELETIONS CODE
+// MISMATCHES INSERTIONS DELETIONS CODE
   if(flex == 0){
     int i;
     char* p1 = code;
     char* p2 = prev;
+    printf("data: %s\n", p2);
+    printf("pat: %s\n", code);
     for( i = len; i && matches(*p2, *p1); i--, p1++, p2++){
       mlen++;
     }
     if(len == mlen){
+      cout << "MATCH\n";
       return prev + mlen + 1;
     }
-  } else{
+    cout << "NO MATCH\n";
+  } /* else{
 // loose_match from scan_for_match    
 //unsigned char *one_data = pattern, *two_data = data;
 //int one_len, two_len;
@@ -198,12 +202,12 @@ char* Exact::search(char* start){
     return NULL;
 }
 */
-  int i;
+/*  int i;
   char* p1 = code;
   char* p2 = prev;
   for(i = len; i && matches(*start, *p1); i--, p1++, p2++){
     mlen++;
-  }
+  } */
   return NULL;
 }
 

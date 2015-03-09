@@ -55,29 +55,82 @@ list<Punit*> parse(string text) {
     }
     /* Converting to _BIT chars */
     if (count == (*it).length()) {
-      char* conv_code = (char*)malloc(1000*sizeof(char));
+      char* conv_code = new char[1000];
+      char* temp = new char[1000];
+      strcpy(temp, (*it).c_str());
       for(int i = 0; i < (*it).length(); i++){
-        conv_code[i] = punit_to_code[tolower((*it)[i])];
+        printf("%c\n", temp[i]);
+        conv_code[i] = punit_to_code[temp[i]];
+        printf("%s\n", conv_code);
       }
-      Exact* ex = new Exact((int) (*it).length(), conv_code, 0, 0, 0, 0);  
+      printf("nr1%s\n",conv_code);
+      Exact* ex = new Exact((int) (*it).length(), conv_code, 0, 0, 0, 0);
+      printf("nr2%s\n", ex->code);
+      cout << ex->code << "AOISHDOASHDIO\n"; 
       pat_list.push_back(ex);
     }
   }
   return pat_list; 
 }
 
+/* Match struct that contains a pointer to the start of the match and the length */
+struct match {
+  char* start;
+  int dist;
+};
+
 /* Looks through the data string to find pattern specified in list pat_list */
-list<char*> pattern_match(list<Punit*> pat_list, char* data) {
+list<match> pattern_match(list<Punit*> pat_list, char* data) {
   list<Punit*>::iterator it = pat_list.begin();
+  list<match> matches;
   char* nxt_start = data;
-  int backtrack;
+  char* match_start;
+  cout << "Hej\n";
   while (true) {
+    match_start = nxt_start;
+    cout << "loop start\n";
     nxt_start = (*it)->search(nxt_start);
-    if (*nxt_start) {
-      backtrack = 1;
+    cout << "after search\n";
+    // If the search was succesfull we search for the next punit 
+    if (nxt_start) {
+      cout << "punit match succes\n";
+      // If we matched the whole pattern 
+      if (it == pat_list.end()) {
+        cout << "whole pattern matched\n";
+        match m;
+        m.start = match_start;
+        m.dist = nxt_start - match_start;
+        matches.push_back(m);
+
+        // If there is no more data
+        if (strcmp(nxt_start, "\0") == 0) {
+          cout <<"End of data, returning list of matches\n";
+          return matches;
+        }
+        cout << "Last punit matched, continuing search...\n";
+        it = pat_list.begin();
+        continue;
+      }
+      it++;
       continue;
     }
-    backtrack = 0;
+
+    // If search was unsuccesfull we iterate back to the previous punit to try again
+    else {
+      cout << "punit NOT match\n";
+      // If we need to backtrack but we're at the first punit 
+      if (it == pat_list.begin()) {
+        cout << "No match for punit\n";
+        if (strcmp(++data, "\0") == 0) {
+          cout << "No more data, returning list of matches\n";
+          return matches;
+        }
+        cout << "UOUOUUOU\n";
+        nxt_start = data;
+        continue;
+      }
+      it--;
+    }
   }
 }
 
@@ -98,6 +151,7 @@ int test_exact()
     for(i = 0; i < 30; i ++) {
         mData[i] = punit_to_code[data[i]];
     }
+    printf("qqqq%s\n", mData);
     Exact exact = Exact(len, mPattern, 
                         0, 0, 0, 0);
     char* hit;
@@ -134,8 +188,10 @@ int test_range() {
 }
 
 int main(int argc, char* argv[]) {
-  ifstream fpp (argv[1]);
-  build_conversion_tables();
+  if (argc == 1) {
+    cout << "ERROR: call to scanfm need arguments in format:\nscanfm -p <pattern> -d <datafile>\n";
+    return -1;
+  }
   int arg = 0;
   /* Skip until -p flag */
   while (strcmp(argv[arg], "-p") != 0) {
@@ -144,6 +200,10 @@ int main(int argc, char* argv[]) {
       return -1;
     }
     arg++;
+  }
+  if (argc == arg + 1) {
+    cout << "ERROR: call to scanfm need arguments in format:\nscanfm -p <pattern> -d <datafile>\n";
+    return -1;
   }
   arg++;
   char* pats = new char[patsize];
@@ -165,22 +225,35 @@ int main(int argc, char* argv[]) {
   pats[index++] = '\0';
   list<Punit*> pat_list = parse(pats);
 
-  /* Read the datafile */
+  // Read the datafile 
   ifstream fp (argv[++arg]);
   if (fp == 0) {
-    cout << "ERROR: No such file: " << argv[arg] << "\n";
+    cout << "ERROR: No such file: \n" << argv[arg] << "\n";
     return -1;
   }
-  
+  build_conversion_tables(); 
   char* data = new char[fsize];
   char* sdata = data;
-  while (fp.get(*data)) {
-    data++;
+  int i = 0;
+  while (fp.get(data[i])) {
+    data[i] = punit_to_code[tolower(data[i])];
+    i++;
   }
-  cout << "Pattern input: "<< sdata << '\n';
-  string text = sdata;
-
-  return test_range();
+  data[i] = '\0';
+  cout << "data input: "<< sdata << '\n';
+  char* x = new char[100];
+  char* y = x;
+  string a ("hej martin");
+  cout << x << "\n";
+  for (int i = 0; i < a.length(); i++) {
+    *(x++) = 'd';
+    cout << i << " " << y << "\n";
+  }
+  printf("x%sx\n", y);
+//  return test_exact();
+//  list<match> matches = pattern_match(pat_list, sdata);
+  return 0;
+/*  return test_range(); */
 /*  list<Punit> pat_list = parse(text);
   for (list<Punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
     if (Exact ex = dynamic_cast<Exact>((*it)) {
