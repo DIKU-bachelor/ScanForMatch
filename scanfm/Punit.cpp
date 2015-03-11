@@ -103,12 +103,12 @@ char* Exact::search(char* start){
   if(start != NULL) {
     prev = start;
     //variable declaration for loose matching pattern
-    one_len = len;
+/*    one_len = len;
     two_len = data_end-prev;
     del_nxt = 0;
     ins_nxt = 0;
-    lml.clear();
-  }
+    lml.clear(); */
+  } 
 // MISMATCHES INSERTIONS DELETIONS CODE
   if(flex == 0){
     int i;
@@ -116,15 +116,15 @@ char* Exact::search(char* start){
     char* p2 = prev;
     printf("data: %s\n", p2);
     printf("pat: %s\n", code);
-    char* p1 = code;
-    char* p2 = prev;
-    for( i = len; i && matches(*p2, *p1); i--, p1++, p2++){
+    for(i = len; i && matches(*p2, *p1); i--, p1++, p2++) {
+      cout << "matchhhhhhhhhhhhh\n";
       mlen++;
     }
+    cout << "len: " << len << ", mlen: " << mlen << "\n";
     if(len == mlen){
-      cout << "MATCH\n";
-      return prev + mlen + 1;
+      return prev + mlen;
     }
+    mlen = 0;
     cout << "NO MATCH\n";
   } /* else{
 // loose_match from scan_for_match    
@@ -259,7 +259,6 @@ char* Exact::search(char* start){
     mlen++;
   } */
   return NULL;
-  }
 }
 
 void Exact::reset(void) {

@@ -21,12 +21,14 @@ list<string> split_str(string text, const char del) {
   }
   string pat;
   int pos = text.find(del);
+
   while (pos != -1) {
     pat = text.substr(0, pos);
     pat_list.push_back(pat);
     text.erase(0, pos + 1);
     pos = text.find(del);
   }
+
   /* Removing unwanted characters from last pattern unit */
   for (int i = 0; i < text.length(); i++) {
     if (text[i] == '\n' || text[i] == '\r' || text[i] == '\t' || text[i] == '\0' 
@@ -56,17 +58,12 @@ list<Punit*> parse(string text) {
     /* Converting to _BIT chars */
     if (count == (*it).length()) {
       char* conv_code = new char[1000];
-      char* temp = new char[1000];
+      char* temp = new char[(*it).length() + 1];
       strcpy(temp, (*it).c_str());
       for(int i = 0; i < (*it).length(); i++){
-        printf("%c\n", temp[i]);
         conv_code[i] = punit_to_code[temp[i]];
-        printf("%s\n", conv_code);
       }
-      printf("nr1%s\n",conv_code);
-      Exact* ex = new Exact((int) (*it).length(), conv_code, 0, 0, 0, 0);
-      printf("nr2%s\n", ex->code);
-      cout << ex->code << "AOISHDOASHDIO\n"; 
+      Exact* ex = new Exact(conv_code,(int) (*it).length(), conv_code, 0, 0, 0, 0);
       pat_list.push_back(ex);
     }
   }
@@ -86,15 +83,17 @@ list<match> pattern_match(list<Punit*> pat_list, char* data) {
   char* nxt_start = data;
   char* match_start;
   cout << "Hej\n";
-  while (true) {
+  int j = 0;
+  while (j++ < 10) {
     match_start = nxt_start;
-    cout << "loop start\n";
+    cout << "\nloop start\n";
     nxt_start = (*it)->search(nxt_start);
     cout << "after search\n";
     // If the search was succesfull we search for the next punit 
     if (nxt_start) {
+      it++;
       cout << "punit match succes\n";
-      // If we matched the whole pattern 
+      // If we matched the whole pattern
       if (it == pat_list.end()) {
         cout << "whole pattern matched\n";
         match m;
@@ -111,7 +110,6 @@ list<match> pattern_match(list<Punit*> pat_list, char* data) {
         it = pat_list.begin();
         continue;
       }
-      it++;
       continue;
     }
 
@@ -125,7 +123,6 @@ list<match> pattern_match(list<Punit*> pat_list, char* data) {
           cout << "No more data, returning list of matches\n";
           return matches;
         }
-        cout << "UOUOUUOU\n";
         nxt_start = data;
         continue;
       }
@@ -133,7 +130,7 @@ list<match> pattern_match(list<Punit*> pat_list, char* data) {
     }
   }
 }
-
+/*
 int test_exact()
 {
     int len = 10;
@@ -166,8 +163,9 @@ int test_exact()
       }
     }
     return 0;
-}
+} */
 /* unit test that range returns the right pointer after jump */
+/*
 int test_range() {
     int len = 6;
     int width = 4;
@@ -186,8 +184,9 @@ int test_range() {
     }
     return 0;
 }
-
+*/
 int main(int argc, char* argv[]) {
+  build_conversion_tables(); 
   if (argc == 1) {
     cout << "ERROR: call to scanfm need arguments in format:\nscanfm -p <pattern> -d <datafile>\n";
     return -1;
@@ -222,7 +221,7 @@ int main(int argc, char* argv[]) {
       return -1;
     }
   }
-  pats[index++] = '\0';
+  pats[--index] = '\0';
   list<Punit*> pat_list = parse(pats);
 
   // Read the datafile 
@@ -231,7 +230,6 @@ int main(int argc, char* argv[]) {
     cout << "ERROR: No such file: \n" << argv[arg] << "\n";
     return -1;
   }
-  build_conversion_tables(); 
   char* data = new char[fsize];
   char* sdata = data;
   int i = 0;
@@ -241,18 +239,21 @@ int main(int argc, char* argv[]) {
   }
   data[i] = '\0';
   cout << "data input: "<< sdata << '\n';
-  char* x = new char[100];
-  char* y = x;
-  string a ("hej martin");
-  cout << x << "\n";
-  for (int i = 0; i < a.length(); i++) {
-    *(x++) = 'd';
-    cout << i << " " << y << "\n";
+  list<match> matches = pattern_match(pat_list, sdata);
+  list<match>::iterator itt = matches.begin();
+  cout << (*itt).start << " " << (*itt).dist << "\n";
+/*
+  char* conv_code = new char[1000];
+  string temp ("hvordan går det");
+  cout << "BEFORE\n";
+  for(int i = 0; i < temp.length(); i++){
+    printf("%c\n", punit_to_code[temp[i]]);
+    conv_code[i] = punit_to_code[temp[i]];
+    printf("%c\n", conv_code[i]);
   }
-  printf("x%sx\n", y);
+  cout << "AFTER\n"; */
 //  return test_exact();
-//  list<match> matches = pattern_match(pat_list, sdata);
-  return 0;
+  return 0; 
 /*  return test_range(); */
 /*  list<Punit> pat_list = parse(text);
   for (list<Punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
