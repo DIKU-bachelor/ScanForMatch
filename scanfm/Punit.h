@@ -8,7 +8,8 @@ extern char code_to_punit[256];
 
 /* for loose fitet patterns (inserts, deletions, mismatches) */
 struct stackent {
-  char *p1,*p2;
+  char* p1;
+  char* p2;
   int n1,n2;
   int mis,ins,del;
   int next_choice;
@@ -39,6 +40,8 @@ class Punit {
 /* punit exact inherites from punit, is used to search for a litteral
 *  in the data */
 class Exact: public Punit {
+    char* p1;
+    char* p2;
     int i, nxtent, one_len, two_len, del_nxt, ins_nxt;
   public:
     int len;
