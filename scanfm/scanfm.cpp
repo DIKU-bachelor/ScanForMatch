@@ -39,7 +39,7 @@ list<string> split_str(string text, const char del) {
 }
 
 /* Parses text to find pattern units and returns a list of these */
-list<Punit*> parse(string text) {
+list<Punit*> parse(string text, char* end_of_data) {
   list<string> split_text = split_str(text, ' ');
   list<Punit*> pat_list;
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
@@ -59,14 +59,9 @@ list<Punit*> parse(string text) {
       char* temp = new char[1000];
       strcpy(temp, (*it).c_str());
       for(int i = 0; i < (*it).length(); i++){
-        printf("%c\n", temp[i]);
         conv_code[i] = punit_to_code[temp[i]];
-        printf("%s\n", conv_code);
       }
-      printf("nr1%s\n",conv_code);
-      Exact* ex = new Exact((int) (*it).length(), conv_code, 0, 0, 0, 0);
-      printf("nr2%s\n", ex->code);
-      cout << ex->code << "AOISHDOASHDIO\n"; 
+      Exact* ex = new Exact(end_of_data, (int) (*it).length(), conv_code, 0, 0, 0, 0);
       pat_list.push_back(ex);
     }
   }
@@ -85,7 +80,6 @@ list<match> pattern_match(list<Punit*> pat_list, char* data) {
   list<match> matches;
   char* nxt_start = data;
   char* match_start;
-  cout << "Hej\n";
   while (true) {
     match_start = nxt_start;
     cout << "loop start\n";
@@ -136,9 +130,9 @@ list<match> pattern_match(list<Punit*> pat_list, char* data) {
 
 int test_exact()
 {
-    int len = 10;
-    char pattern[] = "CAAACAACAC";
-    char data[] = "AACAAACAACACAAAAAAAAAAAAAAAA";
+    int len = 4;
+    char pattern[] = "CAAA";
+    char data[] = "AACAAACAACACAAAAAAAAAAAAAAAACT";
     char* mPattern;
     char* mData;
     mData = (char*)malloc(1000*sizeof(char));
@@ -147,16 +141,17 @@ int test_exact()
     for(i = 0; i < len; i++){
         mPattern[i] = punit_to_code[pattern[i]];
     }
-    
+    char* end_of_data;
     for(i = 0; i < 30; i ++) {
         mData[i] = punit_to_code[data[i]];
+        end_of_data = &mData[i];
     }
-    printf("qqqq%s\n", mData);
-    Exact exact = Exact(len, mPattern, 
-                        0, 0, 0, 0);
+    printf("data: %s\n", mData);
+    Exact exact = Exact(end_of_data, len, mPattern, 
+                        3, 2, 1, 1);
     char* hit;
     int d; 
-    for(d = 0; d < 5; d++){
+    for(d = 0; d < 30; d++){
       exact.mlen = 0;
       hit = exact.search(mData + d);
       if(hit != NULL) {
@@ -175,10 +170,12 @@ int test_range() {
     char* mData;
     mData = (char*)malloc(1000*sizeof(char));
     int i;
+    char* end_of_data;
     for(i = 0; i < 30; i ++) {
         mData[i] = punit_to_code[data[i]];
+        end_of_data = &mData[i];
     }
-    Range range = Range(len, NULL, 
+    Range range = Range(end_of_data,  len, NULL, 
                         width);
     char* next;
     for(i = 0; i < 10; i++){
@@ -223,8 +220,6 @@ int main(int argc, char* argv[]) {
     }
   }
   pats[index++] = '\0';
-  list<Punit*> pat_list = parse(pats);
-
   // Read the datafile 
   ifstream fp (argv[++arg]);
   if (fp == 0) {
@@ -235,11 +230,16 @@ int main(int argc, char* argv[]) {
   char* data = new char[fsize];
   char* sdata = data;
   int i = 0;
+  char * end_of_data;
   while (fp.get(data[i])) {
     data[i] = punit_to_code[tolower(data[i])];
+    end_of_data = &data[i];
     i++;
   }
   data[i] = '\0';
+  // Parse Punits
+  list<Punit*> pat_list = parse(pats, end_of_data);
+
   cout << "data input: "<< sdata << '\n';
   char* x = new char[100];
   char* y = x;
@@ -250,7 +250,7 @@ int main(int argc, char* argv[]) {
     cout << i << " " << y << "\n";
   }
   printf("x%sx\n", y);
-//  return test_exact();
+  return test_exact();
 //  list<match> matches = pattern_match(pat_list, sdata);
   return 0;
 /*  return test_range(); */

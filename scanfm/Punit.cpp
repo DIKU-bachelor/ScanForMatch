@@ -107,57 +107,45 @@ char* Exact::search(char* start){
     two_len = data_end-prev;
     del_nxt = 0;
     ins_nxt = 0;
+    mlen = 0;
+    c_mis = mis;
+    c_ins = ins;
+    c_del = del;
     lml.clear();
+    p1 = code;
+    p2 = prev;
   }
 // MISMATCHES INSERTIONS DELETIONS CODE
   if(flex == 0){
     int i;
-    char* p1 = code;
-    char* p2 = prev;
-    printf("data: %s\n", p2);
-    printf("pat: %s\n", code);
-    char* p1 = code;
-    char* p2 = prev;
+    p1 = code;
+    p2 = prev;
     for( i = len; i && matches(*p2, *p1); i--, p1++, p2++){
       mlen++;
     }
     if(len == mlen){
-      cout << "MATCH\n";
       return prev + mlen + 1;
     }
-    cout << "NO MATCH\n";
-  } /* else{
-// loose_match from scan_for_match    
-//unsigned char *one_data = pattern, *two_data = data;
-//int one_len, two_len;
-//int *match_range;
-
-    int i, nxtent;
-    stackent* stack = (stackent*)malloc(sizeof(stackent)*100);
-
-
-
-=======
   } else{
->>>>>>> 38838ac912e903bad268f85b38a0a920bab02457
     // special-case for ins=del=0 
     if ((c_ins == 0) && (c_del == 0)){
-        if (one_len > two_len)
-        {
+      if (one_len > two_len)
+      {
+          return NULL;
+      }
+      int i;
+      for (i=one_len; i >= 1; i--){
+        if (!known_char((*p2)&15) ||
+           (!matches(*p2,*p1) && (--c_mis < 0))){
             return NULL;
         }
-        for (i=one_len; i >= 1; i--)
+        else
         {
-            if (!known_char((*p2)&15) ||
-               (matches(*p2,*p1) && (--c_mis < 0)))
-                return NULL;
-            else
-            {
-                p2++; p1++;
-            }
+            p2++; p1++;
         }
-	    return (char*)(p2-prev)+1;
       }
+	    return (char*)(p2)+1;
+    }
 
     nxtent=0;
     while (two_len || nxtent){
@@ -174,7 +162,7 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2 - prev)+1;
+            return (char*)(p2)+1;
           }
         }
       }
@@ -197,7 +185,7 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2 - prev)+1;
+            return (char*)(p2)+1;
           }
 	      }
 	    }
@@ -217,7 +205,7 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2 - prev)+1;
+            return (char*)(p2)+1;
           }
 	      }
 	    }
@@ -234,7 +222,7 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2 - prev)+1;
+            return (char*)(p2)+1;
           }
         }
 	    }
@@ -248,18 +236,8 @@ char* Exact::search(char* start){
 	      return NULL;
       }
     }
-    return NULL;
-<<<<<<< HEAD
-}
-*/
-/*  int i;
-  char* p1 = code;
-  char* p2 = prev;
-  for(i = len; i && matches(*start, *p1); i--, p1++, p2++){
-    mlen++;
-  } */
-  return NULL;
   }
+  return NULL;
 }
 
 void Exact::reset(void) {
