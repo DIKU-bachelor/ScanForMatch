@@ -117,12 +117,19 @@ char* Exact::search(char* start){
   }
 // MISMATCHES INSERTIONS DELETIONS CODE
   if(flex == 0){
+    if (one_len > two_len) {
+      return NULL;
+    }
     int i;
     p1 = code;
     p2 = prev;
+//    cout << "data: " << start << "\n";
+//    cout << "pat: " << code << "\n";
     for( i = len; i && matches(*p2, *p1); i--, p1++, p2++){
+//      cout << "mlen ++\n";
       mlen++;
     }
+    cout << len << "\n";
     if(len == mlen){
       return prev + mlen;
     }
@@ -236,8 +243,8 @@ char* Exact::search(char* start){
 	      return NULL;
       }
     }
-    return NULL;
   }
+  return NULL;
 }
 
 void Exact::reset(void) {

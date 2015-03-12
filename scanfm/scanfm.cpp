@@ -72,31 +72,45 @@ list<Punit*> parse(string text, char* end_of_data) {
 
 /* Match struct that contains a pointer to the start of the match and the length */
 struct match {
-  char* start;
-  int dist;
+  string start;
+  int pos;
 };
 
 /* Looks through the data string to find pattern specified in list pat_list */
-list<match> pattern_match(list<Punit*> pat_list, char* data) {
+list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
   list<Punit*>::iterator it = pat_list.begin();
   list<match> matches;
   char* nxt_start = data;
+  char* start_of_data = data;
   char* match_start;
   while (true) {
-    match_start = nxt_start;
     cout << "\nloop start\n";
     nxt_start = (*it)->search(nxt_start);
     cout << "after search\n";
     // If the search was succesfull we search for the next punit 
     if (nxt_start) {
+      if (it == pat_list.begin()) {
+        match_start = data;
+      }
       it++;
       cout << "punit match succes\n";
       // If we matched the whole pattern
       if (it == pat_list.end()) {
         cout << "whole pattern matched\n";
         match m;
-        m.start = match_start;
-        m.dist = nxt_start - match_start;
+/*        cout << strlen(start_of_data) << ":\n";
+        cout << start_of_data << "\n";
+        cout << strlen(match_start) << ":\n";
+        cout << match_start << "\n";
+        cout << strlen(nxt_start) << ":\n";
+        cout << nxt_start << "\n"; */
+        int dist_to_match = strlen(start_of_data) - strlen(match_start);
+        int dist_to_mend = strlen(match_start) - strlen(nxt_start);
+//        cout << "1: " << dist_to_match << "  2: " << dist_to_mend << "\n";
+        string s(real_data + dist_to_match, real_data + dist_to_match + dist_to_mend);
+//        cout << "works2: " << s;
+        m.start = s;
+        m.pos = dist_to_match;
         matches.push_back(m);
 
         // If there is no more data
@@ -106,6 +120,7 @@ list<match> pattern_match(list<Punit*> pat_list, char* data) {
         }
         cout << "Last punit matched, continuing search...\n";
         it = pat_list.begin();
+        data = nxt_start;
         continue;
       }
       continue;
@@ -231,11 +246,12 @@ int main(int argc, char* argv[]) {
     return -1;
   }
   char* data = new char[fsize];
+  char* real_data = new char[fsize];
   char* sdata = data;
   int i = 0;
   char * end_of_data;
-  while (fp.get(data[i])) {
-    data[i] = punit_to_code[tolower(data[i])];
+  while (fp.get(real_data[i])) {
+    data[i] = punit_to_code[tolower(real_data[i])];
     end_of_data = &data[i];
     i++;
   }
@@ -244,8 +260,13 @@ int main(int argc, char* argv[]) {
   list<Punit*> pat_list = parse(pats, end_of_data);
 
   cout << "data input: "<< sdata << '\n';
-  list<match> matches = pattern_match(pat_list, sdata);
-  list<match>::iterator itt = matches.begin();
-  cout << (*itt).start << " " << (*itt).dist << "\n";
+  list<match> matches = pattern_match(pat_list, sdata, real_data);
+  cout << "MATHCES:\n\n";
+  for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
+    cout << (*itt).start << " " << (*itt).pos << "\n";
+  }
+/*  for (list<match>::iterator itt = matches.begin(); itt != matches.end(); i++) {
+    cout << (*itt).start << " " << (*itt).dist << "\n";
+  }*/
   return 0;
 }
