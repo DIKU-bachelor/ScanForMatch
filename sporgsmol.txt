@@ -1,23 +1,7 @@
-1)
-r1={au,ua,gc,cg,gu,ug,ga,ag}
-r1~p1
-hvad vil reglerne sige? 
+- Hvad skal der gøres hvis et pattern som kan have stor variation i længden matcher den lange
+  udgave som så sluger et muligt match som den ellers ville matche på hvis det først match var den
+  korte udgave?
 
-2)
-hvilke bogstaver er tilladt, complimenter omvendt i loops, 
-hvilke standard regler er der?
-Eventuelt har han noget GODT matriale der kan bruges til dette?
-
-3)
-input data: skal det vÃ¦re input via en Ã¥ben stream (giver dette mening med
-kÃ¦mpe data filer?) eller skal inputet bare vÃ¦re muligt over command istedet
-for i en fil for sig selv?
-
-anden mulighed kunne vÃ¦re at brugeren vÃ¦lger hvilken type det skal vÃ¦re
-
-
-4) weight matrix?
-
-5) Må vi skrive programmet på ny, eller skal vi "fixe" det eksisterende?
-
-
+  Eks.
+  data: TACGTACGCG
+  pat: TA 0..6 CG

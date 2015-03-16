@@ -182,7 +182,9 @@ The smart result of this comparing algorithm is that you only need to compare on
 \end{itemize}
 In order to use this he has converted both the data and the pattern with the conversion\_table. \\
 \section{Design}
+
 \subsection{Program structure}
+
 A list of actions our program should do in order to execute a pattern search:
 \begin{itemize}
 \item Read and parse the input line. E.g. "scanFM 'ATTGCCCC[0,1,2]' 'data.txt'". Possibility of writing "$->$ 'output.txt'"
@@ -197,10 +199,35 @@ The PUNIT-object's search method invoked is unique for each different type of PU
 If the search for each PUNIT returns True the match is saved.
 \item The saved matches are either displayed in the terminal or written in a file, depending on the call of scanFM. 
 \end{itemize}
-Types of PUNITs that we need
+
+
+\textbf{Types of PUNITs that we need}
 \begin{itemize}
-\item EXACT - A PUNIT of this type consists of either of the letters 'A', 'C', 'G' and 'T' or any number of the wildcards.
+\item EXACT - A PUNIT of this type consists of either of the letters 'A', 'C', 'G' and 'T' or any number of the wildcards. Also includes begin able to search with a given number of mismatches, insertions, and deletions.
+\begin{itemize}
+  \item The two scenarios of a exact search is either, only literals without mismatches, insertions or deletions, or literals with insertions, deletions or mismatches.
+  \item Without mis, ins, and del, the algorithm runs through all the pattern bases, and compares them to all data bases with the same incrementation from a given point in the data. This means that worst case it has to run the pattern length for each data point, which gives O(n*m) worst case runtime, n being the data length, and m being the pattern length.
+  \item With mis, ins and del, the search function has to do the same as before but trying with all failed matches between data and pattern to insert a mismatch, deletion or insertion. This makes the worst case runtime increase to O(n*m*ins*del*mis) since insertions, deletions and mismatches has to be tryed in all different orders.
+  \item both scenarios is using the same algorithms as scan for matches.
 \end{itemize}
+\item COMPLEMENTARY - A PUNIT that takes the complementary of a literal.
+\begin{itemize}
+  \item complementary punit uses the code from exact to search, it only changes the code from the pattern to the complementary, which happens in O(m), m being the pattern length.
+\end{itemize}
+\item REPEAT - Saves another PUNITs result to search for it later.
+\begin{itemize}
+  \item repeat uses either complementary or exacts search function depending on which Punit it points to, not increasing the overall time consumption.
+\end{itemize}
+\item RANGE - Jumps all distances between to given parameters.
+\begin{itemize}
+  \item Range only jumps in the data file, which is done in constant time.
+\end{itemize}
+\end{itemize}
+
+\begin{figure}[h!]
+\includegraphics[scale=0.6]{UML.png}
+\caption{ULM class diagram of scanfm Punits}
+\end{figure}
 
 \subsection{Optimization}
 \subsubsection{Skip length}

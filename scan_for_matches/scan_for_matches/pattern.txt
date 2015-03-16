@@ -1,1 +1,1 @@
-TTTGAA[2,0,1]
+AAAA[0,3,0] TTTT

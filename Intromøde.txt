@@ -1,9 +1,0 @@
-insertions - manglende base i pattern
-deletions - manglende base i database sekvensen
-mismatch - Ingen base mangler, men en base er forskellige i pattern og i database sekvensen.
-
-
-primær struktur - normal sekvens
-sekundær struktur - hairpin loops
-
-ftp.dna.ku.dk/RealLifeData
