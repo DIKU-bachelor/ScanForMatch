@@ -275,11 +275,11 @@ char* Range::search(char* start){
   char* p2 = prev;
   if(mlen < len) {
     mlen = len;
-    cout << "MLEN: " << mlen << "\n";
+//    cout << "MLEN: " << mlen << "\n";
     return (p2+mlen);
   } else if(mlen < len + width){
     mlen++;
-    cout << "MLEN: " << mlen << "\n";
+//    cout << "MLEN: " << mlen << "\n";
     return (p2 + mlen);
   } 
   return NULL;
