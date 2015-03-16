@@ -4,6 +4,8 @@
 #include "stdio.h"
 #include "ctype.h"
 #include <list>
+#include <cstdio>
+#include <cerrno>
 #include <cstring>
 #include <typeinfo>
 #include <string>
@@ -96,19 +98,19 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
   int co = 0;
   while (true) {
     co++;
-    cout << co << "\nloop start\n";
+//    cout << co << "\nloop start\n";
     nxt_start = (*it)->search(nxt_start);
-    cout << "after search\n";
+//    cout << "after search\n";
     // If the search was succesfull we search for the next punit 
     if (nxt_start) {
       if (it == pat_list.begin()) {
         match_start = data;
       }
       it++;
-      cout << "punit match succes\n";
+//      cout << "punit match succes\n";
       // If we matched the whole pattern
       if (it == pat_list.end()) {
-        cout << "whole pattern matched\n";
+//        cout << "whole pattern matched\n";
         match m;
         int dist_to_match = strlen(start_of_data) - strlen(match_start);
         int dist_to_mend = strlen(match_start) - strlen(nxt_start);
@@ -122,7 +124,7 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
           cout <<"End of data, returning list of matches\n";
           return matches;
         }
-        cout << "Last punit matched, continuing search...\n";
+//        cout << "Last punit matched, continuing search...\n";
         it = pat_list.begin();
         data = nxt_start;
         continue;
@@ -132,18 +134,18 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
 
     // If search was unsuccesfull we iterate back to the previous punit to try again
     else {
-      cout << "punit NOT match\n";
+//      cout << "punit NOT match\n";
       // If we need to backtrack but we're at the first punit 
       if (it == pat_list.begin()) {
-        cout << "No match for punit\n";
+//        cout << "No match for punit\n";
         if (strcmp(++data, "\0") == 0) {
-          cout << "No more data, returning list of matches\n";
+//          cout << "No more data, returning list of matches\n";
           return matches;
         }
         nxt_start = data;
         continue;
       }
-      cout << "backtrack\n";
+//      cout << "backtrack\n";
       it--;
     }
   }
@@ -245,32 +247,38 @@ int main(int argc, char* argv[]) {
   pats[--index] = '\0';
 
   // Read the datafile 
-  ifstream fp (argv[++arg]);
-  if (fp == 0) {
+  string real_data;
+  char* data = new char[fsize];
+  char* rdata = new char[fsize];
+  char* end_of_data = data;
+  FILE* fp = fopen(argv[++arg], "rb");
+  if (fp) {
+    fseek(fp, 0, SEEK_END);
+    real_data.resize(ftell(fp));
+    rewind(fp);
+    fread(&real_data[0], 1, real_data.size(), fp);
+    fclose(fp);
+  } else {
     cout << "ERROR: No such file: \n" << argv[arg] << "\n";
     return -1;
   }
-  char* data = new char[fsize];
-  char* real_data = new char[fsize];
-  char* sdata = data;
-  int i = 0;
-  char * end_of_data;
-  while (fp.get(real_data[i])) {
+  real_data.erase(remove(real_data.begin(), real_data.end(), '\n'), real_data.end());
+  strcpy(rdata, real_data.c_str());
+  int i;
+  for (i = 0; i < real_data.size(); i++) {
     data[i] = punit_to_code[tolower(real_data[i])];
-    end_of_data = &data[i];
-    i++;
+    end_of_data++;
   }
-  data[i] = '\0';
-
+  data[++i] = '\0';
   // Parse Punits
   list<Punit*> pat_list = parse(pats, end_of_data);
 
-  cout << "DATA INPUT: " << real_data << "\n";
+//  cout << "DATA INPUT: " << real_data << "\n";
   // Pattern matching
-  list<match> matches = pattern_match(pat_list, sdata, real_data);
+  list<match> matches = pattern_match(pat_list, data, rdata);
   cout << "MATHCES:\n\n";
   for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
     cout << (*itt).start << " " << (*itt).pos << "\n";
-  }
+  } 
   return 0;
 }
