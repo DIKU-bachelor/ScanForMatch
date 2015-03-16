@@ -21,14 +21,12 @@ list<string> split_str(string text, const char del) {
   }
   string pat;
   int pos = text.find(del);
-
   while (pos != -1) {
     pat = text.substr(0, pos);
     pat_list.push_back(pat);
     text.erase(0, pos + 1);
     pos = text.find(del);
   }
-
   /* Removing unwanted characters from last pattern unit */
   for (int i = 0; i < text.length(); i++) {
     if (text[i] == '\n' || text[i] == '\r' || text[i] == '\t' || text[i] == '\0' 
@@ -41,39 +39,34 @@ list<string> split_str(string text, const char del) {
 }
 
 /* Parses text to find pattern units and returns a list of these */
-list<Punit*> parse(string text, char* end_of_data) {
+list<Punit*> parse(string text) {
   list<string> split_text = split_str(text, ' ');
   list<Punit*> pat_list;
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
-    int valid_punit = 1;
     /* Checks if the Punit is an exact */
     int count = 0;
     for (int i = 0; i < (*it).length(); i++) {
       if (find(known_chars.begin(), known_chars.end(), toupper((*it)[i])) == known_chars.end()) {
-        valid_punit = 0;
         break;
       }
       count++;
     }
-    // Range unit
-    if (valid_punit == 0) {
-      string min = (*it).substr(0, (*it).find('.'));
-      string max = (*it).substr((*it).find("..") + 2);
-      Range* ra = new Range(end_of_data, atoi(min.c_str()), NULL, atoi(max.c_str()) - atoi(min.c_str()));
-      pat_list.push_back(ra); 
-    }
-
     /* Converting to _BIT chars */
     if (count == (*it).length()) {
       char* conv_code = new char[1000];
-      char* temp = new char[(*it).length() + 1];
+      char* temp = new char[1000];
       strcpy(temp, (*it).c_str());
       for(int i = 0; i < (*it).length(); i++){
+        printf("%c\n", temp[i]);
         conv_code[i] = punit_to_code[temp[i]];
+        printf("%s\n", conv_code);
       }
-      Exact* ex = new Exact(end_of_data, (int) (*it).length(), conv_code, 0, 0, 0, 0);
+      printf("nr1%s\n",conv_code);
+      Exact* ex = new Exact((int) (*it).length(), conv_code, 0, 0, 0, 0);
+      printf("nr2%s\n", ex->code);
+      cout << ex->code << "AOISHDOASHDIO\n"; 
       pat_list.push_back(ex);
     }
   }
@@ -82,39 +75,31 @@ list<Punit*> parse(string text, char* end_of_data) {
 
 /* Match struct that contains a pointer to the start of the match and the length */
 struct match {
-  string start;
-  int pos;
+  char* start;
+  int dist;
 };
 
 /* Looks through the data string to find pattern specified in list pat_list */
-list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
+list<match> pattern_match(list<Punit*> pat_list, char* data) {
   list<Punit*>::iterator it = pat_list.begin();
   list<match> matches;
   char* nxt_start = data;
-  char* start_of_data = data;
   char* match_start;
-  int co = 0;
+  cout << "Hej\n";
   while (true) {
-    co++;
-    cout << co << "\nloop start\n";
+    match_start = nxt_start;
+    cout << "loop start\n";
     nxt_start = (*it)->search(nxt_start);
     cout << "after search\n";
     // If the search was succesfull we search for the next punit 
     if (nxt_start) {
-      if (it == pat_list.begin()) {
-        match_start = data;
-      }
-      it++;
       cout << "punit match succes\n";
-      // If we matched the whole pattern
+      // If we matched the whole pattern 
       if (it == pat_list.end()) {
         cout << "whole pattern matched\n";
         match m;
-        int dist_to_match = strlen(start_of_data) - strlen(match_start);
-        int dist_to_mend = strlen(match_start) - strlen(nxt_start);
-        string s(real_data + dist_to_match, real_data + dist_to_match + dist_to_mend);
-        m.start = s;
-        m.pos = dist_to_match;
+        m.start = match_start;
+        m.dist = nxt_start - match_start;
         matches.push_back(m);
 
         // If there is no more data
@@ -124,9 +109,9 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
         }
         cout << "Last punit matched, continuing search...\n";
         it = pat_list.begin();
-        data = nxt_start;
         continue;
       }
+      it++;
       continue;
     }
 
@@ -140,20 +125,20 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
           cout << "No more data, returning list of matches\n";
           return matches;
         }
+        cout << "UOUOUUOU\n";
         nxt_start = data;
         continue;
       }
-      cout << "backtrack\n";
       it--;
     }
   }
 }
-/*
+
 int test_exact()
 {
-    int len = 4;
-    char pattern[] = "CAAA";
-    char data[] = "AACAAACAACACAAAAAAAAAAAAAAAACT";
+    int len = 10;
+    char pattern[] = "CAAACAACAC";
+    char data[] = "AACAAACAACACAAAAAAAAAAAAAAAA";
     char* mPattern;
     char* mData;
     mData = (char*)malloc(1000*sizeof(char));
@@ -162,17 +147,16 @@ int test_exact()
     for(i = 0; i < len; i++){
         mPattern[i] = punit_to_code[pattern[i]];
     }
-    char* end_of_data;
+    
     for(i = 0; i < 30; i ++) {
         mData[i] = punit_to_code[data[i]];
-        end_of_data = &mData[i];
     }
-    printf("data: %s\n", mData);
-    Exact exact = Exact(end_of_data, len, mPattern, 
-                        3, 2, 1, 1);
+    printf("qqqq%s\n", mData);
+    Exact exact = Exact(len, mPattern, 
+                        0, 0, 0, 0);
     char* hit;
     int d; 
-    for(d = 0; d < 30; d++){
+    for(d = 0; d < 5; d++){
       exact.mlen = 0;
       hit = exact.search(mData + d);
       if(hit != NULL) {
@@ -182,9 +166,8 @@ int test_exact()
       }
     }
     return 0;
-} */
+}
 /* unit test that range returns the right pointer after jump */
-/*
 int test_range() {
     int len = 6;
     int width = 4;
@@ -192,12 +175,10 @@ int test_range() {
     char* mData;
     mData = (char*)malloc(1000*sizeof(char));
     int i;
-    char* end_of_data;
     for(i = 0; i < 30; i ++) {
         mData[i] = punit_to_code[data[i]];
-        end_of_data = &mData[i];
     }
-    Range range = Range(end_of_data,  len, NULL, 
+    Range range = Range(len, NULL, 
                         width);
     char* next;
     for(i = 0; i < 10; i++){
@@ -205,9 +186,8 @@ int test_range() {
     }
     return 0;
 }
-*/
+
 int main(int argc, char* argv[]) {
-  build_conversion_tables(); 
   if (argc == 1) {
     cout << "ERROR: call to scanfm need arguments in format:\nscanfm -p <pattern> -d <datafile>\n";
     return -1;
@@ -242,7 +222,8 @@ int main(int argc, char* argv[]) {
       return -1;
     }
   }
-  pats[--index] = '\0';
+  pats[index++] = '\0';
+  list<Punit*> pat_list = parse(pats);
 
   // Read the datafile 
   ifstream fp (argv[++arg]);
@@ -250,27 +231,34 @@ int main(int argc, char* argv[]) {
     cout << "ERROR: No such file: \n" << argv[arg] << "\n";
     return -1;
   }
+  build_conversion_tables(); 
   char* data = new char[fsize];
-  char* real_data = new char[fsize];
   char* sdata = data;
   int i = 0;
-  char * end_of_data;
-  while (fp.get(real_data[i])) {
-    data[i] = punit_to_code[tolower(real_data[i])];
-    end_of_data = &data[i];
+  while (fp.get(data[i])) {
+    data[i] = punit_to_code[tolower(data[i])];
     i++;
   }
   data[i] = '\0';
-
-  // Parse Punits
-  list<Punit*> pat_list = parse(pats, end_of_data);
-
-  cout << "DATA INPUT: " << real_data << "\n";
-  // Pattern matching
-  list<match> matches = pattern_match(pat_list, sdata, real_data);
-  cout << "MATHCES:\n\n";
-  for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
-    cout << (*itt).start << " " << (*itt).pos << "\n";
+  cout << "data input: "<< sdata << '\n';
+  char* x = new char[100];
+  char* y = x;
+  string a ("hej martin");
+  cout << x << "\n";
+  for (int i = 0; i < a.length(); i++) {
+    *(x++) = 'd';
+    cout << i << " " << y << "\n";
   }
+  printf("x%sx\n", y);
+//  return test_exact();
+//  list<match> matches = pattern_match(pat_list, sdata);
   return 0;
+/*  return test_range(); */
+/*  list<Punit> pat_list = parse(text);
+  for (list<Punit>::iterator it = pat_list.begin(); it != pat_list.end(); it++) {
+    if (Exact ex = dynamic_cast<Exact>((*it)) {
+      cout << ex.code << "and length: " << ex.len << "\n";
+    }
+  }*/
+/*  list<char*> mathces = pattern_match(pat_list, sdata);*/
 }
