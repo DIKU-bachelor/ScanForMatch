@@ -2,6 +2,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 #include "Punit.h"
 using namespace std;
 
@@ -277,6 +278,47 @@ char* Range::search(char* start){
 
 void Range::reset(void) {
   mlen = 0;
+}
+
+Complementary::Complementary(char* data_e, int le, char* c, 
+             int i, int d, int m, int f) : Exact(data_e, le, c, 
+             i, d, m, f){
+  cCode = (char*)malloc(1000*sizeof(char));
+  newCode = true;
+}
+
+char* Complementary::search(char* prev){
+  if(newCode){
+    int i = len;
+    int s = 0;
+    while(i >= 0){
+      switch(code[i]){
+        case A_BIT:
+          cCode[s] = T_BIT;
+          break;
+        case T_BIT:
+          cCode[s] = A_BIT;
+          break;
+        case C_BIT:
+          cCode[s] = G_BIT;
+          break;
+        case G_BIT:
+          cCode[s] = C_BIT;
+          break;
+        default:
+          break;
+      }
+      i--;
+      s++;
+    }
+    strncpy(code, cCode, 1000);
+    newCode = false;
+  }
+  return Exact::search(prev);
+}
+
+void Complementary::reset(void){
+
 }
 
 int build_conversion_tables()

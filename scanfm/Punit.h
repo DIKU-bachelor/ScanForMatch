@@ -81,4 +81,16 @@ class Range: public Punit {
     void reset(void);
     char* search(char* start);
 };
+
+class Complementary: public Exact{
+    public:
+    char* cCode; //complementary code
+    bool newCode; //true if the code has not yet been made complementary
+    Complementary(char* data_e, int le, char* c, 
+                  int i, int d, int m, int f);
+    void reset(void);
+    char* search(char* start);
+};
+
+
 #endif
