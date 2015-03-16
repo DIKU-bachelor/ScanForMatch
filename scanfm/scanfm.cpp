@@ -47,14 +47,24 @@ list<Punit*> parse(string text, char* end_of_data) {
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
+    int valid_punit = 1;
     /* Checks if the Punit is an exact */
     int count = 0;
     for (int i = 0; i < (*it).length(); i++) {
       if (find(known_chars.begin(), known_chars.end(), toupper((*it)[i])) == known_chars.end()) {
+        valid_punit = 0;
         break;
       }
       count++;
     }
+    // Range unit
+    if (valid_punit == 0) {
+      string min = (*it).substr(0, (*it).find('.'));
+      string max = (*it).substr((*it).find("..") + 2);
+      Range* ra = new Range(end_of_data, atoi(min.c_str()), NULL, atoi(max.c_str()) - atoi(min.c_str()));
+      pat_list.push_back(ra); 
+    }
+
     /* Converting to _BIT chars */
     if (count == (*it).length()) {
       char* conv_code = new char[1000];
@@ -83,8 +93,10 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
   char* nxt_start = data;
   char* start_of_data = data;
   char* match_start;
+  int co = 0;
   while (true) {
-    cout << "\nloop start\n";
+    co++;
+    cout << co << "\nloop start\n";
     nxt_start = (*it)->search(nxt_start);
     cout << "after search\n";
     // If the search was succesfull we search for the next punit 
@@ -98,17 +110,9 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
       if (it == pat_list.end()) {
         cout << "whole pattern matched\n";
         match m;
-/*        cout << strlen(start_of_data) << ":\n";
-        cout << start_of_data << "\n";
-        cout << strlen(match_start) << ":\n";
-        cout << match_start << "\n";
-        cout << strlen(nxt_start) << ":\n";
-        cout << nxt_start << "\n"; */
         int dist_to_match = strlen(start_of_data) - strlen(match_start);
         int dist_to_mend = strlen(match_start) - strlen(nxt_start);
-//        cout << "1: " << dist_to_match << "  2: " << dist_to_mend << "\n";
         string s(real_data + dist_to_match, real_data + dist_to_match + dist_to_mend);
-//        cout << "works2: " << s;
         m.start = s;
         m.pos = dist_to_match;
         matches.push_back(m);
@@ -139,6 +143,7 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
         nxt_start = data;
         continue;
       }
+      cout << "backtrack\n";
       it--;
     }
   }
@@ -256,17 +261,16 @@ int main(int argc, char* argv[]) {
     i++;
   }
   data[i] = '\0';
+
   // Parse Punits
   list<Punit*> pat_list = parse(pats, end_of_data);
 
-  cout << "data input: "<< sdata << '\n';
+  cout << "DATA INPUT: " << real_data << "\n";
+  // Pattern matching
   list<match> matches = pattern_match(pat_list, sdata, real_data);
   cout << "MATHCES:\n\n";
   for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
     cout << (*itt).start << " " << (*itt).pos << "\n";
   }
-/*  for (list<match>::iterator itt = matches.begin(); itt != matches.end(); i++) {
-    cout << (*itt).start << " " << (*itt).dist << "\n";
-  }*/
   return 0;
 }

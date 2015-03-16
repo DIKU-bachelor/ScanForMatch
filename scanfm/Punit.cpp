@@ -129,7 +129,6 @@ char* Exact::search(char* start){
 //      cout << "mlen ++\n";
       mlen++;
     }
-    cout << len << "\n";
     if(len == mlen){
       return prev + mlen;
     }
@@ -270,13 +269,16 @@ Range::Range(char* data_e, int le, char* c,
 char* Range::search(char* start){
   if(start != NULL) {
     prev = start;
+    mlen = 0;
   }
   char* p2 = prev;
   if(mlen < len) {
     mlen = len;
+    cout << "MLEN: " << mlen << "\n";
     return (p2+mlen);
-  } else if(mlen < len + width - 1){
+  } else if(mlen < len + width){
     mlen++;
+    cout << "MLEN: " << mlen << "\n";
     return (p2 + mlen);
   } 
   return NULL;
