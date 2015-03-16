@@ -298,21 +298,21 @@ Complementary::Complementary(char* data_e, int le, char* c,
 
 char* Complementary::search(char* prev){
   if(newCode){
-    int i = len;
+    int i = len-1;
     int s = 0;
     while(i >= 0){
-      switch(code[i]){
+      switch(code[i] & 15){
         case A_BIT:
-          cCode[s] = T_BIT;
+          cCode[s] = punit_to_code['t'];
           break;
         case T_BIT:
-          cCode[s] = A_BIT;
+          cCode[s] = punit_to_code['a'];
           break;
         case C_BIT:
-          cCode[s] = G_BIT;
+          cCode[s] = punit_to_code['g'];
           break;
         case G_BIT:
-          cCode[s] = C_BIT;
+          cCode[s] = punit_to_code['c'];
           break;
         default:
           break;
@@ -321,6 +321,7 @@ char* Complementary::search(char* prev){
       s++;
     }
     strncpy(code, cCode, 1000);
+    printf("code is now: %s \n", cCode);
     newCode = false;
   }
   return Exact::search(prev);

@@ -148,7 +148,7 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
     }
   }
 }
-/*
+
 int test_exact()
 {
     int len = 4;
@@ -182,9 +182,9 @@ int test_exact()
       }
     }
     return 0;
-} */
+} 
 /* unit test that range returns the right pointer after jump */
-/*
+
 int test_range() {
     int len = 6;
     int width = 4;
@@ -205,7 +205,42 @@ int test_range() {
     }
     return 0;
 }
-*/
+
+int test_complementary()
+{
+    int len = 3;
+    char pattern[] = "GTT";
+    char data[] = "AACAAACAACACAAAAAAAAAAAAAAAACT";
+    char* mPattern;
+    char* mData;
+    mData = (char*)malloc(1000*sizeof(char));
+    mPattern = (char*)malloc(1000*sizeof(char));
+    int i;
+    for(i = 0; i < len; i++){
+        mPattern[i] = punit_to_code[pattern[i]];
+    }
+    char* end_of_data;
+    for(i = 0; i < 30; i ++) {
+        mData[i] = punit_to_code[data[i]];
+        end_of_data = &mData[i];
+    }
+    printf("data: %s\n", mData);
+    Complementary comple = Complementary(end_of_data, len, mPattern, 
+                        1, 0, 0, 1);
+    char* hit;
+    int d; 
+    for(d = 0; d < 30; d++){
+      hit = comple.search(mData + d);
+      if(hit != NULL) {
+        printf("first data letter:%c number: %i \n", *hit, d);
+      } else {
+       printf("failed\n");
+      }
+    }
+    return 0;
+} 
+
+
 int main(int argc, char* argv[]) {
   build_conversion_tables(); 
   if (argc == 1) {
