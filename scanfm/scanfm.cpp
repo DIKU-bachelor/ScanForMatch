@@ -89,19 +89,40 @@ struct match {
 };
 
 /* Looks through the data string to find pattern specified in list pat_list */
-list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
+void pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
   list<Punit*>::iterator it = pat_list.begin();
-  list<match> matches;
-  char* nxt_start = data;
   ret_t* retu;
   retu->startp = data;
-  char* start_of_data = data;
-  char* match_start;
   while (true) {
     retu = (*it)->search(retu);
-    if (retu->len == 0) {
-      cout << "hej\n";
-
+    // If the punit matched
+    if (retu->startp) {
+      cout << "punit match\n";
+      // If the whole pattern matched
+      if (it == pat_list_end()) {
+        cout << "whole pattern match\n\n";
+        it = pat_list.begin();
+        data = retu->startp;
+        continue;
+      }
+      data = retu->startp;
+      i++;
+      continue;
+    // If the punit didn't match
+    } else {
+      cout << "punit NOT match\n";
+      // If whole pattern didn't match
+      if (it == pat_list.begin()) {
+        cout << "whole pattern NOT match\n\n";
+        // If there is no more data
+        if (strcmp(++data, '\0') == 0) {
+          cout << "End of file\n";
+          return;
+        }
+        retu->startp = data;
+        continue;
+      }
+      it--;
     }
   }
 /*    // If the search was succesfull we search for the next punit 
@@ -317,10 +338,11 @@ int main(int argc, char* argv[]) {
 
 //  cout << "DATA INPUT: " << real_data << "\n";
   // Pattern matching
-  list<match> matches;// = pattern_match(pat_list, data, rdata);
+  pattern_match(pat_list, data, rdata);
+/*
   cout << "MATHCES:\n\n";
   for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
     cout << (*itt).start << " " << (*itt).pos << "\n";
-  } 
-  return test_range();
+  } */ 
+  return 0;
 }
