@@ -1,4 +1,4 @@
-#include "Punit.h"
+#include "Punit.h" 
 #include <fstream>
 #include <iostream>
 #include "stdio.h"
@@ -99,14 +99,14 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
     if (retu->startp) {
       cout << "punit match\n";
       // If the whole pattern matched
-      if (it == pat_list_end()) {
+      if (it == pat_list.end()) {
         cout << "whole pattern match\n\n";
         it = pat_list.begin();
         data = retu->startp;
         continue;
       }
       data = retu->startp;
-      i++;
+      it++;
       continue;
     // If the punit didn't match
     } else {
@@ -115,7 +115,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
       if (it == pat_list.begin()) {
         cout << "whole pattern NOT match\n\n";
         // If there is no more data
-        if (strcmp(++data, '\0') == 0) {
+        if (strcmp(++data, "\0") == 0) {
           cout << "End of file\n";
           return;
         }
