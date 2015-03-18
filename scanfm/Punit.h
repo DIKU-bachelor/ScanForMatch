@@ -6,6 +6,11 @@
 extern char punit_to_code[256];
 extern char code_to_punit[256];
 
+typedef struct ret {
+  char* startp;
+  int len;
+} ret_t;
+
 /* for loose fitet patterns (inserts, deletions, mismatches) */
 struct stackent {
   char* p1;
@@ -26,7 +31,7 @@ class Punit {
     Punit(char* data_e, char* c);
     /* If start is NULL, the previous search failed, and this search starts at prev.
        If start is not NULL, prev in this punit is set to start and is initialized */
-    virtual char* search(char* start);
+    virtual ret_t* search(ret_t* retu);
     virtual void reset(void);
     char known_char(char C);
 
@@ -66,7 +71,7 @@ class Exact: public Punit {
                     int* ins_nxt_p, int* del_nxt_p);
     Exact(char* data_e, int le, char* c, int i, int d, int m, int f);
     void reset(void);
-    char* search(char* start);
+    ret_t* search(ret_t* retu);
 };
 
 
@@ -79,7 +84,7 @@ class Range: public Punit {
     int width;
     Range(char* data_e, int le, char* c, int w);
     void reset(void);
-    char* search(char* start);
+    ret_t* search(ret_t* retu);
 };
 
 class Complementary: public Exact{
@@ -89,7 +94,7 @@ class Complementary: public Exact{
     Complementary(char* data_e, int le, char* c, 
                   int i, int d, int m, int f);
     void reset(void);
-    char* search(char* start);
+    ret_t* search(ret_t* retu);
 };
 
 
