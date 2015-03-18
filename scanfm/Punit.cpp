@@ -30,7 +30,7 @@ Punit::Punit(char* data_e, char* c){
 
 void Punit::reset(void) {}
 
-char* Punit::search(char* start) {
+ret_t* Punit::search(ret_t* start) {
   cout << "OASIDJOSIDJ";
 }
 
@@ -100,7 +100,11 @@ void Exact::pop(stackent* st, int nxtent,
 }
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */ 
-char* Exact::search(char* start){
+ret_t* Exact::search(ret_t* sp){
+  char* start = sp->startp;
+  int len = sp->len;
+  ret_t* retu = new ret();
+  retu->len = 0;
   if(start != NULL) {
     prev = start;
     //variable declaration for loose matching pattern
@@ -119,7 +123,8 @@ char* Exact::search(char* start){
 // MISMATCHES INSERTIONS DELETIONS CODE
   if(flex == 0){
     if (one_len > two_len) {
-      return NULL;
+      retu->startp = NULL;
+      return retu;
     }
     int i;
     p1 = code;
@@ -131,7 +136,8 @@ char* Exact::search(char* start){
       mlen++;
     }
     if(len == mlen){
-      return prev + mlen;
+      retu->startp = prev + mlen;
+      return retu;
     }
   } else {
     // special-case for ins=del=0 
@@ -151,8 +157,9 @@ char* Exact::search(char* start){
             p2++; p1++;
         }
       }
-	    return (char*)(p2)+1;
-    }
+      retu->startp = (char*)(p2)+1;
+	    return retu;
+     }
 
     nxtent=0;
     while (two_len || nxtent){
@@ -169,7 +176,9 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2)+1;
+            
+            retu->startp = (char*)(p2)+1;
+            return retu;
           }
         }
       }
@@ -192,7 +201,8 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2)+1;
+            retu->startp = (char*)(p2)+1;
+            return retu;
           }
 	      }
 	    }
@@ -212,7 +222,8 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2)+1;
+            retu->startp = (char*)(p2)+1;
+            return retu;
           }
 	      }
 	    }
@@ -229,7 +240,8 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2)+1;
+            retu->startp = (char*)(p2)+1;
+            return retu;
           }
         }
 	    }
@@ -240,11 +252,13 @@ char* Exact::search(char* start){
          &ins_nxt, &del_nxt);
 	    }
 	    else{
-	      return NULL;
+        retu->startp = NULL;
+	      return retu;
       }
     }
   }
-  return NULL;
+  retu->startp = NULL;
+  return retu;
 }
 
 void Exact::reset(void) {
@@ -267,7 +281,10 @@ Range::Range(char* data_e, int le, char* c,
 
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
-char* Range::search(char* start){
+ret_t* Range::search(ret_t* sp){
+  char* start = sp->startp;
+  ret_t* retu = new ret();
+  retu->len = 0;
   if(start != NULL) {
     prev = start;
     mlen = 0;
@@ -276,13 +293,16 @@ char* Range::search(char* start){
   if(mlen < len) {
     mlen = len;
 //    cout << "MLEN: " << mlen << "\n";
-    return (p2+mlen);
+    retu->startp = (p2 + mlen);
+    return retu;
   } else if(mlen < len + width){
     mlen++;
 //    cout << "MLEN: " << mlen << "\n";
-    return (p2 + mlen);
+    retu->startp = (p2 + mlen);
+    return retu;
   } 
-  return NULL;
+  retu->startp = NULL;
+  return retu;
 }
 
 void Range::reset(void) {
@@ -296,7 +316,7 @@ Complementary::Complementary(char* data_e, int le, char* c,
   newCode = true;
 }
 
-char* Complementary::search(char* prev){
+ret_t* Complementary::search(ret_t* sp){
   if(newCode){
     int i = len-1;
     int s = 0;
@@ -324,7 +344,7 @@ char* Complementary::search(char* prev){
     printf("code is now: %s \n", cCode);
     newCode = false;
   }
-  return Exact::search(prev);
+  return Exact::search(sp);
 }
 
 void Complementary::reset(void){

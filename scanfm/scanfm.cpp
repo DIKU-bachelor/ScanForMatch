@@ -93,15 +93,18 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
   list<Punit*>::iterator it = pat_list.begin();
   list<match> matches;
   char* nxt_start = data;
+  ret_t* retu;
+  retu->startp = data;
   char* start_of_data = data;
   char* match_start;
-  int co = 0;
   while (true) {
-    co++;
-//    cout << co << "\nloop start\n";
-    nxt_start = (*it)->search(nxt_start);
-//    cout << "after search\n";
-    // If the search was succesfull we search for the next punit 
+    retu = (*it)->search(retu);
+    if (retu->len == 0) {
+      cout << "hej\n";
+
+    }
+  }
+/*    // If the search was succesfull we search for the next punit 
     if (nxt_start) {
       if (it == pat_list.begin()) {
         match_start = data;
@@ -147,10 +150,11 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
       }
 //      cout << "backtrack\n";
       it--;
-    }
-  }
+    } 
+  }*/
 }
 
+/*
 int test_exact()
 {
     int len = 4;
@@ -185,7 +189,7 @@ int test_exact()
     }
     return 0;
 } 
-/* unit test that range returns the right pointer after jump */
+// unit test that range returns the right pointer after jump 
 
 int test_range() {
     int len = 6;
@@ -242,7 +246,7 @@ int test_complementary()
     return 0;
 } 
 
-
+*/
 int main(int argc, char* argv[]) {
   build_conversion_tables(); 
   if (argc == 1) {
