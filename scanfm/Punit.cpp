@@ -30,7 +30,7 @@ Punit::Punit(char* data_e, char* c){
 
 void Punit::reset(void) {}
 
-char* Punit::search(char* start) {
+ret_t* Punit::search(ret_t* start) {
   cout << "OASIDJOSIDJ";
 }
 
@@ -100,6 +100,7 @@ void Exact::pop(stackent* st, int nxtent,
 }
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */ 
+
 ret_t* search(ret_t* retu);
   if(start != NULL) {
     prev = retu->startp;
@@ -120,7 +121,8 @@ ret_t* search(ret_t* retu);
 // MISMATCHES INSERTIONS DELETIONS CODE
   if(flex == 0){
     if (one_len > two_len) {
-      return NULL;
+      retu->startp = NULL;
+      return retu;
     }
     int i;
     char* last = prev + run_len;
@@ -178,6 +180,7 @@ ret_t* search(ret_t* retu);
           }
           if(succes){
             lml.push_back(p1);
+
             ret_t r = {((char*)(p2)+1), 0};
             return r;
           }
@@ -202,6 +205,7 @@ ret_t* search(ret_t* retu);
           }
           if(succes){
             lml.push_back(p1);
+
             ret_t r = {((char*)(p2)+1), 0};
             return r;
           }
@@ -301,7 +305,7 @@ Complementary::Complementary(char* data_e, int le, char* c,
   newCode = true;
 }
 
-char* Complementary::search(char* prev){
+ret_t* Complementary::search(ret_t* sp){
   if(newCode){
     int i = len-1;
     int s = 0;
@@ -329,7 +333,7 @@ char* Complementary::search(char* prev){
     printf("code is now: %s \n", cCode);
     newCode = false;
   }
-  return Exact::search(prev);
+  return Exact::search(sp);
 }
 
 void Complementary::reset(void){
