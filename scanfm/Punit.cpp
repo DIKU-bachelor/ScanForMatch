@@ -101,8 +101,8 @@ void Exact::pop(stackent* st, int nxtent,
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */ 
 
-ret_t* search(ret_t* retu);
-  if(start != NULL) {
+ret_t* Exact::search(ret_t* retu){
+  if(retu->startp != NULL) {
     prev = retu->startp;
     run_len = retu->len;
     //variable declaration for loose matching pattern
@@ -125,44 +125,49 @@ ret_t* search(ret_t* retu);
       return retu;
     }
     int i;
-    char* last = prev + run_len;
+    char* last = (char*)(prev + run_len);
     while (prev <= last) {
-      if (Matches(*prev,*code)){
-        p2 = prev+1; p3 = code+1;
-        for (i=len; i && Matches(*p2,*p3); i--,p3++,p2++)
+      if (matches(*prev,*code)){
+        p2 = prev+1;char* p3 = code+1;
+        for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
           ;
-        if (!i)
+        if (!i){
           mlen = len;
           break;
+        }
       }
       prev++;
     }
     if(len == mlen){
-      ret_t r = {(prev + len), 0}; 
-      return r;
+      retu->startp = (prev + len);
+      retu->len = 0; 
+      return retu;
     }
   } else {
     // special-case for ins=del=0 
     if ((c_ins == 0) && (c_del == 0)){
       if (one_len > two_len)
       {
-          ret_t r = {NULL, 0};
-          return NULL;
+        retu->startp = NULL;
+        retu->len = 0;
+        return retu;
       }
       int i;
       for (i=one_len; i >= 1; i--){
         if (!known_char((*p2)&15) ||
            (!matches(*p2,*p1) && (--c_mis < 0))){
-          ret_t r = {NULL, 0};
-          return NULL;
+          retu->startp = NULL;
+          retu->len = 0;
+          return retu;
         }
         else
         {
             p2++; p1++;
         }
       }
-      ret_t r = {((char*)(p2)+1), 0};
-      return r;
+      retu->startp = (char*)(p2)+1;
+      retu->len = 0;
+      return retu;
     }
 
     nxtent=0;
@@ -181,8 +186,9 @@ ret_t* search(ret_t* retu);
           if(succes){
             lml.push_back(p1);
 
-            ret_t r = {((char*)(p2)+1), 0};
-            return r;
+            retu->startp = (char*)(p2)+1;
+            retu->len = 0;
+            return retu;
           }
         }
       }
@@ -206,8 +212,9 @@ ret_t* search(ret_t* retu);
           if(succes){
             lml.push_back(p1);
 
-            ret_t r = {((char*)(p2)+1), 0};
-            return r;
+            retu->startp = (char*)(p2)+1;
+            retu->len = 0;
+            return retu;
           }
 	      }
 	    }
@@ -227,8 +234,9 @@ ret_t* search(ret_t* retu);
           }
           if(succes){
             lml.push_back(p1);
-            ret_t r = {((char*)(p2)+1), 0};
-            return r;
+            retu->startp = (char*)(p2)+1;
+            retu->len = 0;
+            return retu;
           }
 	      }
 	    }
@@ -245,8 +253,9 @@ ret_t* search(ret_t* retu);
           }
           if(succes){
             lml.push_back(p1);
-            ret_t r = {((char*)(p2)+1), 0};
-            return r;
+              retu->startp = (char*)(p2)+1;
+              retu->len = 0;
+              return retu;
           }
         }
 	    }
@@ -257,13 +266,15 @@ ret_t* search(ret_t* retu);
          &ins_nxt, &del_nxt);
 	    }
 	    else{
-        ret_t r = {NULL, 0};
-        return NULL;
+        retu->startp = NULL;
+        retu->len = 0;
+        return retu;
       }
     }
   }
-  ret_t r = {NULL, 0};
-  return NULL;
+  retu->startp = NULL;
+  retu->len = 0;
+  return retu;
 }
 
 void Exact::reset(void) {
@@ -286,12 +297,13 @@ Range::Range(char* data_e, int le, char* c,
 
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
-ret_t Range::search(ret_t retu){
+ret_t* Range::search(ret_t* retu){
   if(retu->startp == NULL) {
     return retu;
   } 
-  ret_t r = {(retu->startp + len), width};
-  return r;
+  retu->startp = (retu->startp + len);
+  retu->len = width;
+  return retu;
 }
 
 void Range::reset(void) {

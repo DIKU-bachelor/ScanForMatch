@@ -154,7 +154,7 @@ list<match> pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
   }*/
 }
 
-/*
+
 int test_exact()
 {
     int len = 4;
@@ -173,22 +173,24 @@ int test_exact()
         mData[i] = punit_to_code[data[i]];
         end_of_data = &mData[i];
     }
-    printf("data: %s\n", mData);
+    printf("data: %s, datap: %p\n", mData, &mData);
     Exact exact = Exact(end_of_data, len, mPattern, 
-                        3, 2, 1, 1);
-    char* hit;
-    int d; 
-    for(d = 0; d < 30; d++){
+                        0, 0, 0, 0);
+    ret_t* hit;
+    int d = 0; 
       exact.mlen = 0;
-      hit = exact.search(mData + d);
-      if(hit != NULL) {
-        printf("first data letter:%c number: %i \n", *hit, d);
+      ret_t* r = (ret_t*)malloc(sizeof(ret_t));
+      r->startp = (mData + d);
+      r->len = 30;
+      hit = exact.search(r);
+      if(hit->startp != NULL) {
+        printf("first data letter:%c number: %i \n", *hit->startp, d);
       } else {
        printf("failed\n");
       }
-    }
     return 0;
-} 
+}
+ 
 // unit test that range returns the right pointer after jump 
 
 int test_range() {
@@ -205,13 +207,14 @@ int test_range() {
     }
     Range range = Range(end_of_data,  len, NULL, 
                         width);
-    char* next;
-    for(i = 0; i < 10; i++){
-      next = range.search(mData);
-    }
+    ret_t* next = (ret_t*)malloc(sizeof(ret_t));
+    next->startp = mData;
+    next->len = 0;
+    next = range.search(next);
+    printf("range result startp = %p, len = %i \n", next->startp, next->len);
     return 0;
 }
-
+/*
 int test_complementary()
 {
     int len = 3;
@@ -244,9 +247,9 @@ int test_complementary()
       }
     }
     return 0;
-} 
+} */
 
-*/
+
 int main(int argc, char* argv[]) {
   build_conversion_tables(); 
   if (argc == 1) {
@@ -314,10 +317,10 @@ int main(int argc, char* argv[]) {
 
 //  cout << "DATA INPUT: " << real_data << "\n";
   // Pattern matching
-  list<match> matches = pattern_match(pat_list, data, rdata);
+  list<match> matches;// = pattern_match(pat_list, data, rdata);
   cout << "MATHCES:\n\n";
   for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
     cout << (*itt).start << " " << (*itt).pos << "\n";
   } 
-  return 0;
+  return test_range();
 }
