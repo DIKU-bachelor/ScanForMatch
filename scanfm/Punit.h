@@ -25,6 +25,7 @@ int build_conversion_tables(void);
 class Punit {
   public:
     char* data_end;
+    int run_len;
     int mlen;
     char* code;
     char* prev;

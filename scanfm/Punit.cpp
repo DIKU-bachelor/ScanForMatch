@@ -100,9 +100,10 @@ void Exact::pop(stackent* st, int nxtent,
 }
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */ 
-char* Exact::search(char* start){
+ret_t* search(ret_t* retu);
   if(start != NULL) {
-    prev = start;
+    prev = retu->startp;
+    run_len = retu->len;
     //variable declaration for loose matching pattern
     one_len = len;
     two_len = data_end-prev;
@@ -122,36 +123,44 @@ char* Exact::search(char* start){
       return NULL;
     }
     int i;
-    p1 = code;
-    p2 = prev;
-//    cout << "data: " << start << "\n";
-//    cout << "pat: " << code << "\n";
-    for( i = len; i && matches(*p2, *p1); i--, p1++, p2++){
-//      cout << "mlen ++\n";
-      mlen++;
+    char* last = prev + run_len;
+    while (prev <= last) {
+      if (Matches(*prev,*code)){
+        p2 = prev+1; p3 = code+1;
+        for (i=len; i && Matches(*p2,*p3); i--,p3++,p2++)
+          ;
+        if (!i)
+          mlen = len;
+          break;
+      }
+      prev++;
     }
     if(len == mlen){
-      return prev + mlen;
+      ret_t r = {(prev + len), 0}; 
+      return r;
     }
   } else {
     // special-case for ins=del=0 
     if ((c_ins == 0) && (c_del == 0)){
       if (one_len > two_len)
       {
+          ret_t r = {NULL, 0};
           return NULL;
       }
       int i;
       for (i=one_len; i >= 1; i--){
         if (!known_char((*p2)&15) ||
            (!matches(*p2,*p1) && (--c_mis < 0))){
-            return NULL;
+          ret_t r = {NULL, 0};
+          return NULL;
         }
         else
         {
             p2++; p1++;
         }
       }
-	    return (char*)(p2)+1;
+      ret_t r = {((char*)(p2)+1), 0};
+      return r;
     }
 
     nxtent=0;
@@ -169,7 +178,8 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2)+1;
+            ret_t r = {((char*)(p2)+1), 0};
+            return r;
           }
         }
       }
@@ -192,7 +202,8 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2)+1;
+            ret_t r = {((char*)(p2)+1), 0};
+            return r;
           }
 	      }
 	    }
@@ -212,7 +223,8 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2)+1;
+            ret_t r = {((char*)(p2)+1), 0};
+            return r;
           }
 	      }
 	    }
@@ -229,7 +241,8 @@ char* Exact::search(char* start){
           }
           if(succes){
             lml.push_back(p1);
-            return (char*)(p2)+1;
+            ret_t r = {((char*)(p2)+1), 0};
+            return r;
           }
         }
 	    }
@@ -240,10 +253,12 @@ char* Exact::search(char* start){
          &ins_nxt, &del_nxt);
 	    }
 	    else{
-	      return NULL;
+        ret_t r = {NULL, 0};
+        return NULL;
       }
     }
   }
+  ret_t r = {NULL, 0};
   return NULL;
 }
 
@@ -267,22 +282,12 @@ Range::Range(char* data_e, int le, char* c,
 
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
-char* Range::search(char* start){
-  if(start != NULL) {
-    prev = start;
-    mlen = 0;
-  }
-  char* p2 = prev;
-  if(mlen < len) {
-    mlen = len;
-//    cout << "MLEN: " << mlen << "\n";
-    return (p2+mlen);
-  } else if(mlen < len + width){
-    mlen++;
-//    cout << "MLEN: " << mlen << "\n";
-    return (p2 + mlen);
+ret_t Range::search(ret_t retu){
+  if(retu->startp == NULL) {
+    return retu;
   } 
-  return NULL;
+  ret_t r = {(retu->startp + len), width};
+  return r;
 }
 
 void Range::reset(void) {
