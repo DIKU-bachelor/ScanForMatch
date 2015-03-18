@@ -29,7 +29,7 @@ list<string> split_str(string text, const char del) {
     pat_list.push_back(pat);
     text.erase(0, pos + 1);
     pos = text.find(del);
-  }
+  } 
 
   /* Removing unwanted characters from last pattern unit */
   for (int i = 0; i < text.length(); i++) {
