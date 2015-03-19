@@ -43,7 +43,7 @@ list<string> split_str(string text, const char del) {
 }
 
 /* Parses text to find pattern units and returns a list of these */
-list<Punit*> parse(string text, char* end_of_data) {
+list<Punit*> parse(string text, char* end_of_data, int data_len) {
   list<string> split_text = split_str(text, ' ');
   list<Punit*> pat_list;
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
@@ -75,7 +75,7 @@ list<Punit*> parse(string text, char* end_of_data) {
       for(int i = 0; i < (*it).length(); i++){
         conv_code[i] = punit_to_code[temp[i]];
       }
-      Exact* ex = new Exact(end_of_data, (int) (*it).length(), conv_code, 0, 0, 0, 0);
+      Exact* ex = new Exact(end_of_data, data_len, (int) (*it).length(), conv_code, 0, 0, 0, 0);
       pat_list.push_back(ex);
     }
   }
@@ -89,93 +89,54 @@ struct match {
 };
 
 /* Looks through the data string to find pattern specified in list pat_list */
-void pattern_match(list<Punit*> pat_list, char* data, char* real_data) {
+void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end_of_data) {
   list<Punit*>::iterator it = pat_list.begin();
-  ret_t* retu;
+  ret_t* retu = new ret();
   retu->startp = data;
+  int dist;
+  int data_len = end_of_data - data;
+  retu->len = data_len;
+  retu->match_len = 0;
+  char* match_start;
+  char* start_of_data = data;
+  int l = 0;
   while (true) {
+    if (it == pat_list.begin()) {
+      retu->len = data_len;
+    }
     retu = (*it)->search(retu);
     // If the punit matched
     if (retu->startp) {
-      cout << "punit match\n";
+//      cout << "punit match\n";
       // If the whole pattern matched
-      if (it == pat_list.end()) {
-        cout << "whole pattern match\n\n";
+      if (++it == pat_list.end()) {
+//        cout << "whole pattern match\n\n";
+        dist = (retu->startp - retu->match_len) - start_of_data;
+        printf("%i  %.*s\n", dist, retu->match_len, real_data + dist);
         it = pat_list.begin();
         data = retu->startp;
+        retu->len = data_len;
+        retu->match_len = 0;
         continue;
       }
       data = retu->startp;
-      it++;
       continue;
     // If the punit didn't match
     } else {
-      cout << "punit NOT match\n";
+//      cout << "punit NOT match\n";
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
-        cout << "whole pattern NOT match\n\n";
+//        cout << "whole pattern NOT match\n\n";
         // If there is no more data
-        if (strcmp(++data, "\0") == 0) {
-          cout << "End of file\n";
-          return;
-        }
-        retu->startp = data;
-        continue;
+        return;
       }
-      it--;
+      if (--it == pat_list.begin()) {
+      }
     }
   }
-/*    // If the search was succesfull we search for the next punit 
-    if (nxt_start) {
-      if (it == pat_list.begin()) {
-        match_start = data;
-      }
-      it++;
-//      cout << "punit match succes\n";
-      // If we matched the whole pattern
-      if (it == pat_list.end()) {
-//        cout << "whole pattern matched\n";
-        match m;
-        int dist_to_match = strlen(start_of_data) - strlen(match_start);
-        int dist_to_mend = strlen(match_start) - strlen(nxt_start);
-        string s(real_data + dist_to_match, real_data + dist_to_match + dist_to_mend);
-        m.start = s;
-        m.pos = dist_to_match;
-        matches.push_back(m);
-
-        // If there is no more data
-        if (strcmp(nxt_start, "\0") == 0) {
-          cout <<"End of data, returning list of matches\n";
-          return matches;
-        }
-//        cout << "Last punit matched, continuing search...\n";
-        it = pat_list.begin();
-        data = nxt_start;
-        continue;
-      }
-      continue;
-    }
-
-    // If search was unsuccesfull we iterate back to the previous punit to try again
-    else {
-//      cout << "punit NOT match\n";
-      // If we need to backtrack but we're at the first punit 
-      if (it == pat_list.begin()) {
-//        cout << "No match for punit\n";
-        if (strcmp(++data, "\0") == 0) {
-//          cout << "No more data, returning list of matches\n";
-          return matches;
-        }
-        nxt_start = data;
-        continue;
-      }
-//      cout << "backtrack\n";
-      it--;
-    } 
-  }*/
 }
 
-
+/*
 int test_exact()
 {
     int len = 4;
@@ -234,7 +195,7 @@ int test_range() {
     next = range.search(next);
     printf("range result startp = %p, len = %i \n", next->startp, next->len);
     return 0;
-}
+} */
 /*
 int test_complementary()
 {
@@ -334,11 +295,12 @@ int main(int argc, char* argv[]) {
   }
   data[++i] = '\0';
   // Parse Punits
-  list<Punit*> pat_list = parse(pats, end_of_data);
+  list<Punit*> pat_list = parse(pats, end_of_data, end_of_data - data);
 
 //  cout << "DATA INPUT: " << real_data << "\n";
   // Pattern matching
-  pattern_match(pat_list, data, rdata);
+  cout << "FØR PATTERN MATCH\n";
+  pattern_match(pat_list, data, rdata, end_of_data);
 /*
   cout << "MATHCES:\n\n";
   for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
