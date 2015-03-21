@@ -43,7 +43,7 @@ list<string> split_str(string text, const char del) {
 }
 
 /* Parses text to find pattern units and returns a list of these */
-list<Punit*> parse(string text, char* end_of_data, int data_len) {
+list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data_len) {
   list<string> split_text = split_str(text, ' ');
   list<Punit*> pat_list;
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
@@ -63,7 +63,8 @@ list<Punit*> parse(string text, char* end_of_data, int data_len) {
     if (valid_punit == 0) {
       string min = (*it).substr(0, (*it).find('.'));
       string max = (*it).substr((*it).find("..") + 2);
-      Range* ra = new Range(end_of_data, atoi(min.c_str()), NULL, atoi(max.c_str()) - atoi(min.c_str()));
+      Range* ra = new Range(start_of_data, end_of_data, atoi(min.c_str()), NULL, atoi(max.c_str()) - 
+        atoi(min.c_str()));
       pat_list.push_back(ra); 
     }
 
@@ -75,7 +76,8 @@ list<Punit*> parse(string text, char* end_of_data, int data_len) {
       for(int i = 0; i < (*it).length(); i++){
         conv_code[i] = punit_to_code[temp[i]];
       }
-      Exact* ex = new Exact(end_of_data, data_len, (int) (*it).length(), conv_code, 0, 0, 0, 0);
+      Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
+        conv_code, 0, 0, 0, 0);
       pat_list.push_back(ex);
     }
   }
@@ -110,7 +112,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
 //      cout << "punit match\n";
       // If the whole pattern matched
       if (++it == pat_list.end()) {
-//        cout << "whole pattern match\n\n";
+        cout << "whole pattern match\n\n";
         dist = (retu->startp - retu->match_len) - start_of_data;
         printf("%i  %.*s\n", dist, retu->match_len, real_data + dist);
         it = pat_list.begin();
@@ -126,7 +128,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
 //      cout << "punit NOT match\n";
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
-//        cout << "whole pattern NOT match\n\n";
+        cout << "whole pattern NOT match\n\n";
         // If there is no more data
         return;
       }
@@ -295,7 +297,7 @@ int main(int argc, char* argv[]) {
   }
   data[++i] = '\0';
   // Parse Punits
-  list<Punit*> pat_list = parse(pats, end_of_data, end_of_data - data);
+  list<Punit*> pat_list = parse(pats, data, end_of_data, end_of_data - data);
 
 //  cout << "DATA INPUT: " << real_data << "\n";
   // Pattern matching

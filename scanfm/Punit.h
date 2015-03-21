@@ -25,13 +25,14 @@ int build_conversion_tables(void);
 
 class Punit {
   public:
+    char* data_start;
     char* data_end;
     int data_len;
     int run_len;
     int mlen;
     char* code;
     char* prev;
-    Punit(char* data_e, int data_l, char* c);
+    Punit(char* data_s, char* data_e, int data_l, char* c);
     /* If start is NULL, the previous search failed, and this search starts at prev.
        If start is not NULL, prev in this punit is set to start and is initialized */
     virtual ret_t* search(ret_t* retu);
@@ -72,7 +73,7 @@ class Exact: public Punit {
                     char** pattern, char** data, int* p_len, int* d_len, 
                     int* p_mis, int* p_ins, int* p_del,
                     int* ins_nxt_p, int* del_nxt_p);
-    Exact(char* data_e, int data_len, int le, char* c, int i, int d, int m, int f);
+    Exact(char* data_s, char* data_e, int data_len, int le, char* c, int i, int d, int m, int f);
     void reset(void);
     ret_t* search(ret_t* retu);
 };
@@ -85,7 +86,7 @@ class Range: public Punit {
   public:
     int len;
     int width;
-    Range(char* data_e, int le, char* c, int w);
+    Range(char* data_s, char* data_e, int le, char* c, int w);
     void reset(void);
     ret_t* search(ret_t* retu);
 };
@@ -94,7 +95,7 @@ class Complementary: public Exact{
     public:
     char* cCode; //complementary code
     bool newCode; //true if the code has not yet been made complementary
-    Complementary(char* data_e, int data_len, int le, char* c, 
+    Complementary(char* data_s, char* data_e, int data_len, int le, char* c, 
                   int i, int d, int m, int f);
     void reset(void);
     ret_t* search(ret_t* retu);

@@ -22,7 +22,7 @@ char known_char_index[16] =
 #define T_BIT 0x08              /* char bitfield */
 
 
-Punit::Punit(char* data_e, int data_l, char* c){
+Punit::Punit(char* data_s, char* data_e, int data_l, char* c){
     data_end = data_e;
     data_len = data_l;
     mlen = 0;
@@ -48,8 +48,8 @@ bool Punit::matches(char C1, char C2) {
 
 
 /* exact constructer used by the parser */
-Exact::Exact(char* data_e, int data_len, int le, char* c, 
-             int i, int d, int m, int f) : Punit(data_e, data_len, c){
+Exact::Exact(char* data_s, char* data_e, int data_len, int le, char* c, 
+             int i, int d, int m, int f) : Punit(data_s, data_e, data_len, c){
     len = le;
     ins = i;
     del = d;
@@ -106,6 +106,7 @@ ret_t* Exact::search(ret_t* retu){
   if(retu->startp != NULL) {
     prev = retu->startp;
     //variable declaration for loose matching pattern
+    run_len = retu->len;
     one_len = len;
     two_len = data_end-prev;
     del_nxt = 0;
@@ -116,10 +117,8 @@ ret_t* Exact::search(ret_t* retu){
   // Else we are at backtracking
   } else {
     retu->match_len -= mlen;
+    mlen = 0;
     // If we're also at the first punit, we increment data with 1
-    if (retu->match_len == 0) {
-      prev++;
-    }
   }
 // MISMATCHES INSERTIONS DELETIONS CODE
   if(flex == 0){
@@ -128,12 +127,15 @@ ret_t* Exact::search(ret_t* retu){
       return retu;
     }
     int i;
-    char* last = (char*)(prev + retu->len);
     int c = 0;
    // Is len used for allowing scan throught possibly whole file
-    if (retu->len == data_len) {
+    if (run_len == data_len) {
+      if (retu->startp == NULL) {
+        prev++;
+      }
 //      cout << "START EXACT: " << retu->len << "\n";
-      while (prev <= last) {
+//      cout << prev << "\n";
+      while (prev <= data_end) {
         if (matches(*prev,*code)){
           p2 = prev+1;char* p3 = code+1;
           for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
@@ -148,9 +150,14 @@ ret_t* Exact::search(ret_t* retu){
       }
     // If len is used for flexibility due to previous Range punit
     } else {
-//      cout << "NEXT EXACT: " << retu->len << "\n";
+      if (retu->startp == NULL && run_len >= 0) {
+        prev++;
+        run_len--;
+      }
+//      cout << "NEXT EXACT: " << run_len << "\n";
+//      cout << prev << "\n";
       char* prev_s = prev;
-      while (prev <= last) {
+      while (prev_s <= prev_s + run_len--) {
         if (matches(*prev,*code)){
           p2 = prev+1;char* p3 = code+1;
           for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
@@ -167,9 +174,13 @@ ret_t* Exact::search(ret_t* retu){
     }
    retu->len = 0;
    if(len == mlen){
+//      cout << "MATCHMATCH\n";
       mlen += c;
       retu->startp = (prev + len);
       retu->match_len += mlen;
+      return retu;
+    } else {
+      retu->startp = NULL;
       return retu;
     }
   // OBS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Tilføjelse til MID koden: retu->match_len skal tælles op
@@ -323,8 +334,8 @@ void Exact::reset(void) {
 
 
 /* Range constructer used by the parser */
-Range::Range(char* data_e, int le, char* c, 
-             int w) : Punit(data_e, 0, c){
+Range::Range(char* data_s, char* data_e, int le, char* c, 
+             int w) : Punit(data_s, data_e, 0, c){
     len = le;
     width = w;
 }
@@ -350,8 +361,8 @@ void Range::reset(void) {
   mlen = 0;
 }
 
-Complementary::Complementary(char* data_e, int data_len, int le, char* c, 
-             int i, int d, int m, int f) : Exact(data_e, data_len, le, c, 
+Complementary::Complementary(char* data_s, char* data_e, int data_len, int le, char* c, 
+             int i, int d, int m, int f) : Exact(data_s, data_e, data_len, le, c, 
              i, d, m, f){
   cCode = (char*)malloc(1000*sizeof(char));
   newCode = true;
