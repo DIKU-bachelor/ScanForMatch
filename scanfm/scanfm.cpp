@@ -44,13 +44,81 @@ list<string> split_str(string text, const char del) {
 
 /* Parses text to find pattern units and returns a list of these */
 list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data_len) {
+  list<Punit*> pat_list;
   list<string> split_text = split_str(text, ' ');
+  list<string> vtable;
+  char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
+  list<char> known_chars (x, x + 16);
+
+  // Loop to try and parse punits
+  for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
+    string pu = (*it);
+    int eq = (*it).find('=');
+
+    // Variable assignment
+    if (eq != string::npos) {
+      string var = (*it).substr(0, eq);
+      vtable.push_back(var);
+      pu = pu.substr(eq + 1);
+    }
+    int dots = pu.find("...");
+
+    // Range type punit
+    if (dots != string::npos) {
+      string min_s = pu.substr(0, dots);
+      string max_s = pu.substr(dots + 3);
+      for (int i = 0; i < min_s.length(); i++) {
+        if ((! isdigit(min_s[i])) || (! isdigit(max_s[i]))) {
+          cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) 
+            << ": Range type punit must be in format <int>...<int>\n";
+          pat_list.clear();
+          return pat_list;
+        }
+      }
+      int min = atoi(min_s.c_str());
+      int max = atoi(max_s.c_str());
+      Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
+      pat_list.push_back(ra); 
+      continue;
+    }
+    if (pu.length() != (*it).length()) {
+      cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it)
+        << ": Variable can only be assigned Range type punit\n";
+      pat_list.clear();
+      return pat_list;
+    }
+
+    // Exact type punit
+    char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
+    list<char> known_chars (x, x + 16);   
+    int count = 0;
+    for (int i = 0; i < pu.length(); i++) {
+      if (find(known_chars.begin(), known_chars.end(), toupper(pu[i])) == known_chars.end()) {
+        break;
+      }
+      count++;
+    }
+
+    // Complement punit
+    if (count != pu.length()) {
+      int comp = pu.find('~');
+      if (comp != string::npos) {
+        pu = pu.substr(1);
+      }
+      list<string>::iterator var_it = find(vtable.begin(), vtable.end(), pu);
+      if (var_it != vtable.end()
+    }
+  }
+
+
+
+/*  list<string> split_text = split_str(text, ' ');
   list<Punit*> pat_list;
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
     int valid_punit = 1;
-    /* Checks if the Punit is an exact */
+    // Checks if the Punit is an exact 
     int count = 0;
     for (int i = 0; i < (*it).length(); i++) {
       if (find(known_chars.begin(), known_chars.end(), toupper((*it)[i])) == known_chars.end()) {
@@ -68,7 +136,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       pat_list.push_back(ra); 
     }
 
-    /* Converting to _BIT chars */
+    // Converting to _BIT chars 
     if (count == (*it).length()) {
       char* conv_code = new char[1000];
       char* temp = new char[(*it).length() + 1];
@@ -80,7 +148,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
         conv_code, 0, 0, 0, 0);
       pat_list.push_back(ex);
     }
-  }
+  } */
   return pat_list; 
 }
 
@@ -298,11 +366,13 @@ int main(int argc, char* argv[]) {
   data[++i] = '\0';
   // Parse Punits
   list<Punit*> pat_list = parse(pats, data, end_of_data, end_of_data - data);
-
+  if (pat_list.empty()) {
+    return -1;
+  }
 //  cout << "DATA INPUT: " << real_data << "\n";
   // Pattern matching
   cout << "FØR PATTERN MATCH\n";
-  pattern_match(pat_list, data, rdata, end_of_data);
+//  pattern_match(pat_list, data, rdata, end_of_data);
 /*
   cout << "MATHCES:\n\n";
   for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
