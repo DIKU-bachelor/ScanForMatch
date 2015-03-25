@@ -10,6 +10,8 @@ typedef struct ret {
   char* startp;
   int len;
   int match_len;
+  int var;
+  char* pcode;
 } ret_t;
 
 /* for loose fitet patterns (inserts, deletions, mismatches) */
@@ -92,7 +94,7 @@ class Range: public Punit {
 };
 
 class Complementary: public Exact{
-    public:
+  public:
     char* cCode; //complementary code
     bool newCode; //true if the code has not yet been made complementary
     Complementary(char* data_s, char* data_e, int data_len, int le, char* c, 
@@ -101,5 +103,12 @@ class Complementary: public Exact{
     ret_t* search(ret_t* retu);
 };
 
+class Variable: public Exact {
+  public:
+    int len;
+    int width;
+    Variable(char* data_s, char* data_e, int data_len, char* name, int le, char* c, int w);
+    ret_t* search(ret_t* retu);
+};
 
 #endif

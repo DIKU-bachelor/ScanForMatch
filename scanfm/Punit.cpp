@@ -21,6 +21,14 @@ char known_char_index[16] =
 #define G_BIT 0x04              /* char bitfield */
 #define T_BIT 0x08              /* char bitfield */
 
+#define max_var_size 10000
+
+struct var {
+  char* name;
+  char* code;
+};
+
+list<var*> vtable;
 
 Punit::Punit(char* data_s, char* data_e, int data_l, char* c){
     data_end = data_e;
@@ -102,9 +110,21 @@ void Exact::pop(stackent* st, int nxtent,
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */ 
 
+char* appendChar(char* arr, char a) {
+  size_t l = strlen(arr);
+  char* r = new char[l + 2];
+  strcpy(r, arr);
+  r[l] = a;
+  r[l + 1] = '\0';
+  return r;
+}
+
+
+
 ret_t* Exact::search(ret_t* retu){
   if(retu->startp != NULL) {
     prev = retu->startp;
+
     //variable declaration for loose matching pattern
     run_len = retu->len;
     one_len = len;
@@ -120,7 +140,8 @@ ret_t* Exact::search(ret_t* retu){
     mlen = 0;
     // If we're also at the first punit, we increment data with 1
   }
-// MISMATCHES INSERTIONS DELETIONS CODE
+
+  // If no mismatches, insertions or deletions allowed
   if(flex == 0){
     if (one_len > two_len) {
       retu->startp = NULL;
@@ -128,34 +149,31 @@ ret_t* Exact::search(ret_t* retu){
     }
     int i;
     int c = 0;
+
    // Is len used for allowing scan throught possibly whole file
     if (run_len == data_len) {
       if (retu->startp == NULL) {
         prev++;
       }
-//      cout << "START EXACT: " << retu->len << "\n";
-//      cout << prev << "\n";
       while (prev <= data_end) {
         if (matches(*prev,*code)){
           p2 = prev+1;char* p3 = code+1;
           for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
             ;
           if (!i){
-//            cout << "START MATCH\n";
             mlen = len;
             break;
           }
         }
         prev++;
       }
+
     // If len is used for flexibility due to previous Range punit
-    } else {
+    } else if (retu->var == 0) {
       if (retu->startp == NULL && run_len >= 0) {
         prev++;
         run_len--;
       }
-//      cout << "NEXT EXACT: " << run_len << "\n";
-//      cout << prev << "\n";
       char* prev_s = prev;
       while (prev_s <= prev_s + run_len--) {
         if (matches(*prev,*code)){
@@ -163,7 +181,6 @@ ret_t* Exact::search(ret_t* retu){
           for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
             ;
           if (!i){
-//            cout << "NEXT MATCH\n";
             c = prev - prev_s;
             mlen = len;
             break;
@@ -171,10 +188,36 @@ ret_t* Exact::search(ret_t* retu){
         }
         prev++;
       }
+
+    // If the previous range unit was a variable being set, we need to save the letters
+    // for future reference
+    } else {
+      if (retu->startp == NULL && run_len >= 0) {
+        prev++;
+        run_len--;
+      }
+      char* prev_s = prev;
+      while (prev_s <= prev_s + run_len--) {
+        if (matches(*prev,*code)){
+          p2 = prev+1;char* p3 = code+1;
+          for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
+            ;
+          if (!i){
+            c = prev - prev_s;
+            mlen = len;
+            break;
+          }
+        }
+        retu->pcode = appendChar(retu->pcode, *prev);
+        prev++;
+      }
+
     }
    retu->len = 0;
    if(len == mlen){
-//      cout << "MATCHMATCH\n";
+      if (retu->var == 1) {
+        
+      }
       mlen += c;
       retu->startp = (prev + len);
       retu->match_len += mlen;
@@ -402,6 +445,37 @@ ret_t* Complementary::search(ret_t* sp){
 void Complementary::reset(void){
 
 }
+
+Variable::Variable(char* data_s, char* data_e, int data_len, char* name, int le, char* c, int w)
+          : Exact(data_s, data_e, data_len, le, c, 0, 0, 0, 0) {
+  len = le;
+  width = w;
+  mlen = 0;
+  code = new char[max_var_size];
+  var* v = new var();
+  v->name = name;
+  vtable.push_back(v);
+}
+
+ret_t* Variable::search(ret_t* retu) {
+  if (retu->startp == NULL) {
+    retu->match_len -= mlen;
+    return retu;
+  }
+  code = new char[max_var_size];
+  for (int i = 0; i < len; i++) {
+    code[i] = retu->startp[i];
+  }
+  retu->startp = (retu->startp + len);
+  retu->len = width;
+  mlen = len;
+  retu->match_len += len;
+  retu->var = 1;
+  retu->pcode = code;
+  cout << "Var search code: " <<  code << "\n";
+  return retu;
+}
+
 
 int build_conversion_tables()
 {

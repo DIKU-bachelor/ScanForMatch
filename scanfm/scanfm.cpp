@@ -42,11 +42,11 @@ list<string> split_str(string text, const char del) {
   return pat_list;
 }
 
+
 /* Parses text to find pattern units and returns a list of these */
 list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data_len) {
   list<Punit*> pat_list;
   list<string> split_text = split_str(text, ' ');
-  list<string> vtable;
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
 
@@ -54,11 +54,11 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
     string pu = (*it);
     int eq = (*it).find('=');
+    string var;
 
     // Variable assignment
     if (eq != string::npos) {
-      string var = (*it).substr(0, eq);
-      vtable.push_back(var);
+      var = (*it).substr(0, eq);
       pu = pu.substr(eq + 1);
     }
     int dots = pu.find("...");
@@ -77,8 +77,18 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       }
       int min = atoi(min_s.c_str());
       int max = atoi(max_s.c_str());
-      Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
-      pat_list.push_back(ra); 
+      if (pu.length() == (*it).length()) {
+        Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
+        pat_list.push_back(ra); 
+      } else {
+        cout << "PARSE: VARIABLE created\n";
+        char* var_name = new char[var.length()];
+        strcpy(var_name, var.c_str());
+        var_name[var.length()] = '\0';
+        Variable* va = new Variable(start_of_data, end_of_data, data_len, var_name, 
+          min, NULL, max - min);
+        pat_list.push_back(va); 
+      }
       continue;
     }
     if (pu.length() != (*it).length()) {
@@ -98,7 +108,19 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       }
       count++;
     }
+    if (count == pu.length()) {
+      char* conv_code = new char[1000];
+      char* temp = new char[pu.length() + 1];
+      strcpy(temp, pu.c_str());
+      for(int i = 0; i < pu.length(); i++){
+        conv_code[i] = punit_to_code[temp[i]];
+      }
+      Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
+        conv_code, 0, 0, 0, 0);
+      pat_list.push_back(ex);
+    }
 
+/*
     // Complement punit
     if (count != pu.length()) {
       int comp = pu.find('~');
@@ -106,8 +128,10 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
         pu = pu.substr(1);
       }
       list<string>::iterator var_it = find(vtable.begin(), vtable.end(), pu);
-      if (var_it != vtable.end()
-    }
+      if (var_it != vtable.end()) {
+        
+      }
+    } */
   }
 
 
@@ -170,7 +194,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   char* match_start;
   char* start_of_data = data;
   int l = 0;
-  while (true) {
+  while (l++ < 15) {
     if (it == pat_list.begin()) {
       retu->len = data_len;
     }
@@ -350,7 +374,7 @@ int main(int argc, char* argv[]) {
     fseek(fp, 0, SEEK_END);
     real_data.resize(ftell(fp));
     rewind(fp);
-    fread(&real_data[0], 1, real_data.size(), fp);
+    size_t a = fread(&real_data[0], 1, real_data.size(), fp);
     fclose(fp);
   } else {
     cout << "ERROR: No such file: \n" << argv[arg] << "\n";
@@ -369,14 +393,6 @@ int main(int argc, char* argv[]) {
   if (pat_list.empty()) {
     return -1;
   }
-//  cout << "DATA INPUT: " << real_data << "\n";
-  // Pattern matching
-  cout << "FØR PATTERN MATCH\n";
-//  pattern_match(pat_list, data, rdata, end_of_data);
-/*
-  cout << "MATHCES:\n\n";
-  for (list<match>::iterator itt = matches.begin(); itt != matches.end(); itt++) {
-    cout << (*itt).start << " " << (*itt).pos << "\n";
-  } */ 
+  pattern_match(pat_list, data, rdata, end_of_data);
   return 0;
 }
