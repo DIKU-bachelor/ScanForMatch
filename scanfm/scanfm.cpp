@@ -1,4 +1,4 @@
-#include "Punit.h" 
+#include "Punit.h"  
 #include <fstream>
 #include <iostream>
 #include "stdio.h"
@@ -70,7 +70,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
     // Variable type punit
     if (eq != string::npos) {
       var = (*it).substr(0, eq);
-      varlist.push_back(var);
+      var_list.push_back(var);
       pu = pu.substr(eq + 1);
     }
     int dots = pu.find("...");
@@ -144,8 +144,8 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       if (brac != string::npos) {
         until_brac = pu.substr(0, brac);
       }
-      var_it = find(varlist.begin(), varlist.end(), until_brac);
-      if (var_it == varlist.end()) {
+      var_it = find(var_list.begin(), var_list.end(), until_brac);
+      if (var_it == var_list.end()) {
         cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
           << ": " << pu << " not a known variable\n";
         pat_list.clear();
@@ -227,7 +227,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       pat_list.push_back(ex);
       continue;
     } 
-    if (var_it != varlist.end()) {
+    if (var_it != var_list.end()) {
       cout << "REFERENCE\n";
       Reference* re = new Reference(start_of_data, end_of_data, data_len, var_name, 
         comp, mis, ins, del, 0);
