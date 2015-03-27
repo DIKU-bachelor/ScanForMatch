@@ -454,6 +454,7 @@ Variable::Variable(char* data_s, char* data_e, int data_len, char* name, int le,
   code = new char[max_var_size];
   var* v = new var();
   v->name = name;
+  var_name = name;
   vtable.push_back(v);
 }
 
@@ -476,6 +477,16 @@ ret_t* Variable::search(ret_t* retu) {
   return retu;
 }
 
+Reference::Reference(char* data_s, char* data_e, int data_len, char* name, int comp, 
+           int mis, int ins, int del, int flex) 
+           : Exact(data_s, data_e, data_len, 0, NULL, mis, ins, del, flex) {
+  var_name = name;
+  complement = comp;
+}
+
+ret_t* Reference::search(ret_t* retu) {
+
+}
 
 int build_conversion_tables()
 {

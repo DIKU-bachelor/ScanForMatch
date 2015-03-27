@@ -45,10 +45,21 @@ list<string> split_str(string text, const char del) {
 
 /* Parses text to find pattern units and returns a list of these */
 list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data_len) {
+  // pat_list: contains the parsed punits to be returned
   list<Punit*> pat_list;
+
+  // var_list: contains the variables declared. List is searched to verify legal reference 
+  // type punit.
+  list<string> var_list;
+  list<string>::iterator var_it;
+  char* var_name = new char[100];
+
   list<string> split_text = split_str(text, ' ');
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
+
+  int comp;
+  char* conv_code;
 
   // Loop to try and parse punits
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
@@ -56,20 +67,20 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
     int eq = (*it).find('=');
     string var;
 
-    // Variable assignment
+    // Variable type punit
     if (eq != string::npos) {
       var = (*it).substr(0, eq);
+      varlist.push_back(var);
       pu = pu.substr(eq + 1);
     }
     int dots = pu.find("...");
-
     // Range type punit
     if (dots != string::npos) {
       string min_s = pu.substr(0, dots);
       string max_s = pu.substr(dots + 3);
       for (int i = 0; i < min_s.length(); i++) {
         if ((! isdigit(min_s[i])) || (! isdigit(max_s[i]))) {
-          cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) 
+          cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1 
             << ": Range type punit must be in format <int>...<int>\n";
           pat_list.clear();
           return pat_list;
@@ -78,29 +89,28 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       int min = atoi(min_s.c_str());
       int max = atoi(max_s.c_str());
       if (pu.length() == (*it).length()) {
+        cout << "RANGE\n";
         Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
-        pat_list.push_back(ra); 
+        pat_list.push_back(ra);
       } else {
-        cout << "PARSE: VARIABLE created\n";
         char* var_name = new char[var.length()];
         strcpy(var_name, var.c_str());
         var_name[var.length()] = '\0';
+        cout << "VARIABLE\n";
         Variable* va = new Variable(start_of_data, end_of_data, data_len, var_name, 
           min, NULL, max - min);
-        pat_list.push_back(va); 
+        pat_list.push_back(va);
       }
       continue;
     }
     if (pu.length() != (*it).length()) {
-      cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it)
+      cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
         << ": Variable can only be assigned Range type punit\n";
       pat_list.clear();
       return pat_list;
     }
 
     // Exact type punit
-    char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
-    list<char> known_chars (x, x + 16);   
     int count = 0;
     for (int i = 0; i < pu.length(); i++) {
       if (find(known_chars.begin(), known_chars.end(), toupper(pu[i])) == known_chars.end()) {
@@ -109,29 +119,126 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       count++;
     }
     if (count == pu.length()) {
-      char* conv_code = new char[1000];
+      conv_code = new char[1000];
       char* temp = new char[pu.length() + 1];
       strcpy(temp, pu.c_str());
       for(int i = 0; i < pu.length(); i++){
         conv_code[i] = punit_to_code[temp[i]];
       }
-      Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
-        conv_code, 0, 0, 0, 0);
-      pat_list.push_back(ex);
     }
 
-/*
-    // Complement punit
-    if (count != pu.length()) {
-      int comp = pu.find('~');
+    int brac = pu.find('[');
+    int ex_len = pu.length();
+    if (brac != string::npos) {
+      ex_len = brac;
+    }
+
+    // Reference type punit
+    if (count != ex_len) {
+      comp = pu.find('~');
       if (comp != string::npos) {
         pu = pu.substr(1);
       }
-      list<string>::iterator var_it = find(vtable.begin(), vtable.end(), pu);
-      if (var_it != vtable.end()) {
-        
+      brac = pu.find('[');
+      string until_brac = pu;
+      if (brac != string::npos) {
+        until_brac = pu.substr(0, brac);
       }
-    } */
+      var_it = find(varlist.begin(), varlist.end(), until_brac);
+      if (var_it == varlist.end()) {
+        cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
+          << ": " << pu << " not a known variable\n";
+        pat_list.clear();
+        return pat_list;
+      }
+      strcpy(var_name, (*var_it).c_str());
+    }
+
+    // Mismatches, insertions, deletions
+    string mis_s;
+    string ins_s;
+    string del_s;
+    int mis = 0;
+    int ins = 0;
+    int del = 0;
+    brac = pu.find('[');
+    if (brac != string::npos) {
+      pu = pu.substr(brac + 1);
+      int com = pu.find(',');
+      if (com != string::npos) {
+        mis_s = pu.substr(0, com);
+        pu = pu.substr(com + 1);
+      } else {
+        cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
+          << ": Mismatches, insertions and deletions must be declared in format:\n<punit>[?,?,?]\n";
+          pat_list.clear();
+          return pat_list;
+      }
+      com = pu.find(',');
+      if (com != string::npos) {
+        ins_s = pu.substr(0, com);
+        pu = pu.substr(com + 1);
+      } else {
+        cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
+          << "Mismatches, insertions and deletions must be declared in format:\n<punit>[?,?,?]\n";
+          pat_list.clear();
+          return pat_list;
+      }
+      brac = pu.find(']');
+      if (brac != string::npos) {
+        del_s = pu.substr(0, brac);
+      } else {
+        cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
+          << "Mismatches, insertions and deletions must be declared in format:\n<punit>[?,?,?]\n";
+          pat_list.clear();
+          return pat_list;
+      }
+      int invalid = 0;
+      for (int i = 0; i < mis_s.length(); i++) {
+        if (! isdigit(mis_s[i])) {
+          invalid = 1;
+        }
+      }
+      for (int i = 0; i < ins_s.length(); i++) {
+        if (! isdigit(ins_s[i])) {
+          invalid = 1;
+        }
+      }
+      for (int i = 0; i < del_s.length(); i++) {
+        if (! isdigit(del_s[i])) {
+          invalid = 1;
+        }
+      }
+      if (invalid) {
+        cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
+          << ": Mismatches insertions and deletions must be declared in format:\n"
+          << "<punit>[<int>,<int>,<int>]\n";
+        pat_list.clear();
+        return pat_list;
+      }
+      mis = atoi(mis_s.c_str());
+      ins = atoi(ins_s.c_str());
+      del = atoi(del_s.c_str());     
+    }
+    if (ex_len == count) {
+      cout << "EXACT\n";
+      Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
+        conv_code, mis, ins, del, 0);
+      pat_list.push_back(ex);
+      continue;
+    } 
+    if (var_it != varlist.end()) {
+      cout << "REFERENCE\n";
+      Reference* re = new Reference(start_of_data, end_of_data, data_len, var_name, 
+        comp, mis, ins, del, 0);
+      pat_list.push_back(re);
+      continue;
+    } else {
+      cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
+        << ": Invalid characters in Exact type punit\n";
+      pat_list.clear();
+      return pat_list;
+    }
   }
 
 
@@ -393,6 +500,6 @@ int main(int argc, char* argv[]) {
   if (pat_list.empty()) {
     return -1;
   }
-  pattern_match(pat_list, data, rdata, end_of_data);
+//  pattern_match(pat_list, data, rdata, end_of_data);
   return 0;
 }

@@ -107,7 +107,17 @@ class Variable: public Exact {
   public:
     int len;
     int width;
+    char* var_name;
     Variable(char* data_s, char* data_e, int data_len, char* name, int le, char* c, int w);
+    ret_t* search(ret_t* retu);
+};
+
+class Reference: public Exact {
+  public:
+    int complement;
+    char* var_name;
+    Reference(char* data_s, char* data_e, int data_len, char* name, int comp, int mis, int ins, 
+      int del, int flex);
     ret_t* search(ret_t* retu);
 };
 
