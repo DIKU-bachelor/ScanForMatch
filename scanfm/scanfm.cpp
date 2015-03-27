@@ -67,14 +67,15 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
     int eq = (*it).find('=');
     string var;
 
-    // Variable type punit
+    // Variable type punit, saves variable name in var_list
     if (eq != string::npos) {
       var = (*it).substr(0, eq);
       var_list.push_back(var);
       pu = pu.substr(eq + 1);
     }
     int dots = pu.find("...");
-    // Range type punit
+
+    // Range type punit, verifies that both sides of ... are valid digits
     if (dots != string::npos) {
       string min_s = pu.substr(0, dots);
       string max_s = pu.substr(dots + 3);
@@ -88,15 +89,15 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       }
       int min = atoi(min_s.c_str());
       int max = atoi(max_s.c_str());
+
+      // Determines whether it's a normal Range punit or a Variable punit
       if (pu.length() == (*it).length()) {
-        cout << "RANGE\n";
         Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
         pat_list.push_back(ra);
       } else {
         char* var_name = new char[var.length()];
         strcpy(var_name, var.c_str());
         var_name[var.length()] = '\0';
-        cout << "VARIABLE\n";
         Variable* va = new Variable(start_of_data, end_of_data, data_len, var_name, 
           min, NULL, max - min);
         pat_list.push_back(va);
@@ -110,7 +111,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       return pat_list;
     }
 
-    // Exact type punit
+    // Exact type punit, checks validity of each letter and converts to 4-BIT chars
     int count = 0;
     for (int i = 0; i < pu.length(); i++) {
       if (find(known_chars.begin(), known_chars.end(), toupper(pu[i])) == known_chars.end()) {
@@ -127,13 +128,15 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       }
     }
 
+    // ex_len used to determine length of Exact punit before [ char
     int brac = pu.find('[');
     int ex_len = pu.length();
     if (brac != string::npos) {
       ex_len = brac;
     }
 
-    // Reference type punit
+    // Reference type punit, finds potetial ~ and searches var_list to determine 
+    // validity of reference
     if (count != ex_len) {
       comp = pu.find('~');
       if (comp != string::npos) {
@@ -154,7 +157,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       strcpy(var_name, (*var_it).c_str());
     }
 
-    // Mismatches, insertions, deletions
+    // Finds mismatches, insertions and deletions whether it's an Exact or a Reference punit
     string mis_s;
     string ins_s;
     string del_s;
@@ -163,6 +166,8 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
     int del = 0;
     brac = pu.find('[');
     if (brac != string::npos) {
+
+      // Fills mis_s, ins_s and del_s with the relevant parts of the "[?,?,?]" string
       pu = pu.substr(brac + 1);
       int com = pu.find(',');
       if (com != string::npos) {
@@ -193,6 +198,8 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
           pat_list.clear();
           return pat_list;
       }
+
+      // Check if all characters in mis_s, ins_s and del_s are valid digits
       int invalid = 0;
       for (int i = 0; i < mis_s.length(); i++) {
         if (! isdigit(mis_s[i])) {
@@ -220,6 +227,8 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       ins = atoi(ins_s.c_str());
       del = atoi(del_s.c_str());     
     }
+
+    // Checks if it's an Exact or Reference type punit
     if (ex_len == count) {
       cout << "EXACT\n";
       Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
