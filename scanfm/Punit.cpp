@@ -155,7 +155,9 @@ ret_t* Exact::search(ret_t* retu){
       run_len--;
     }
     char* prev_s = prev;
+//    cout << "EXACT run_len: " << run_len << "\n";
     while (prev_s <= prev_s + run_len-- && prev < data_end) {
+//      cout << "prev: " << prev << "\n";
       if (matches(*prev,*code)){
         p2 = prev+1;char* p3 = code+1;
         for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
@@ -330,10 +332,11 @@ void Exact::reset(void) {
 
 
 /* Range constructer used by the parser */
-Range::Range(char* data_s, char* data_e, int le, char* c, 
+Range::Range(char* data_s, char* data_e, int data_l, int le, char* c, 
              int w) : Punit(data_s, data_e, 0, c){
     len = le;
     width = w;
+    data_len = data_l;
 }
 
 
@@ -342,33 +345,38 @@ Range::Range(char* data_s, char* data_e, int le, char* c,
    If start is not NULL, prev in this punit is set to start and is initialized */
 ret_t* Range::search(ret_t* retu){
   int first = 0;
+//  cout << "RANGE retu->len: " << retu->len << "\n";
+//  cout << "data_len: " << data_len << "\n";
   if (retu->len == data_len) {
     first = 1;
+//    cout << "RANGE FIRST\n";
   }
   if(retu->startp == NULL) {
     /* it can't backtrack any more */
     if(inc_width == 0){
-      retu->match_len -= (len + strech);
       return retu;
     /* backtracking one forward*/
     } else {
+//      cout << "RANGE streching\n";
       inc_width--;
       strech++;
       prev++;
       retu->len = width;
       retu->startp = prev + len;
-      if (first == 1) {
+      return retu;
+/*      if (first == 1) {
         return retu;
       } else {
         retu->startp = NULL;
         retu->len = 0;
         return retu;
-      }
+      } */
     }
   }
   mlen = len;
   strech = 0;
   prev = retu->startp;
+//  cout << "RANGE prev: " << prev << "\n";
   inc_width = retu->len;
   if(retu->startp + len < data_end){
     retu->startp = (retu->startp + len);
@@ -388,10 +396,10 @@ void Range::reset(void) {
 }
 
 
-Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, 
+Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Range* var_p, 
               Punit* nxt_p, int mis, int ins, int del, int flex)
            : Exact(data_s, data_e, data_len, 0, NULL, mis, ins, del, flex) {
-  variable = var;
+  variable = var_p;
   next_Punit = nxt_p;
   complement = comp;
   cCode = new char[1000];
@@ -399,11 +407,14 @@ Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Punit* 
 
 ret_t* Reference::search(ret_t* retu) {
   if(code != variable->prev || len != next_Punit->prev - variable->prev){
-    cout << "Reference search start\n";
+//    cout << "Reference search start\n";
     code = variable->prev;
+    len = variable->len + next_Punit->strech;
+//    cout << "REFERENCE code: " << code << "\n";
+//    cout << "REFERENCE len : " << len << "\n";
     len = next_Punit->prev - variable->prev;
     if(complement){
-      cout << "Reference search IS compl\n";
+//      cout << "Reference search IS compl\n";
       int i = len-1;
       int s = 0;
       while(i >= 0){

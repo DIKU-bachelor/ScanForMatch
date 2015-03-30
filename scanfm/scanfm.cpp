@@ -91,7 +91,8 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       int min = atoi(min_s.c_str());
       int max = atoi(max_s.c_str());
 
-      Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
+      Range* ra = new Range(start_of_data, end_of_data, end_of_data - start_of_data,
+        min, NULL, max - min);
       pat_list.push_back(ra);
 
       // If previous punit was being set as variable
@@ -252,8 +253,12 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       continue;
     } 
     if (var_it != var_list.end()) {
-      Reference* re = new Reference(start_of_data, end_of_data, data_len, comp, var_p, var_p_nxt,
-        mis, ins, del, 0);
+      int complem = 0;
+      if (comp != string::npos) {
+        int complem = 1;
+      }
+      Reference* re = new Reference(start_of_data, end_of_data, data_len, complem, (Range*)
+        var_p, var_p_nxt, mis, ins, del, 0);
       pat_list.push_back(re);
       if (save_next == 1) {
         va->nxt_punit = re;
