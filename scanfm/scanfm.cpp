@@ -296,9 +296,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       // If the whole pattern matched
       if (++it == pat_list.end()) {
 //        cout << "whole pattern match\n\n";
-        cout << retu->match_len << "\n";
         dist = (retu->startp - retu->match_len) - start_of_data;
-        cout << dist << "\n";
         printf("%i  %.*s\n", dist, retu->match_len, real_data + dist);
         it = pat_list.begin();
         data = retu->startp;

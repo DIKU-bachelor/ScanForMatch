@@ -170,7 +170,6 @@ ret_t* Exact::search(ret_t* retu){
       if (first != 1) {
         mlen += c;
       }
-      cout << mlen << "\n";
       retu->startp = (prev + len);
       retu->match_len += mlen;
       return retu;
@@ -347,14 +346,21 @@ ret_t* Range::search(ret_t* retu){
       return retu;
     /* backtracking one forward*/
     } else {
-      inc_width--;
-      prev++;
-      retu->len = width;
-      retu->startp = prev + len;
-      return retu;
+      if(prev + len < data_end){
+        inc_width--;
+        prev++;
+        retu->len = width;
+        retu->startp = prev + len;
+        retu->match_len++;
+        return retu;
+      } else {
+        retu->startp = NULL;
+        retu->len = 0;
+        return retu;
+      }
     }
   }
-  
+  prev = retu->startp;
   inc_width = retu->len;
   if(retu->startp + len < data_end){
     retu->startp = (retu->startp + len);
