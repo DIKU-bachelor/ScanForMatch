@@ -358,9 +358,12 @@ ret_t* Range::search(ret_t* retu){
       retu->len = width;
       retu->startp = prev + len;
       if (first == 1) {
-        retu->match_len++;
+        return retu;
+      } else {
+        retu->startp = NULL;
+        retu->len = 0;
+        return retu;
       }
-      return retu;
     }
   }
   mlen = len;
