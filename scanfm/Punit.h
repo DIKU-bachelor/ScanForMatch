@@ -16,8 +16,6 @@ typedef struct ret {
   char* startp;
   int len;
   int match_len;
-  char* var;
-  char* pcode;
 } ret_t;
 
 
@@ -106,15 +104,6 @@ class Range: public Punit {
     ret_t* search(ret_t* retu);
 };
 
-
-class Variable: public Exact {
-  public:
-    int len;
-    int width;
-    char* var_name;
-    Variable(char* data_s, char* data_e, int data_len, char* name, int le, char* c, int w);
-    ret_t* search(ret_t* retu);
-};
 
 class Reference: public Exact {
   public:

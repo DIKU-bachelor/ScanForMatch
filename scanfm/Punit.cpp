@@ -144,44 +144,23 @@ ret_t* Exact::search(ret_t* retu){
     int i;
     int c = 0;
 
-   // Is len used for allowing scan throught possibly whole file
-    if (run_len == data_len) {
-      if (retu->startp == NULL) {
-        prev++;
-      }
-      while (prev <= data_end) {
-        if (matches(*prev,*code)){
-          p2 = prev+1;char* p3 = code+1;
-          for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
-            ;
-          if (!i){
-            mlen = len;
-            break;
-          }
+    if (retu->startp == NULL && run_len >= 0) {
+      prev++;
+      run_len--;
+    }
+    char* prev_s = prev;
+    while (prev_s <= prev_s + run_len--) {
+      if (matches(*prev,*code)){
+        p2 = prev+1;char* p3 = code+1;
+        for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
+          ;
+        if (!i){
+          c = prev - prev_s;
+          mlen = len;
+          break;
         }
-        prev++;
       }
-
-    // If len is used for flexibility due to previous Range punit
-    } else if (strcmp(retu->var, "\0") == 0) {
-      if (retu->startp == NULL && run_len >= 0) {
-        prev++;
-        run_len--;
-      }
-      char* prev_s = prev;
-      while (prev_s <= prev_s + run_len--) {
-        if (matches(*prev,*code)){
-          p2 = prev+1;char* p3 = code+1;
-          for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
-            ;
-          if (!i){
-            c = prev - prev_s;
-            mlen = len;
-            break;
-          }
-        }
-        prev++;
-      }
+      prev++;
     }
     retu->len = 0;
     if(len == mlen){
@@ -355,58 +334,38 @@ Range::Range(char* data_s, char* data_e, int le, char* c,
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
 ret_t* Range::search(ret_t* retu){
+  /* Backtracking */
   if(retu->startp == NULL) {
+    /* it can't backtrack any more */
     if(inc_width == 0){
       retu->match_len -= len;
       return retu;
+    /* backtracking one forward*/
     } else {
-      retu->match_len -= len + inc_width;
       inc_width--;
+      prev++;
+      retu->len = width;
+      retu->startp = prev + len;
+      return retu;
     }
-  } else { 
-    inc_width = retu->len;
   }
-  retu->startp = (retu->startp + len + inc_width);
-  retu->len = width;
-  mlen = len + inc_width;
-  retu->match_len += len + inc_width;
-  return retu;
+  
+  inc_width = retu->len;
+  if(retu->startp + len < data_end){
+    retu->startp = (retu->startp + len);
+    retu->len = width;
+    mlen = len;
+    retu->match_len += len;
+    return retu;
+  } else {
+    retu->startp = NULL;
+    retu->len = 0;
+    return retu;
+  }
 }
 
 void Range::reset(void) {
   mlen = 0;
-}
-
-
-Variable::Variable(char* data_s, char* data_e, int data_len, char* name, int le, char* c, int w)
-          : Exact(data_s, data_e, data_len, le, c, 0, 0, 0, 0) {
-  len = le;
-  width = w;
-  mlen = 0;
-  code = new char[max_var_size];
-  var* v = new var();
-  v->name = name;
-  var_name = name;
-  vtable.push_back(v);
-}
-
-ret_t* Variable::search(ret_t* retu) {
-  if (retu->startp == NULL) {
-    retu->match_len -= mlen;
-    return retu;
-  }
-  code = new char[max_var_size];
-  for (int i = 0; i < len; i++) {
-    code[i] = retu->startp[i];
-  }
-  cout << "VARIABLE search: " << code << "\n";
-  retu->startp = (retu->startp + len);
-  retu->len = width;
-  mlen = len;
-  retu->match_len += len;
-  retu->var = var_name;
-  retu->pcode = code;
-  return retu;
 }
 
 

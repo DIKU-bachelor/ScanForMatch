@@ -270,8 +270,6 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   int dist;
   int data_len = end_of_data - data;
   retu->len = data_len;
-  retu->var = new char[100];
-  strcpy(retu->var, "\0");
   retu->match_len = 0;
   char* match_start;
   char* start_of_data = data;
@@ -284,7 +282,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
 
     // If the punit matched
     if (retu->startp) {
-      cout << "punit match\n";
+//      cout << "punit match\n";
 
       // If the whole pattern matched
       if (++it == pat_list.end()) {
@@ -301,7 +299,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       continue;
     // If the punit didn't match
     } else {
-      cout << "punit NOT match\n";
+//      cout << "punit NOT match\n";
 
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
