@@ -88,20 +88,12 @@ class Range: public Punit {
   public:
     int len;
     int width;
+    int inc_width; //If range is called with a width, this is used
     Range(char* data_s, char* data_e, int le, char* c, int w);
     void reset(void);
     ret_t* search(ret_t* retu);
 };
 
-class Complementary: public Exact{
-  public:
-    char* cCode; //complementary code
-    bool newCode; //true if the code has not yet been made complementary
-    Complementary(char* data_s, char* data_e, int data_len, int le, char* c, 
-                  int i, int d, int m, int f);
-    void reset(void);
-    ret_t* search(ret_t* retu);
-};
 
 class Variable: public Exact {
   public:
@@ -115,8 +107,14 @@ class Variable: public Exact {
 class Reference: public Exact {
   public:
     int complement;
-    Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, Punit* next_p, 
-      int mis, int ins, int del, int flex);
+    Punit* variable;
+    char* var_old_prev; // To test if code needs to be made complementary again
+    Punit* next_Punit;
+    char* next_p_old_prev; // To test if code needs to be made complementary again
+    char* cCode; //complementary code
+    
+    Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, 
+              Punit* next_p, int mis, int ins, int del, int flex);
     ret_t* search(ret_t* retu);
 };
 
