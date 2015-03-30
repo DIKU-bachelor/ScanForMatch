@@ -1,7 +1,13 @@
 #ifndef PUNIT_H
 #define PUNIT_H
 
+#include <stdlib.h>
+#include <iostream>
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
 #include <list>
+using namespace std;
 
 extern char punit_to_code[256];
 extern char code_to_punit[256];
@@ -13,6 +19,7 @@ typedef struct ret {
   char* var;
   char* pcode;
 } ret_t;
+
 
 /* for loose fitet patterns (inserts, deletions, mismatches) */
 struct stackent {
@@ -46,6 +53,11 @@ class Punit {
 };
 
 
+typedef struct var {
+  string name;
+  Punit* var_punit;
+  Punit* nxt_punit;
+} var_t;
 
 
 /* punit exact inherites from punit, is used to search for a litteral

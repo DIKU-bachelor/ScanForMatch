@@ -48,10 +48,8 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
   // pat_list: contains the parsed punits to be returned
   list<Punit*> pat_list;
 
-  // var_list: contains the variables declared. List is searched to verify legal reference 
-  // type punit.
-  list<string> var_list;
-  list<string>::iterator var_it;
+  list<var_t*> var_list;
+  list<var_t*>::iterator var_it;
   char* var_name = new char[100];
 
   list<string> split_text = split_str(text, ' ');
@@ -60,17 +58,20 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
 
   int comp;
   char* conv_code;
+  int save_next = 0;
+  Punit* var_p;
+  Punit* var_p_nxt;
+  var_t* va;
 
   // Loop to try and parse punits
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
     string pu = (*it);
     int eq = (*it).find('=');
-    string var;
+    string varn;
 
     // Variable type punit, saves variable name in var_list
     if (eq != string::npos) {
-      var = (*it).substr(0, eq);
-      var_list.push_back(var);
+      varn = (*it).substr(0, eq);
       pu = pu.substr(eq + 1);
     }
     int dots = pu.find("...");
@@ -90,17 +91,20 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       int min = atoi(min_s.c_str());
       int max = atoi(max_s.c_str());
 
-      // Determines whether it's a normal Range punit or a Variable punit
-      if (pu.length() == (*it).length()) {
-        Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
-        pat_list.push_back(ra);
-      } else {
-        char* var_name = new char[var.length()];
-        strcpy(var_name, var.c_str());
-        var_name[var.length()] = '\0';
-        Variable* va = new Variable(start_of_data, end_of_data, data_len, var_name, 
-          min, NULL, max - min);
-        pat_list.push_back(va);
+      Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
+      pat_list.push_back(ra);
+      if (save_next == 1) {
+        cout << "Save this next punit as well\n";
+        va->nxt_punit = ra;
+        save_next = 0;
+      }
+      if (pu.length() != (*it).length()) {
+        cout << "Save this punit (Range) for later reference\n";
+        va = new var();
+        va->name = varn;
+        va->var_punit = ra;
+        var_list.push_back(va);
+        save_next = 1;
       }
       continue;
     }
@@ -147,14 +151,21 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       if (brac != string::npos) {
         until_brac = pu.substr(0, brac);
       }
-      var_it = find(var_list.begin(), var_list.end(), until_brac);
+
+      // Searches for valid variable
+      for (var_it = var_list.begin(); var_it != var_list.end(); var_it++) {
+        if (until_brac.compare((*var_it)->name) == 0) {
+          cout << "Variable found, creating reference\n";
+          var_p = (*var_it)->var_punit;
+          var_p_nxt = (*var_it)->nxt_punit;
+        }
+      }
       if (var_it == var_list.end()) {
         cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
           << ": " << pu << " not a known variable\n";
         pat_list.clear();
         return pat_list;
       }
-      strcpy(var_name, (*var_it).c_str());
     }
 
     // Finds mismatches, insertions and deletions whether it's an Exact or a Reference punit
@@ -236,8 +247,8 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       continue;
     } 
     if (var_it != var_list.end()) {
-      Reference* re = new Reference(start_of_data, end_of_data, data_len, var_name, 
-        comp, mis, ins, del, 0);
+      Reference* re = new Reference(start_of_data, end_of_data, data_len, comp, var_p, var_p_nxt,
+        mis, ins, del, 0);
       pat_list.push_back(re);
       continue;
     } else {

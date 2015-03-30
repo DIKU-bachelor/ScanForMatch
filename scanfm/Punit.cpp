@@ -23,10 +23,6 @@ char known_char_index[16] =
 
 #define max_var_size 10000
 
-struct var {
-  char* name;
-  char* code;
-};
 
 list<var*> vtable;
 
@@ -186,46 +182,9 @@ ret_t* Exact::search(ret_t* retu){
         }
         prev++;
       }
-
-    // If the previous range unit was a variable being set, we need to save the letters
-    // for future reference
-    } else {
-      if (retu->startp == NULL && run_len >= 0) {
-        prev++;
-        run_len--;
-      }
-      char* prev_s = prev;
-      while (prev_s <= prev_s + run_len--) {
-        if (matches(*prev,*code)){
-          p2 = prev+1;char* p3 = code+1;
-          for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
-            ;
-          if (!i){
-            c = prev - prev_s;
-            mlen = len;
-            break;
-          }
-        }
-        retu->pcode = appendChar(retu->pcode, *prev);
-        prev++;
-      }
-
     }
     retu->len = 0;
     if(len == mlen){
-      if (strcmp(retu->var, "\0") == 0) {
-        cout << "huhu\n";
-        for (list<var*>::iterator it = vtable.begin(); it != vtable.end(); it++) {
-          cout << retu->var << "\n";
-          cout << (*it)->name << "\n";
-          if (strcmp(retu->var, (*it)->name) == 0) {
-            (*it)->code = retu->pcode;
-            cout << (*it)->name << "\n";
-            cout << (*it)->code << "\n";
-            break;
-          }
-        }
-      }
       mlen += c;
       retu->startp = (prev + len);
       retu->match_len += mlen;
@@ -485,24 +444,13 @@ ret_t* Variable::search(ret_t* retu) {
   return retu;
 }
 
-Reference::Reference(char* data_s, char* data_e, int data_len, char* name, int comp, 
+Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, Punit* nxt_p,
            int mis, int ins, int del, int flex) 
            : Exact(data_s, data_e, data_len, 0, NULL, mis, ins, del, flex) {
-  var_name = name;
   complement = comp;
 }
 
 ret_t* Reference::search(ret_t* retu) {
-  cout << "REFERENCE search\n";
-  for (list<var*>::iterator it = vtable.begin(); it != vtable.end(); it++) {
-    if (strcmp(var_name, (*it)->name) == 0) {
-      cout << "HEJ\n";
-      code = (*it)->code;
-      cout << "DAV\n";
-      break;
-    }
-  }
-  cout << "REFERENCE fandt var med kode: " << code << "\n";
 }
 
 int build_conversion_tables()
