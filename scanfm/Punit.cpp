@@ -339,6 +339,10 @@ Range::Range(char* data_s, char* data_e, int le, char* c,
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
 ret_t* Range::search(ret_t* retu){
+  int first = 0;
+  if (retu->len == data_len) {
+    first = 1;
+  }
   if(retu->startp == NULL) {
     /* it can't backtrack any more */
     if(inc_width == 0){
@@ -356,6 +360,9 @@ ret_t* Range::search(ret_t* retu){
       } else {
         retu->startp = NULL;
         retu->len = 0;
+        if (first == 1) {
+          retu->match_len++;
+        }
         return retu;
       }
     }
