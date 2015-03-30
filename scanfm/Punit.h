@@ -36,7 +36,9 @@ class Punit {
     char* data_end;
     int data_len;
     int run_len;
+    int run_len_s;
     int mlen;
+    int strech;
     char* code;
     char* prev;
     Punit(char* data_s, char* data_e, int data_l, char* c);

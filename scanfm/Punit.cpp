@@ -30,6 +30,7 @@ Punit::Punit(char* data_s, char* data_e, int data_l, char* c){
     data_end = data_e;
     data_len = data_l;
     mlen = 0;
+    strech = 0;
     code = c;
 }
 
@@ -121,6 +122,7 @@ ret_t* Exact::search(ret_t* retu){
 
     //variable declaration for loose matching pattern
     run_len = retu->len;
+    run_len_s = run_len;
     one_len = len;
     two_len = data_end-prev;
     del_nxt = 0;
@@ -128,13 +130,14 @@ ret_t* Exact::search(ret_t* retu){
     mlen = 0;
     p1 = code;
     p2 = prev;
+
   // Else we are at backtracking
   } else {
     retu->match_len -= mlen;
     mlen = 0;
   }
   int first = 0;
-  if (run_len == data_len) {
+  if (run_len_s == data_len) {
     first = 1;
   }
 
@@ -152,7 +155,7 @@ ret_t* Exact::search(ret_t* retu){
       run_len--;
     }
     char* prev_s = prev;
-    while (prev_s <= prev_s + run_len--) {
+    while (prev_s <= prev_s + run_len-- && prev < data_end) {
       if (matches(*prev,*code)){
         p2 = prev+1;char* p3 = code+1;
         for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
@@ -171,7 +174,6 @@ ret_t* Exact::search(ret_t* retu){
         mlen += c;
       }
       retu->startp = (prev + len);
-      retu->match_len += mlen;
       return retu;
     } else {
       retu->startp = NULL;
@@ -346,11 +348,12 @@ ret_t* Range::search(ret_t* retu){
   if(retu->startp == NULL) {
     /* it can't backtrack any more */
     if(inc_width == 0){
-      retu->match_len -= len;
+      retu->match_len -= (len + strech);
       return retu;
     /* backtracking one forward*/
     } else {
       inc_width--;
+      strech++;
       prev++;
       retu->len = width;
       retu->startp = prev + len;
@@ -360,6 +363,8 @@ ret_t* Range::search(ret_t* retu){
       return retu;
     }
   }
+  mlen = len;
+  strech = 0;
   prev = retu->startp;
   inc_width = retu->len;
   if(retu->startp + len < data_end){

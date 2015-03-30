@@ -282,6 +282,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   retu->match_len = 0;
   char* match_start;
   char* start_of_data = data;
+  int comb_mlen = 0;
   int l = 0;
   while (true) {
     if (it == pat_list.begin()) {
@@ -296,13 +297,19 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       // If the whole pattern matched
       if (++it == pat_list.end()) {
 //        cout << "whole pattern match\n\n";
-        dist = (retu->startp - retu->match_len) - start_of_data;
-        cout << dist << "\n";
-//        printf("%i  %.*s\n", dist, retu->match_len, real_data + dist);
-        it = pat_list.begin();
+//        dist = (retu->startp - retu->match_len) - start_of_data;
+//        cout << dist << "  " << retu->match_len << "\n";
+        for (it = pat_list.begin(); it != pat_list.end(); it++) {
+          comb_mlen += (*it)->mlen;
+        }
+        dist = (retu->startp - comb_mlen) - start_of_data;
+        printf("%i  %.*s\n", dist, comb_mlen, real_data + dist);
         data = retu->startp;
+        comb_mlen = 0;
         retu->len = data_len;
+//        retu->len = end_of_data - data;
         retu->match_len = 0;
+        it = pat_list.begin();
         continue;
       }
       data = retu->startp;
