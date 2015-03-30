@@ -147,14 +147,12 @@ ret_t* Exact::search(ret_t* retu){
     int i;
     int c = 0;
 
-    // If len is used for flexibility due to previous Range punit
     if (retu->startp == NULL && run_len >= 0) {
       prev++;
       run_len--;
     }
     char* prev_s = prev;
     while (prev_s <= prev_s + run_len--) {
-//      cout << "Exact search, bruger flex\n";
       if (matches(*prev,*code)){
         p2 = prev+1;char* p3 = code+1;
         for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
@@ -342,29 +340,38 @@ Range::Range(char* data_s, char* data_e, int le, char* c,
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
 ret_t* Range::search(ret_t* retu){
-//  cout << "Range search start\n";
   if(retu->startp == NULL) {
+    /* it can't backtrack any more */
     if(inc_width == 0){
       retu->match_len -= len;
       return retu;
+    /* backtracking one forward*/
     } else {
-      retu->match_len -= len + inc_width;
       inc_width--;
+      prev++;
+      retu->len = width;
+      retu->startp = prev + len;
+      return retu;
     }
-  } else { 
-    inc_width = retu->len;
   }
-  retu->startp = (retu->startp + len + inc_width);
-  retu->len = width;
-  mlen = len + inc_width;
-  retu->match_len += len + inc_width;
-  return retu;
+  
+  inc_width = retu->len;
+  if(retu->startp + len < data_end){
+    retu->startp = (retu->startp + len);
+    retu->len = width;
+    mlen = len;
+    retu->match_len += len;
+    return retu;
+  } else {
+    retu->startp = NULL;
+    retu->len = 0;
+    return retu;
+  }
 }
 
 void Range::reset(void) {
   mlen = 0;
 }
-
 
 
 Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, 
