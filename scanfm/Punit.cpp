@@ -132,7 +132,10 @@ ret_t* Exact::search(ret_t* retu){
   } else {
     retu->match_len -= mlen;
     mlen = 0;
-    // If we're also at the first punit, we increment data with 1
+  }
+  int first = 0;
+  if (run_len == data_len) {
+    first = 1;
   }
 
   // If no mismatches, insertions or deletions allowed
@@ -144,48 +147,32 @@ ret_t* Exact::search(ret_t* retu){
     int i;
     int c = 0;
 
-   // Is len used for allowing scan throught possibly whole file
-    if (run_len == data_len) {
-      if (retu->startp == NULL) {
-        prev++;
-      }
-      while (prev <= data_end) {
-        if (matches(*prev,*code)){
-          p2 = prev+1;char* p3 = code+1;
-          for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
-            ;
-          if (!i){
-            mlen = len;
-            break;
-          }
-        }
-        prev++;
-      }
-
     // If len is used for flexibility due to previous Range punit
-    } else if (strcmp(retu->var, "\0") == 0) {
-      if (retu->startp == NULL && run_len >= 0) {
-        prev++;
-        run_len--;
-      }
-      char* prev_s = prev;
-      while (prev_s <= prev_s + run_len--) {
-        if (matches(*prev,*code)){
-          p2 = prev+1;char* p3 = code+1;
-          for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
-            ;
-          if (!i){
-            c = prev - prev_s;
-            mlen = len;
-            break;
-          }
+    if (retu->startp == NULL && run_len >= 0) {
+      prev++;
+      run_len--;
+    }
+    char* prev_s = prev;
+    while (prev_s <= prev_s + run_len--) {
+//      cout << "Exact search, bruger flex\n";
+      if (matches(*prev,*code)){
+        p2 = prev+1;char* p3 = code+1;
+        for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
+          ;
+        if (!i){
+          c = prev - prev_s;
+          mlen = len;
+          break;
         }
-        prev++;
       }
+      prev++;
     }
     retu->len = 0;
     if(len == mlen){
-      mlen += c;
+      if (first != 1) {
+        mlen += c;
+      }
+      cout << mlen << "\n";
       retu->startp = (prev + len);
       retu->match_len += mlen;
       return retu;
@@ -355,6 +342,7 @@ Range::Range(char* data_s, char* data_e, int le, char* c,
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */
 ret_t* Range::search(ret_t* retu){
+//  cout << "Range search start\n";
   if(retu->startp == NULL) {
     if(inc_width == 0){
       retu->match_len -= len;
@@ -378,37 +366,6 @@ void Range::reset(void) {
 }
 
 
-Variable::Variable(char* data_s, char* data_e, int data_len, char* name, int le, char* c, int w)
-          : Exact(data_s, data_e, data_len, le, c, 0, 0, 0, 0) {
-  len = le;
-  width = w;
-  mlen = 0;
-  code = new char[max_var_size];
-  var* v = new var();
-  v->name = name;
-  var_name = name;
-  vtable.push_back(v);
-}
-
-ret_t* Variable::search(ret_t* retu) {
-  if (retu->startp == NULL) {
-    retu->match_len -= mlen;
-    return retu;
-  }
-  code = new char[max_var_size];
-  for (int i = 0; i < len; i++) {
-    code[i] = retu->startp[i];
-  }
-  cout << "VARIABLE search: " << code << "\n";
-  retu->startp = (retu->startp + len);
-  retu->len = width;
-  mlen = len;
-  retu->match_len += len;
-  retu->var = var_name;
-  retu->pcode = code;
-  return retu;
-}
-
 
 Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, 
               Punit* nxt_p, int mis, int ins, int del, int flex)
@@ -421,9 +378,11 @@ Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Punit* 
 
 ret_t* Reference::search(ret_t* retu) {
   if(code != variable->prev || len != next_Punit->prev - variable->prev){
+    cout << "Reference search start\n";
     code = variable->prev;
     len = next_Punit->prev - variable->prev;
     if(complement){
+      cout << "Reference search IS compl\n";
       int i = len-1;
       int s = 0;
       while(i >= 0){

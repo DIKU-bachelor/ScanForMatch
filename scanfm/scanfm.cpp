@@ -93,13 +93,15 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
 
       Range* ra = new Range(start_of_data, end_of_data, min, NULL, max - min);
       pat_list.push_back(ra);
+
+      // If previous punit was being set as variable
       if (save_next == 1) {
-        cout << "Save this next punit as well\n";
         va->nxt_punit = ra;
         save_next = 0;
       }
+
+      // If this punit is a variable being set
       if (pu.length() != (*it).length()) {
-        cout << "Save this punit (Range) for later reference\n";
         va = new var();
         va->name = varn;
         va->var_punit = ra;
@@ -155,14 +157,13 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       // Searches for valid variable
       for (var_it = var_list.begin(); var_it != var_list.end(); var_it++) {
         if (until_brac.compare((*var_it)->name) == 0) {
-          cout << "Variable found, creating reference\n";
           var_p = (*var_it)->var_punit;
           var_p_nxt = (*var_it)->nxt_punit;
+          break;
         }
       }
       if (var_it == var_list.end()) {
-        cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
-          << ": " << pu << " not a known variable\n";
+          cout << "Could not parse punit: " << pu << " not a known variable\n";
         pat_list.clear();
         return pat_list;
       }
@@ -244,12 +245,20 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
         conv_code, mis, ins, del, 0);
       pat_list.push_back(ex);
+      if (save_next == 1) {
+        va->nxt_punit = ex;
+        save_next = 0;
+      }
       continue;
     } 
     if (var_it != var_list.end()) {
       Reference* re = new Reference(start_of_data, end_of_data, data_len, comp, var_p, var_p_nxt,
         mis, ins, del, 0);
       pat_list.push_back(re);
+      if (save_next == 1) {
+        va->nxt_punit = re;
+        save_next = 0;
+      }
       continue;
     } else {
       cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
@@ -270,8 +279,6 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   int dist;
   int data_len = end_of_data - data;
   retu->len = data_len;
-  retu->var = new char[100];
-  strcpy(retu->var, "\0");
   retu->match_len = 0;
   char* match_start;
   char* start_of_data = data;
@@ -284,12 +291,14 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
 
     // If the punit matched
     if (retu->startp) {
-      cout << "punit match\n";
+//      cout << "punit match\n";
 
       // If the whole pattern matched
       if (++it == pat_list.end()) {
 //        cout << "whole pattern match\n\n";
+        cout << retu->match_len << "\n";
         dist = (retu->startp - retu->match_len) - start_of_data;
+        cout << dist << "\n";
         printf("%i  %.*s\n", dist, retu->match_len, real_data + dist);
         it = pat_list.begin();
         data = retu->startp;
@@ -301,7 +310,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       continue;
     // If the punit didn't match
     } else {
-      cout << "punit NOT match\n";
+//      cout << "punit NOT match\n";
 
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
