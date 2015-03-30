@@ -230,14 +230,12 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
 
     // Checks if it's an Exact or Reference type punit
     if (ex_len == count) {
-      cout << "EXACT\n";
       Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
         conv_code, mis, ins, del, 0);
       pat_list.push_back(ex);
       continue;
     } 
     if (var_it != var_list.end()) {
-      cout << "REFERENCE\n";
       Reference* re = new Reference(start_of_data, end_of_data, data_len, var_name, 
         comp, mis, ins, del, 0);
       pat_list.push_back(re);
@@ -249,54 +247,9 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       return pat_list;
     }
   }
-
-
-
-/*  list<string> split_text = split_str(text, ' ');
-  list<Punit*> pat_list;
-  char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
-  list<char> known_chars (x, x + 16);
-  for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
-    int valid_punit = 1;
-    // Checks if the Punit is an exact 
-    int count = 0;
-    for (int i = 0; i < (*it).length(); i++) {
-      if (find(known_chars.begin(), known_chars.end(), toupper((*it)[i])) == known_chars.end()) {
-        valid_punit = 0;
-        break;
-      }
-      count++;
-    }
-    // Range unit
-    if (valid_punit == 0) {
-      string min = (*it).substr(0, (*it).find('.'));
-      string max = (*it).substr((*it).find("..") + 2);
-      Range* ra = new Range(start_of_data, end_of_data, atoi(min.c_str()), NULL, atoi(max.c_str()) - 
-        atoi(min.c_str()));
-      pat_list.push_back(ra); 
-    }
-
-    // Converting to _BIT chars 
-    if (count == (*it).length()) {
-      char* conv_code = new char[1000];
-      char* temp = new char[(*it).length() + 1];
-      strcpy(temp, (*it).c_str());
-      for(int i = 0; i < (*it).length(); i++){
-        conv_code[i] = punit_to_code[temp[i]];
-      }
-      Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
-        conv_code, 0, 0, 0, 0);
-      pat_list.push_back(ex);
-    }
-  } */
   return pat_list; 
 }
 
-/* Match struct that contains a pointer to the start of the match and the length */
-struct match {
-  string start;
-  int pos;
-};
 
 /* Looks through the data string to find pattern specified in list pat_list */
 void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end_of_data) {
@@ -306,21 +259,25 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   int dist;
   int data_len = end_of_data - data;
   retu->len = data_len;
+  retu->var = new char[100];
+  strcpy(retu->var, "\0");
   retu->match_len = 0;
   char* match_start;
   char* start_of_data = data;
   int l = 0;
-  while (l++ < 15) {
+  while (true) {
     if (it == pat_list.begin()) {
       retu->len = data_len;
     }
     retu = (*it)->search(retu);
+
     // If the punit matched
     if (retu->startp) {
-//      cout << "punit match\n";
+      cout << "punit match\n";
+
       // If the whole pattern matched
       if (++it == pat_list.end()) {
-        cout << "whole pattern match\n\n";
+//        cout << "whole pattern match\n\n";
         dist = (retu->startp - retu->match_len) - start_of_data;
         printf("%i  %.*s\n", dist, retu->match_len, real_data + dist);
         it = pat_list.begin();
@@ -333,11 +290,11 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       continue;
     // If the punit didn't match
     } else {
-//      cout << "punit NOT match\n";
+      cout << "punit NOT match\n";
+
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
-        cout << "whole pattern NOT match\n\n";
-        // If there is no more data
+//        cout << "whole pattern NOT match\n\n";
         return;
       }
       if (--it == pat_list.begin()) {
@@ -509,6 +466,6 @@ int main(int argc, char* argv[]) {
   if (pat_list.empty()) {
     return -1;
   }
-//  pattern_match(pat_list, data, rdata, end_of_data);
+  pattern_match(pat_list, data, rdata, end_of_data);
   return 0;
 }

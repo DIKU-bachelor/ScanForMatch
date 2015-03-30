@@ -10,7 +10,7 @@ typedef struct ret {
   char* startp;
   int len;
   int match_len;
-  int var;
+  char* var;
   char* pcode;
 } ret_t;
 
@@ -115,9 +115,8 @@ class Variable: public Exact {
 class Reference: public Exact {
   public:
     int complement;
-    char* var_name;
-    Reference(char* data_s, char* data_e, int data_len, char* name, int comp, int mis, int ins, 
-      int del, int flex);
+    Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, Punit* next_p, 
+      int mis, int ins, int del, int flex);
     ret_t* search(ret_t* retu);
 };
 

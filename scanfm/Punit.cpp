@@ -119,8 +119,6 @@ char* appendChar(char* arr, char a) {
   return r;
 }
 
-
-
 ret_t* Exact::search(ret_t* retu){
   if(retu->startp != NULL) {
     prev = retu->startp;
@@ -169,7 +167,7 @@ ret_t* Exact::search(ret_t* retu){
       }
 
     // If len is used for flexibility due to previous Range punit
-    } else if (retu->var == 0) {
+    } else if (strcmp(retu->var, "\0") == 0) {
       if (retu->startp == NULL && run_len >= 0) {
         prev++;
         run_len--;
@@ -213,10 +211,20 @@ ret_t* Exact::search(ret_t* retu){
       }
 
     }
-   retu->len = 0;
-   if(len == mlen){
-      if (retu->var == 1) {
-        
+    retu->len = 0;
+    if(len == mlen){
+      if (strcmp(retu->var, "\0") == 0) {
+        cout << "huhu\n";
+        for (list<var*>::iterator it = vtable.begin(); it != vtable.end(); it++) {
+          cout << retu->var << "\n";
+          cout << (*it)->name << "\n";
+          if (strcmp(retu->var, (*it)->name) == 0) {
+            (*it)->code = retu->pcode;
+            cout << (*it)->name << "\n";
+            cout << (*it)->code << "\n";
+            break;
+          }
+        }
       }
       mlen += c;
       retu->startp = (prev + len);
@@ -467,13 +475,13 @@ ret_t* Variable::search(ret_t* retu) {
   for (int i = 0; i < len; i++) {
     code[i] = retu->startp[i];
   }
+  cout << "VARIABLE search: " << code << "\n";
   retu->startp = (retu->startp + len);
   retu->len = width;
   mlen = len;
   retu->match_len += len;
-  retu->var = 1;
+  retu->var = var_name;
   retu->pcode = code;
-  cout << "Var search code: " <<  code << "\n";
   return retu;
 }
 
@@ -485,7 +493,16 @@ Reference::Reference(char* data_s, char* data_e, int data_len, char* name, int c
 }
 
 ret_t* Reference::search(ret_t* retu) {
-
+  cout << "REFERENCE search\n";
+  for (list<var*>::iterator it = vtable.begin(); it != vtable.end(); it++) {
+    if (strcmp(var_name, (*it)->name) == 0) {
+      cout << "HEJ\n";
+      code = (*it)->code;
+      cout << "DAV\n";
+      break;
+    }
+  }
+  cout << "REFERENCE fandt var med kode: " << code << "\n";
 }
 
 int build_conversion_tables()
