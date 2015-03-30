@@ -356,14 +356,20 @@ Range::Range(char* data_s, char* data_e, int le, char* c,
    If start is not NULL, prev in this punit is set to start and is initialized */
 ret_t* Range::search(ret_t* retu){
   if(retu->startp == NULL) {
-    retu->match_len -= mlen;
-    return retu;
+    if(inc_width == 0){
+      retu->match_len -= len;
+      return retu;
+    } else {
+      retu->match_len -= len + inc_width;
+      inc_width--;
+    }
+  } else { 
+    inc_width = retu->len;
   }
-//  cout << "RANGE\n"; 
-  retu->startp = (retu->startp + len);
+  retu->startp = (retu->startp + len + inc_width);
   retu->len = width;
-  mlen = len;
-  retu->match_len += len;
+  mlen = len + inc_width;
+  retu->match_len += len + inc_width;
   return retu;
 }
 
@@ -371,47 +377,6 @@ void Range::reset(void) {
   mlen = 0;
 }
 
-Complementary::Complementary(char* data_s, char* data_e, int data_len, int le, char* c, 
-             int i, int d, int m, int f) : Exact(data_s, data_e, data_len, le, c, 
-             i, d, m, f){
-  cCode = (char*)malloc(1000*sizeof(char));
-  newCode = true;
-}
-
-ret_t* Complementary::search(ret_t* sp){
-  if(newCode){
-    int i = len-1;
-    int s = 0;
-    while(i >= 0){
-      switch(code[i] & 15){
-        case A_BIT:
-          cCode[s] = punit_to_code['t'];
-          break;
-        case T_BIT:
-          cCode[s] = punit_to_code['a'];
-          break;
-        case C_BIT:
-          cCode[s] = punit_to_code['g'];
-          break;
-        case G_BIT:
-          cCode[s] = punit_to_code['c'];
-          break;
-        default:
-          break;
-      }
-      i--;
-      s++;
-    }
-    strncpy(code, cCode, 1000);
-    printf("code is now: %s \n", cCode);
-    newCode = false;
-  }
-  return Exact::search(sp);
-}
-
-void Complementary::reset(void){
-
-}
 
 Variable::Variable(char* data_s, char* data_e, int data_len, char* name, int le, char* c, int w)
           : Exact(data_s, data_e, data_len, le, c, 0, 0, 0, 0) {
@@ -444,13 +409,48 @@ ret_t* Variable::search(ret_t* retu) {
   return retu;
 }
 
-Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, Punit* nxt_p,
-           int mis, int ins, int del, int flex) 
+
+Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Punit* var, 
+              Punit* nxt_p, int mis, int ins, int del, int flex)
            : Exact(data_s, data_e, data_len, 0, NULL, mis, ins, del, flex) {
+  variable = var;
+  next_Punit = nxt_p;
   complement = comp;
+  cCode = new char[1000];
 }
 
 ret_t* Reference::search(ret_t* retu) {
+  if(code != variable->prev || len != next_Punit->prev - variable->prev){
+    code = variable->prev;
+    len = next_Punit->prev - variable->prev;
+    if(complement){
+      int i = len-1;
+      int s = 0;
+      while(i >= 0){
+        switch(code[i] & 15){
+          case A_BIT:
+            cCode[s] = punit_to_code['t'];
+            break;
+          case T_BIT:
+            cCode[s] = punit_to_code['a'];
+            break;
+          case C_BIT:
+            cCode[s] = punit_to_code['g'];
+            break;
+          case G_BIT:
+            cCode[s] = punit_to_code['c'];
+            break;
+          default:
+            break;
+        }
+        i--;
+        s++;
+      }
+      strncpy(code, cCode, 1000);
+    }
+  }
+
+  return Exact::search(retu);
 }
 
 int build_conversion_tables()
