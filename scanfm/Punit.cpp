@@ -360,6 +360,9 @@ ret_t* Range::search(ret_t* retu){
 //      cout << "RANGE streching\n";
       inc_width--;
       strech++;
+      if (! first) {
+        mlen++;
+      }
       prev++;
       retu->len = width;
       retu->startp = prev + len;
@@ -412,7 +415,6 @@ ret_t* Reference::search(ret_t* retu) {
 //    cout << "REFERENCE code: " << code << "\n";
     len = next_Punit->prev - variable->prev;
     if(complement){
-//      cout << "Reference search IS compl\n";
       int i = len-1;
       int s = 0;
       while(i >= 0){

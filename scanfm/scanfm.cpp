@@ -255,7 +255,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
     if (var_it != var_list.end()) {
       int complem = 0;
       if (comp != string::npos) {
-        int complem = 1;
+        complem = 1;
       }
       Reference* re = new Reference(start_of_data, end_of_data, data_len, complem, (Range*)
         var_p, var_p_nxt, mis, ins, del, 0);
