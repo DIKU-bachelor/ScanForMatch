@@ -437,11 +437,15 @@ ret_t* Reference::search(ret_t* retu) {
         i--;
         s++;
       }
-      strncpy(code, cCode, 1000);
+      printf("before %s \n", code);
+      code = cCode;
+      //strncpy(code, cCode, 1000);
+      printf("after %s \n", code);
     }
   }
-
-  return Exact::search(retu);
+  ret_t* retnew = Exact::search(retu);
+  printf("ret: %p\n", retnew->startp);
+  return retnew;
 }
 
 int build_conversion_tables()
