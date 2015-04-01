@@ -411,6 +411,7 @@ Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Range* 
 ret_t* Reference::search(ret_t* retu) {
   if(code != variable->prev || len != next_Punit->prev - variable->prev){
     code = variable->prev;
+//    printf("%.*s\n", 3, code);
     len = variable->len + next_Punit->strech;
 //    cout << "REFERENCE code: " << code << "\n";
     len = next_Punit->prev - variable->prev;
@@ -437,10 +438,9 @@ ret_t* Reference::search(ret_t* retu) {
         i--;
         s++;
       }
-      strncpy(code, cCode, 1000);
+      code = cCode;
     }
   }
-
   return Exact::search(retu);
 }
 
