@@ -352,10 +352,10 @@ ret_t* Range::search(ret_t* retu){
 //    cout << "RANGE FIRST\n";
   }
   if(retu->startp == NULL) {
-    /* it can't backtrack any more */
+    // it can't backtrack any more
     if(inc_width == 0){
       return retu;
-    /* backtracking one forward*/
+    // backtracking one forward
     } else {
 //      cout << "RANGE streching\n";
       inc_width--;
@@ -407,11 +407,9 @@ Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Range* 
 
 ret_t* Reference::search(ret_t* retu) {
   if(code != variable->prev || len != next_Punit->prev - variable->prev){
-//    cout << "Reference search start\n";
     code = variable->prev;
     len = variable->len + next_Punit->strech;
 //    cout << "REFERENCE code: " << code << "\n";
-//    cout << "REFERENCE len : " << len << "\n";
     len = next_Punit->prev - variable->prev;
     if(complement){
 //      cout << "Reference search IS compl\n";

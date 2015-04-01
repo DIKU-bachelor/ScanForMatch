@@ -260,6 +260,9 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       Reference* re = new Reference(start_of_data, end_of_data, data_len, complem, (Range*)
         var_p, var_p_nxt, mis, ins, del, 0);
       pat_list.push_back(re);
+      if (! re->next_Punit) {
+        re->next_Punit = re;
+      }
       if (save_next == 1) {
         va->nxt_punit = re;
         save_next = 0;
