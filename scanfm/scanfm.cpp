@@ -261,6 +261,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
         var_p, var_p_nxt, mis, ins, del, 0);
       pat_list.push_back(re);
       if (! re->next_Punit) {
+        cout << "hejhej\n";
         re->next_Punit = re;
       }
       if (save_next == 1) {
@@ -292,6 +293,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   char* start_of_data = data;
   int comb_mlen = 0;
   int l = 0;
+  int number_c = 0;
   while (true) {
     if (it == pat_list.begin()) {
       retu->len = data_len;
@@ -309,6 +311,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
           comb_mlen += (*it)->mlen;
         }
         dist = (retu->startp - comb_mlen) - start_of_data;
+        number_c++;
         printf("%i  %.*s\n", dist, comb_mlen, real_data + dist);
         it = pat_list.begin();
         data = retu->startp;
@@ -328,6 +331,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
 //        cout << "whole pattern NOT match\n\n";
+        cout << number_c << "\n";
         return;
       }
       if (--it == pat_list.begin()) {
@@ -499,6 +503,11 @@ int main(int argc, char* argv[]) {
   if (pat_list.empty()) {
     return -1;
   }
+  #define T_BIT 0x08;
+  unsigned char x = T_BIT;
+  unsigned char t = (unsigned char) (( x >> 4) & 15);
+//  cout << (int) x << "\n";
+//  cout << (int) t << "\n";
   pattern_match(pat_list, data, rdata, end_of_data);
   return 0;
 }
