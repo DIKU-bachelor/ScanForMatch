@@ -16,6 +16,7 @@ typedef struct ret {
   char* startp;
   int len;
   int match_len;
+  int quick_ref;
 } ret_t;
 
 
@@ -58,7 +59,6 @@ typedef struct var {
   Punit* var_punit;
   Punit* nxt_punit;
 } var_t;
-
 
 /* punit exact inherites from punit, is used to search for a litteral
 *  in the data */

@@ -24,7 +24,7 @@ char known_char_index[16] =
 #define max_var_size 10000
 
 
-list<var*> vtable;
+//list<var_run*> vtable;
 
 Punit::Punit(char* data_s, char* data_e, int data_l, char* c){
     data_end = data_e;
@@ -107,15 +107,6 @@ void Exact::pop(stackent* st, int nxtent,
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */ 
 
-char* appendChar(char* arr, char a) {
-  size_t l = strlen(arr);
-  char* r = new char[l + 2];
-  strcpy(r, arr);
-  r[l] = a;
-  r[l + 1] = '\0';
-  return r;
-}
-
 ret_t* Exact::search(ret_t* retu){
   if(retu->startp != NULL) {
     prev = retu->startp;
@@ -133,7 +124,6 @@ ret_t* Exact::search(ret_t* retu){
 
   // Else we are at backtracking
   } else {
-    retu->match_len -= mlen;
     mlen = 0;
   }
   int first = 0;
@@ -155,27 +145,47 @@ ret_t* Exact::search(ret_t* retu){
       run_len--;
     }
     char* prev_s = prev;
-//    cout << "EXACT run_len: " << run_len << "\n";
-    while (prev_s <= prev_s + run_len-- && prev < data_end) {
-//      cout << "prev: " << prev << "\n";
-      if (matches(*prev,*code)){
-        p2 = prev+1;char* p3 = code+1;
-        for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
-          ;
-        if (!i){
+    if (retu->quick_ref) {
+      while (prev_s <= prev_s + run_len-- && prev < data_end) {
+        if (matches(*prev,*code)){
+          p2 = prev+1;char* p3 = code+1;
           c = prev - prev_s;
-          mlen = len;
-          break;
+          for (i = (len + c) - 1; i && matches(*p2,*p3); i--,p3++,p2++)
+            ;
+          if (!i){
+            c = prev - prev_s;
+            mlen = len;
+            break;
+          }
         }
+        prev++;
       }
-      prev++;
+    } else {
+      while (prev_s <= prev_s + run_len-- && prev < data_end) {
+        if (matches(*prev,*code)){
+          p2 = prev+1;char* p3 = code+1;
+          for (i=len-1; i && matches(*p2,*p3); i--,p3++,p2++)
+            ;
+          if (!i){
+            c = prev - prev_s;
+            mlen = len;
+            break;
+          }
+        }
+        prev++;
+      }
     }
+    retu->quick_ref = 0;
     retu->len = 0;
     if(len == mlen){
       if (first != 1) {
         mlen += c;
       }
       retu->startp = (prev + len);
+      // Both the variable and the reference is c longer, so mlen is incremented twice with c
+      if (retu->quick_ref) {
+        mlen += c;
+      }
       return retu;
     } else {
       retu->startp = NULL;
@@ -337,6 +347,11 @@ Range::Range(char* data_s, char* data_e, int data_l, int le, char* c,
     len = le;
     width = w;
     data_len = data_l;
+/*    vname = var_name;
+    var_run_t* v = var_run();
+    v->name = vname;
+    v->xlen = 0;
+    vtable.push_back(v); */
 }
 
 
@@ -345,12 +360,10 @@ Range::Range(char* data_s, char* data_e, int data_l, int le, char* c,
    If start is not NULL, prev in this punit is set to start and is initialized */
 ret_t* Range::search(ret_t* retu){
   int first = 0;
-//  cout << "RANGE retu->len: " << retu->len << "\n";
-//  cout << "data_len: " << data_len << "\n";
   if (retu->len == data_len) {
     first = 1;
-//    cout << "RANGE FIRST\n";
   }
+  // The next punit will know that this is a variable being set
   if(retu->startp == NULL) {
     // it can't backtrack any more
     if(inc_width == 0){
@@ -358,6 +371,15 @@ ret_t* Range::search(ret_t* retu){
     // backtracking one forward
     } else {
 //      cout << "RANGE streching\n";
+      // If previous punit was variable being set and we need to try another of the allowed lengths
+      // of that punit
+/*      if (retu->prev_var) {
+        for (list<var*>::iterator it = vtable.begin(); it != vtable.end(); it++) {
+          if (strcmp((*it)->name, retu->ref) == 0) {
+            (*it)->xlen++;
+          }
+        }
+      } */
       inc_width--;
       strech++;
       if (! first) {
@@ -367,13 +389,6 @@ ret_t* Range::search(ret_t* retu){
       retu->len = width;
       retu->startp = prev + len;
       return retu;
-/*      if (first == 1) {
-        return retu;
-      } else {
-        retu->startp = NULL;
-        retu->len = 0;
-        return retu;
-      } */
     }
   }
   mlen = len;
@@ -385,7 +400,6 @@ ret_t* Range::search(ret_t* retu){
     retu->startp = (retu->startp + len);
     retu->len = width;
     mlen = len;
-    retu->match_len += len;
     return retu;
   } else {
     retu->startp = NULL;
@@ -412,35 +426,22 @@ ret_t* Reference::search(ret_t* retu) {
   if(code != variable->prev || len != next_Punit->prev - variable->prev){
     prev = retu->startp;
     code = variable->prev;
-//    printf("%.*s\n", 3, code);
-    len = variable->len + next_Punit->strech;
-//    cout << "REFERENCE code: " << code << "\n";
+    // If this reference is immediately after the variable being set
+    if (this == next_Punit) {
+      retu->quick_ref = 1;
+    } else {
+      retu->quick_ref = 0;
+    }
     len = next_Punit->prev - variable->prev;
     if(complement){
       int i = len-1;
       int s = 0;
       while(i >= 0){
-        switch(code[i] & 15){
-          case A_BIT:
-            cCode[s] = punit_to_code['t'];
-            break;
-          case T_BIT:
-            cCode[s] = punit_to_code['a'];
-            break;
-          case C_BIT:
-            cCode[s] = punit_to_code['g'];
-            break;
-          case G_BIT:
-            cCode[s] = punit_to_code['c'];
-            break;
-          default:
-            break;
-        }
-        i--;
-        s++;
+        cCode[s++] = ((code[i--] >> 4) & 15);
       }
       code = cCode;
     }
+//    retu->ref = var_p->vname;
   }
   return Exact::search(retu);
 }
@@ -524,6 +525,7 @@ int build_conversion_tables()
           case G_BIT + T_BIT:
             code_to_punit[the_char] = 'K'; 
             break;
+
           case C_BIT + G_BIT + T_BIT:
             code_to_punit[the_char] = 'B';
             break;

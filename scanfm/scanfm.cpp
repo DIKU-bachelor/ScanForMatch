@@ -90,7 +90,6 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       }
       int min = atoi(min_s.c_str());
       int max = atoi(max_s.c_str());
-
       Range* ra = new Range(start_of_data, end_of_data, end_of_data - start_of_data,
         min, NULL, max - min);
       pat_list.push_back(ra);
@@ -261,7 +260,6 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
         var_p, var_p_nxt, mis, ins, del, 0);
       pat_list.push_back(re);
       if (! re->next_Punit) {
-        cout << "hejhej\n";
         re->next_Punit = re;
       }
       if (save_next == 1) {
@@ -288,7 +286,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   int dist;
   int data_len = end_of_data - data;
   retu->len = data_len;
-  retu->match_len = 0;
+  retu->quick_ref = 0;
   char* match_start;
   char* start_of_data = data;
   int comb_mlen = 0;
@@ -299,17 +297,20 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       retu->len = data_len;
     }
     retu = (*it)->search(retu);
-
     // If the punit matched
     if (retu->startp) {
 //      cout << "punit match\n";
-
       // If the whole pattern matched
       if (++it == pat_list.end()) {
 //        cout << "whole pattern match\n\n";
         for (it = pat_list.begin(); it != pat_list.end(); it++) {
+//          cout << "mlen: " << (*it)->mlen << "\n";
           comb_mlen += (*it)->mlen;
         }
+//        cout << "hej: " << retu->startp << "\n";
+        int x = retu->startp - start_of_data;
+//        cout << "comb_mlen: " << comb_mlen << "\n";
+//        cout << "end of match: " << x << "\n";
         dist = (retu->startp - comb_mlen) - start_of_data;
         number_c++;
         printf("%i  %.*s\n", dist, comb_mlen, real_data + dist);
@@ -331,7 +332,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
 //        cout << "whole pattern NOT match\n\n";
-        cout << number_c << "\n";
+//        cout << number_c << "\n";
         return;
       }
       if (--it == pat_list.begin()) {
