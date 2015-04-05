@@ -307,11 +307,12 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
 //          cout << "mlen: " << (*it)->mlen << "\n";
           comb_mlen += (*it)->mlen;
         }
+        dist = (retu->startp - comb_mlen) - start_of_data;
+        int punit_start = 0;
+       
 //        cout << "hej: " << retu->startp << "\n";
-        int x = retu->startp - start_of_data;
 //        cout << "comb_mlen: " << comb_mlen << "\n";
 //        cout << "end of match: " << x << "\n";
-        dist = (retu->startp - comb_mlen) - start_of_data;
         number_c++;
         printf("%i  %.*s\n", dist, comb_mlen, real_data + dist);
         it = pat_list.begin();
@@ -319,7 +320,6 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
         comb_mlen = 0;
         retu->len = data_len;
 //        retu->len = end_of_data - data;
-        retu->match_len = 0;
         it = pat_list.begin();
         continue;
       }

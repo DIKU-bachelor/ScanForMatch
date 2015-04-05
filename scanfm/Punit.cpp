@@ -146,19 +146,36 @@ ret_t* Exact::search(ret_t* retu){
     }
     char* prev_s = prev;
     if (retu->quick_ref) {
-      while (prev_s <= prev_s + run_len-- && prev < data_end) {
-        if (matches(*prev,*code)){
-          p2 = prev+1;char* p3 = code+1;
-          c = prev - prev_s;
-          for (i = (len + c) - 1; i && matches(*p2,*p3); i--,p3++,p2++)
-            ;
-          if (!i){
+      if (comp) {
+        while (prev_s <= prev_s + run_len-- && prev < data_end) {
+          if (matches(*prev,*(code + run_len + 1))){
+            p2 = prev+1;char* p3 = code + run_len + 2;
             c = prev - prev_s;
-            mlen = len;
-            break;
+            for (i = (len + c) - 1; i && matches(*p2,*p3); i--,p3++,p2++)
+              ;
+            if (!i){
+              c = prev - prev_s;
+              mlen = len;
+              break;
+            }
           }
+          prev++;
         }
-        prev++;
+      } else {
+        while (prev_s <= prev_s + run_len-- && prev < data_end) {
+          if (matches(*prev,*code)){
+            p2 = prev+1;char* p3 = code+1;
+            c = prev - prev_s;
+            for (i = (len + c) - 1; i && matches(*p2,*p3); i--,p3++,p2++)
+              ;
+            if (!i){
+              c = prev - prev_s;
+              mlen = len;
+              break;
+            }
+          }
+          prev++;
+        }
       }
     } else {
       while (prev_s <= prev_s + run_len-- && prev < data_end) {
@@ -370,16 +387,6 @@ ret_t* Range::search(ret_t* retu){
       return retu;
     // backtracking one forward
     } else {
-//      cout << "RANGE streching\n";
-      // If previous punit was variable being set and we need to try another of the allowed lengths
-      // of that punit
-/*      if (retu->prev_var) {
-        for (list<var*>::iterator it = vtable.begin(); it != vtable.end(); it++) {
-          if (strcmp((*it)->name, retu->ref) == 0) {
-            (*it)->xlen++;
-          }
-        }
-      } */
       inc_width--;
       strech++;
       if (! first) {
@@ -426,15 +433,20 @@ ret_t* Reference::search(ret_t* retu) {
   if(code != variable->prev || len != next_Punit->prev - variable->prev){
     prev = retu->startp;
     code = variable->prev;
-    // If this reference is immediately after the variable being set
+    len = next_Punit->prev - variable->prev;
+   // If this reference is immediately after the variable being set
     if (this == next_Punit) {
       retu->quick_ref = 1;
     } else {
       retu->quick_ref = 0;
     }
-    len = next_Punit->prev - variable->prev;
     if(complement){
-      int i = len-1;
+      comp = complement;
+      tmp = new char[1000];
+      int i = len - 1;
+      if (retu->quick_ref) {
+        i += variable->width;
+      }
       int s = 0;
       while(i >= 0){
         cCode[s++] = ((code[i--] >> 4) & 15);

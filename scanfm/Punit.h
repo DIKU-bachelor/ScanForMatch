@@ -15,7 +15,6 @@ extern char code_to_punit[256];
 typedef struct ret {
   char* startp;
   int len;
-  int match_len;
   int quick_ref;
 } ret_t;
 
@@ -60,6 +59,19 @@ typedef struct var {
   Punit* nxt_punit;
 } var_t;
 
+/* punit range inherites from punit, is used to jump in the data e.g
+*  6..8 jumps from 6 to 8 charecters
+*  in the data */
+class Range: public Punit {
+  public:
+    int len;
+    int width;
+    int inc_width; //If range is called with a width, this is used
+    Range(char* data_s, char* data_e, int data_l, int le, char* c, int w);
+    void reset(void);
+    ret_t* search(ret_t* retu);
+};
+
 /* punit exact inherites from punit, is used to search for a litteral
 *  in the data */
 class Exact: public Punit {
@@ -80,6 +92,10 @@ class Exact: public Punit {
     stackent* stack;
     //last match lengths
     std::list<char*> lml;
+    char* tmp;
+    Range* variable;
+    char* cCode; //complementary code
+    int comp;
     void stack_next(stackent* st,int* nxtE, int N, 
                        char* p1, char* d1, int one_len,
                        int two_len);
@@ -93,28 +109,12 @@ class Exact: public Punit {
 };
 
 
-/* punit range inherites from punit, is used to jump in the data e.g
-*  6..8 jumps from 6 to 8 charecters
-*  in the data */
-class Range: public Punit {
-  public:
-    int len;
-    int width;
-    int inc_width; //If range is called with a width, this is used
-    Range(char* data_s, char* data_e, int data_l, int le, char* c, int w);
-    void reset(void);
-    ret_t* search(ret_t* retu);
-};
-
 class Reference: public Exact {
   public:
     int complement;
-    Range* variable;
     char* var_old_prev; // To test if code needs to be made complementary again
     Punit* next_Punit;
     char* next_p_old_prev; // To test if code needs to be made complementary again
-    char* cCode; //complementary code
-    
     Reference(char* data_s, char* data_e, int data_len, int comp, Range* var_p, 
               Punit* next_p, int mis, int ins, int del, int flex);
     ret_t* search(ret_t* retu);
