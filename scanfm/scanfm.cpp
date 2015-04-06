@@ -137,6 +137,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       for(int i = 0; i < until_brac; i++){
         conv_code[i] = punit_to_code[temp[i]];
       }
+      conv_code[pu.length()] = '\0';
     }
 
     // ex_len used to determine length of Exact punit before [ char
