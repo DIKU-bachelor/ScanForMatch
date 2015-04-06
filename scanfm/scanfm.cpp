@@ -319,7 +319,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
 //        cout << "comb_mlen: " << comb_mlen << "\n";
 //        cout << "end of match: " << x << "\n";
         number_c++;
-        printf("%i  %.*s\n", dist, comb_mlen, real_data + dist);
+        printf("%i  %.*s\n", dist + 1, comb_mlen, real_data + dist);
         it = pat_list.begin();
         data = retu->startp;
         comb_mlen = 0;
