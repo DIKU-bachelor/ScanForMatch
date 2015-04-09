@@ -241,8 +241,7 @@ ret_t* Exact::search(ret_t* retu){
   } else {
     ret_t* new_retu = new ret_t;
     while (0 <= run_len-- && prev < data_end) {
-      new_retu = loose_match(retu, new_retu, run_len, run_len_s, one_len, 
-                         two_len, del_nxt, ins_nxt, p1, p2);
+      new_retu = loose_match(retu, new_retu);
       if(new_retu->startp){
         return new_retu;
       }
@@ -257,10 +256,18 @@ ret_t* Exact::search(ret_t* retu){
 
 
 //Loose match, in the case of insertions, deletions and mismatches
-ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu, int run_len, 
-                           int run_len_s, int one_len, 
-                           int two_len, int del_nxt, int ins_nxt, char* p1, char* p2){
+ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
   if (retu->startp != NULL) {
+    run_len = retu->len;
+    run_len_s = run_len;
+    one_len = len;
+    two_len = data_end-prev;
+    del_nxt = 0;
+    ins_nxt = 0;
+    mlen = 0;
+    p1 = code;
+    p2 = prev;
+    flex = ins + del + mis;
     c_mis = mis;
     c_ins = ins;
     c_del = del;
@@ -390,8 +397,16 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu, int run_len,
        &p1, &p2, &one_len, &two_len, 
        &c_mis, &c_ins, &c_del,
        &ins_nxt, &del_nxt);
-    }
-    else{
+    } else if (c_ins){
+      c_ins--;
+      p2--;
+      if(!one_len){
+            new_retu->startp = (char*)(p2);
+            new_retu->len = 0;
+            mlen  = (int) (p2 - prev);
+            return new_retu;
+      }
+    } else{
       new_retu->startp = NULL;
       new_retu->len = 0;
       mlen  = (int) (p2 - prev);
