@@ -1,4 +1,4 @@
-#include "Punit.h"  
+#include "Punit.h" 
 #include <fstream>
 #include <iostream>
 #include "stdio.h"
@@ -129,6 +129,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
     if (until_brac == string::npos) {
       until_brac = pu.length();
     }
+
     if (count == until_brac) {
       conv_code = new char[1000];
       char* temp = new char[until_brac + 1];
@@ -141,7 +142,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
 
     // ex_len used to determine length of Exact punit before [ char
     int brac = pu.find('[');
-    int ex_len = pu.length();
+    int ex_len = until_brac;
     if (brac != string::npos) {
       ex_len = brac;
     }
@@ -247,7 +248,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
 
     // Checks if it's an Exact or Reference type punit
     if (ex_len == count) {
-      Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) (*it).length(), 
+      Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) until_brac, 
         conv_code, mis, ins, del, 0);
       pat_list.push_back(ex);
       if (save_next == 1) {

@@ -121,6 +121,7 @@ ret_t* Exact::search(ret_t* retu){
     mlen = 0;
     p1 = code;
     p2 = prev;
+    flex = ins + del + mis;
 
   // Else we are at backtracking
   } else {
@@ -225,7 +226,8 @@ ret_t* Exact::search(ret_t* retu){
         mlen += c;
       }
       retu->startp = (prev + len);
-      // Both the variable and the reference is c longer, so mlen is incremented twice with c
+      /* Both the variable and the reference is c longer, 
+         so mlen is incremented twice with c */
       if (retu->quick_ref) {
         mlen += c;
       }
@@ -234,145 +236,171 @@ ret_t* Exact::search(ret_t* retu){
       retu->startp = NULL;
       return retu;
     }
-  // OBS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Tilføjelse til MID koden: retu->match_len skal tælles op
+  /* Loose match in the case where there are:
+     Insertions, deletions and mismatches */
   } else {
-    if (retu->startp != NULL) {
-      c_mis = mis;
-      c_ins = ins;
-      c_del = del;
-      lml.clear();
-    } 
-    // special-case for ins=del=0 
-    if ((c_ins == 0) && (c_del == 0)){
-      if (one_len > two_len)
-      {
-        retu->startp = NULL;
-        retu->len = 0;
-        return retu;
+    ret_t* new_retu = new ret_t;
+    while (0 <= run_len-- && prev < data_end) {
+      new_retu = loose_match(retu, new_retu, run_len, run_len_s, one_len, 
+                         two_len, del_nxt, ins_nxt, p1, p2);
+      if(new_retu->startp){
+        return new_retu;
       }
-      int i;
-      for (i=one_len; i >= 1; i--){
-        if (!known_char((*p2)&15) ||
-           (!matches(*p2,*p1) && (--c_mis < 0))){
-          retu->startp = NULL;
-          retu->len = 0;
-          return retu;
-        }
-        else
-        {
-            p2++; p1++;
-        }
-      }
-      retu->startp = (char*)(p2)+1;
-      retu->len = 0;
-      return retu;
-    }
-
-    nxtent=0;
-    while (two_len || nxtent){
-      if (!del_nxt && !ins_nxt && (two_len && one_len && known_char((*p2)&15) &&
-	      matches(*p2,*p1))){
-        p2++; p1++; two_len--;
-        if (!(--one_len)){
-          int succes = 1;
-          for(list<char*>::iterator list_iter = lml.begin(); 
-              list_iter != lml.end(); list_iter++){
-            if(*list_iter == p1){
-              succes = 0;
-            }
-          }
-          if(succes){
-            lml.push_back(p1);
-
-            retu->startp = (char*)(p2)+1;
-            retu->len = 0;
-            return retu;
-          }
-        }
-      }
-      else if (!del_nxt && !ins_nxt &&(c_mis && (one_len >= 1) && (two_len >= 1))){
-	      if (c_ins){
-          stack_next(stack, &nxtent, 1, p1, p2, one_len, two_len);
-	      }
-	      else if (c_del){
-          stack_next(stack, &nxtent, 2, p1, p2, one_len, two_len);
-	      }
-	      c_mis--; p2++; p2++; one_len--; two_len--;
-	      if (! one_len)
-	      {
-          int succes = 1;
-          for(list<char*>::iterator list_iter = lml.begin(); 
-              list_iter != lml.end(); list_iter++){
-            if(*list_iter == p1){
-              succes = 0;
-            }
-          }
-          if(succes){
-            lml.push_back(p1);
-
-            retu->startp = (char*)(p2)+1;
-            retu->len = 0;
-            return retu;
-          }
-	      }
-	    }
-	    else if (!del_nxt && (ins_nxt  || (c_ins) && (one_len >= 1))){
-	      if (!ins_nxt && (c_del) && (two_len >= 1)){
-          stack_next(stack, &nxtent, 2, p1, p2, one_len, two_len);
-	      }
-        ins_nxt = 0;
-	      c_ins--; p1++; one_len--;
-	      if (! one_len){
-          int succes = 1;
-          for(list<char*>::iterator list_iter = lml.begin(); 
-              list_iter != lml.end(); list_iter++){
-            if(*list_iter == p1){
-              succes = 0;
-            }
-          }
-          if(succes){
-            lml.push_back(p1);
-            retu->startp = (char*)(p2)+1;
-            retu->len = 0;
-            return retu;
-          }
-	      }
-	    }
-	    else if (del_nxt || ((c_del) && (two_len >= 1))){
-        del_nxt = 0;
-        c_del--; p2++; two_len--;
-        if (! one_len){
-          int succes = 1;
-          for(list<char*>::iterator list_iter = lml.begin(); 
-              list_iter != lml.end(); list_iter++){
-            if(*list_iter == p1){
-              succes = 0;
-            }
-          }
-          if(succes){
-            lml.push_back(p1);
-              retu->startp = (char*)(p2)+1;
-              retu->len = 0;
-              return retu;
-          }
-        }
-	    }
-	    else if (nxtent--){
-	      pop(stack, nxtent, 
-         &p1, &p2, &one_len, &two_len, 
-         &c_mis, &c_ins, &c_del,
-         &ins_nxt, &del_nxt);
-	    }
-	    else{
-        retu->startp = NULL;
-        retu->len = 0;
-        return retu;
-      }
+      prev++; retu->startp++; p2++;
     }
   }
   retu->startp = NULL;
   retu->len = 0;
   return retu;
+}
+
+
+
+//Loose match, in the case of insertions, deletions and mismatches
+ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu, int run_len, 
+                           int run_len_s, int one_len, 
+                           int two_len, int del_nxt, int ins_nxt, char* p1, char* p2){
+  if (retu->startp != NULL) {
+    c_mis = mis;
+    c_ins = ins;
+    c_del = del;
+    lml.clear();
+  } 
+
+  // special-case for ins=del=0 
+  if ((c_ins == 0) && (c_del == 0)){
+    if (one_len > two_len)
+    {
+      new_retu->startp = NULL;
+      new_retu->len = 0;
+      return new_retu;
+    }
+    int i;
+    for (i=one_len; i >= 1; i--){
+      if (!known_char((*p2)&15) ||
+         (!matches(*p2,*p1) && (--c_mis < 0))){
+        new_retu->startp = NULL;
+        new_retu->len = 0;
+        return new_retu;
+      } else {
+          p2++; p1++;
+      }
+    }
+    new_retu->startp = (char*)(p2);
+    new_retu->len = 0;
+    mlen  = (int) (p2 - prev);
+    return new_retu;
+  }
+  // With insertions and deletions
+  nxtent=0;
+  while (two_len || nxtent){
+    if (!del_nxt && !ins_nxt && (two_len && one_len && known_char((*p2)&15) &&
+      matches(*p2,*p1))){
+      p2++; p1++; two_len--;
+      if (!(--one_len)){
+        int succes = 1;
+        for(list<char*>::iterator list_iter = lml.begin(); 
+            list_iter != lml.end(); list_iter++){
+          if(*list_iter == p1){
+            succes = 0;
+          }
+        }
+        if(succes){
+          lml.push_back(p1);
+
+          new_retu->startp = (char*)(p2);
+          new_retu->len = 0;
+          mlen  = (int) (p2 - prev);
+          return new_retu;
+        }
+      }
+    }
+    else if (!del_nxt && !ins_nxt &&(c_mis && (one_len >= 1) && (two_len >= 1))){
+      if (c_ins){
+        stack_next(stack, &nxtent, 1, p1, p2, one_len, two_len);
+      }
+      else if (c_del){
+        stack_next(stack, &nxtent, 2, p1, p2, one_len, two_len);
+      }
+      c_mis--; p2++; p2++; one_len--; two_len--;
+      if (! one_len)
+      {
+        int succes = 1;
+        for(list<char*>::iterator list_iter = lml.begin(); 
+            list_iter != lml.end(); list_iter++){
+          if(*list_iter == p1){
+            succes = 0;
+          }
+        }
+        if(succes){
+          lml.push_back(p1);
+
+          new_retu->startp = (char*)(p2);
+          new_retu->len = 0;
+          mlen  = (int) (p2 - prev);
+          return new_retu;
+        }
+      }
+    }
+    else if (!del_nxt && (ins_nxt  || (c_ins) && (one_len >= 1))){
+      if (!ins_nxt && (c_del) && (two_len >= 1)){
+        stack_next(stack, &nxtent, 2, p1, p2, one_len, two_len);
+      }
+      ins_nxt = 0;
+      c_ins--; p1++; one_len--;
+      if (! one_len){
+        int succes = 1;
+        for(list<char*>::iterator list_iter = lml.begin(); 
+            list_iter != lml.end(); list_iter++){
+          if(*list_iter == p1){
+            succes = 0;
+          }
+        }
+        if(succes){
+          lml.push_back(p1);
+          new_retu->startp = (char*)(p2);
+          new_retu->len = 0;
+          mlen  = (int) (p2 - prev);
+          return new_retu;
+        }
+      }
+    }
+    else if (del_nxt || ((c_del) && (two_len >= 1))){
+      del_nxt = 0;
+      c_del--; p2++; two_len--;
+      if (! one_len){
+        int succes = 1;
+        for(list<char*>::iterator list_iter = lml.begin(); 
+            list_iter != lml.end(); list_iter++){
+          if(*list_iter == p1){
+            succes = 0;
+          }
+        }
+        if(succes){
+          lml.push_back(p1);
+            new_retu->startp = (char*)(p2);
+            new_retu->len = 0;
+            mlen  = (int) (p2 - prev);
+            return new_retu;
+        }
+      }
+    }
+    else if (nxtent--){
+      pop(stack, nxtent, 
+       &p1, &p2, &one_len, &two_len, 
+       &c_mis, &c_ins, &c_del,
+       &ins_nxt, &del_nxt);
+    }
+    else{
+      new_retu->startp = NULL;
+      new_retu->len = 0;
+      mlen  = (int) (p2 - prev);
+      return new_retu;
+    }
+  }
+  new_retu->startp = NULL;
+  new_retu->len = 0;
+  return new_retu;
 }
 
 void Exact::reset(void) {
@@ -449,7 +477,7 @@ Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Range* 
   complement = comp;
   cCode = new char[1000];
 }
-
+//Refference search
 ret_t* Reference::search(ret_t* retu) {
   if(retu->startp && (code != variable->prev || len != next_Punit->prev - variable->prev)){
     prev = retu->startp;
@@ -474,8 +502,9 @@ ret_t* Reference::search(ret_t* retu) {
       }
       code = cCode; 
     }
-//    retu->ref = var_p->vname;
+    //retu->ref = var_p->vname;
   }
+  //Calls exact search with the reffered code
   return Exact::search(retu);
 }
 

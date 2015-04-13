@@ -96,6 +96,9 @@ class Exact: public Punit {
     Range* variable;
     char* cCode; //complementary code
     int comp;
+    ret_t* loose_match(ret_t* retu, ret_t* new_retu, int run_len, 
+                       int run_lens, int one_len, 
+                       int two_len, int del_nxt, int ins_nxt, char* p1, char* p2);
     void stack_next(stackent* st,int* nxtE, int N, 
                        char* p1, char* d1, int one_len,
                        int two_len);
