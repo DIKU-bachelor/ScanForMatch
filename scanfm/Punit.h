@@ -38,9 +38,15 @@ class Punit {
     int run_len;
     int run_len_s;
     int mlen;
+    char* mlen_start;
+    int is_amb;
+    int quick_ref;
     int strech;
     char* code;
     char* prev;
+    //Loose match saved variables
+    char* p1;
+    char* p2;
     Punit(char* data_s, char* data_e, int data_l, char* c);
     /* If start is NULL, the previous search failed, and this search starts at prev.
        If start is not NULL, prev in this punit is set to start and is initialized */
@@ -96,9 +102,7 @@ class Exact: public Punit {
     Range* variable;
     char* cCode; //complementary code
     int comp;
-    ret_t* loose_match(ret_t* retu, ret_t* new_retu, int run_len, 
-                       int run_lens, int one_len, 
-                       int two_len, int del_nxt, int ins_nxt, char* p1, char* p2);
+    ret_t* loose_match(ret_t* retu, ret_t* new_retu);
     void stack_next(stackent* st,int* nxtE, int N, 
                        char* p1, char* d1, int one_len,
                        int two_len);
@@ -115,6 +119,8 @@ class Exact: public Punit {
 class Reference: public Exact {
   public:
     int complement;
+    int counter1;
+    int counter2;
     char* var_old_prev; // To test if code needs to be made complementary again
     Punit* next_Punit;
     char* next_p_old_prev; // To test if code needs to be made complementary again

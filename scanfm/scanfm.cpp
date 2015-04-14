@@ -1,4 +1,4 @@
-#include "Punit.h" 
+#include "Punit.h"
 #include <fstream>
 #include <iostream>
 #include "stdio.h"
@@ -316,9 +316,6 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
         dist = (retu->startp - comb_mlen) - start_of_data;
         int punit_start = 0;
        
-//        cout << "hej: " << retu->startp << "\n";
-//        cout << "comb_mlen: " << comb_mlen << "\n";
-//        cout << "end of match: " << x << "\n";
         number_c++;
         printf("%i  %.*s\n", dist + 1, comb_mlen, real_data + dist);
         it = pat_list.begin();
