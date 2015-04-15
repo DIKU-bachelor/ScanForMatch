@@ -1,0 +1,4 @@
+Jeg skal teste hvorfor nogle patterns ikke virker. (Segfault eller uendelig loop).
+Måske flercifrede range tal (fejl i parsing), måske flere end 2-3 patterns fejler
+pga stadig manglende håndtering af backtrack (variabel modificering) i selve pattern_match
+og Exact::search.
