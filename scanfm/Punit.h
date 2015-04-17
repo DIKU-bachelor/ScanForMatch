@@ -44,6 +44,7 @@ class Punit {
     int strech;
     char* code;
     char* prev;
+    char* orig_code;
     //Loose match saved variables
     char* p1;
     char* p2;
@@ -63,6 +64,7 @@ typedef struct var {
   string name;
   Punit* var_punit;
   Punit* nxt_punit;
+  int first;
 } var_t;
 
 /* punit range inherites from punit, is used to jump in the data e.g
@@ -124,8 +126,9 @@ class Reference: public Exact {
     char* var_old_prev; // To test if code needs to be made complementary again
     Punit* next_Punit;
     char* next_p_old_prev; // To test if code needs to be made complementary again
+    int first_ref;
     Reference(char* data_s, char* data_e, int data_len, int comp, Range* var_p, 
-              Punit* next_p, int mis, int ins, int del, int flex);
+              Punit* next_p, int first, int mis, int ins, int del, int flex);
     ret_t* search(ret_t* retu);
 };
 

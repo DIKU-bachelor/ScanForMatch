@@ -62,6 +62,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
   Punit* var_p;
   Punit* var_p_nxt;
   var_t* va;
+  int first_ref = 0;
 
   // Loop to try and parse punits
   for (list<string>::iterator it = split_text.begin(); it != split_text.end(); it++) {
@@ -105,6 +106,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
         va = new var();
         va->name = varn;
         va->var_punit = ra;
+        va->first = 1;
         var_list.push_back(va);
         save_next = 1;
       }
@@ -165,6 +167,10 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
         if (until_brac.compare((*var_it)->name) == 0) {
           var_p = (*var_it)->var_punit;
           var_p_nxt = (*var_it)->nxt_punit;
+          if ((*var_it)->first == 1) {
+            first_ref = 1;
+            (*var_it)->first = 0;
+          }
           break;
         }
       }
@@ -263,8 +269,9 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
         complem = 1;
       }
       Reference* re = new Reference(start_of_data, end_of_data, data_len, complem, (Range*)
-        var_p, var_p_nxt, mis, ins, del, 0);
+        var_p, var_p_nxt, first_ref, mis, ins, del, 0);
       pat_list.push_back(re);
+      first_ref = 0;
       if (! re->next_Punit) {
         re->next_Punit = re;
       }
