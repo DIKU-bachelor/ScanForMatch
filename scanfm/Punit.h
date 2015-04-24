@@ -10,6 +10,7 @@
 using namespace std;
 
 extern char punit_to_code[256];
+extern char punit_to_code_for_data[256];
 extern char code_to_punit[256];
 
 typedef struct ret {

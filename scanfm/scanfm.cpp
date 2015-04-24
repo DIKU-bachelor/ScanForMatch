@@ -10,6 +10,7 @@
 #include <typeinfo>
 #include <string>
 #include <algorithm>
+#include <time.h>
 using namespace std;
 
 #define fsize 250000000
@@ -448,6 +449,7 @@ int test_complementary()
 
 
 int main(int argc, char* argv[]) {
+  clock_t tim = clock();
   build_conversion_tables(); 
   if (argc == 1) {
     cout << "ERROR: call to scanfm need arguments in format:\nscanfm -p <pattern> -d <datafile>\n";
@@ -505,7 +507,7 @@ int main(int argc, char* argv[]) {
   strcpy(rdata, real_data.c_str());
   int i;
   for (i = 0; i < real_data.size(); i++) {
-    data[i] = punit_to_code[tolower(real_data[i])];
+    data[i] = punit_to_code_for_data[tolower(real_data[i])];
     end_of_data++;
   }
   data[++i] = '\0';
@@ -514,11 +516,8 @@ int main(int argc, char* argv[]) {
   if (pat_list.empty()) {
     return -1;
   }
-  #define T_BIT 0x08;
-  unsigned char x = T_BIT;
-  unsigned char t = (unsigned char) (( x >> 4) & 15);
-//  cout << (int) x << "\n";
-//  cout << (int) t << "\n";
   pattern_match(pat_list, data, rdata, end_of_data);
+  tim = clock() - tim;
+  printf("Total time: %f seconds\n", ((float) tim) / CLOCKS_PER_SEC);
   return 0;
 }

@@ -8,6 +8,7 @@ using namespace std;
 
 int initialized = 1;
 char punit_to_code[256];
+char punit_to_code_for_data[256];
 char code_to_punit[256];
 
 bool known_char_i[16] = {0,1,1,0,1,0,0,0,1,0,0,0,0,0,0,0};
@@ -19,6 +20,7 @@ char known_char_index[16] =
 #define C_BIT 0x02              /* char bitfield */
 #define G_BIT 0x04              /* char bitfield */
 #define T_BIT 0x08              /* char bitfield */
+#define NO_BIT 0x00
 
 #define max_var_size 10000
 
@@ -191,6 +193,7 @@ ret_t* Exact::search(ret_t* retu){
         }
       }
     } else {
+    // If this Punit is complementary and the previous Punit was not the variable being set
       if (comp) {
         while (prev_s <= prev_s + run_len-- && prev + len < data_end) {
           if (matches(*prev,*(code))){
@@ -206,6 +209,7 @@ ret_t* Exact::search(ret_t* retu){
           prev++;
         }
       } else {
+      // If this Punit is not complementary and the previous Puni was not the variable being set
         while (prev_s <= prev_s + run_len-- && prev + len < data_end) {
           if (matches(*prev,*code)){
             p2 = prev+1;char* p3 = code+1;
@@ -247,7 +251,7 @@ ret_t* Exact::search(ret_t* retu){
         mlen += c;
       }
       // If this is a reference punit, ambiguous letters must be set to specific
-      if (is_amb) {
+/*      if (is_amb) {
         if (comp == 1) {
           int k = 0;
           for (int j = len - 1; j >= 0; j--) {
@@ -256,7 +260,7 @@ ret_t* Exact::search(ret_t* retu){
         } else {
           strncpy(variable->code, prev, len);
         }
-      }
+      } */
       return retu;
     } else {
       retu->startp = NULL;
@@ -506,7 +510,6 @@ ret_t* Range::search(ret_t* retu){
     mlen = len;
     return retu;
   } else {
-    cout << "IKKE MERE PLADS\n";
     retu->startp = NULL;
     retu->len = 0;
     return retu;
@@ -538,13 +541,13 @@ ret_t* Reference::search(ret_t* retu) {
     }
     code = variable->code;
     len = next_Punit->prev - variable->prev;
-    is_amb = 0;
+/*    is_amb = 0;
     for (int i = 0; i < len + variable->width; i++) {
       if ((code[i] & 15) & ((code[i] >> 4) & 15)) {
         is_amb = 1;
         break;
       }
-    }
+    } */
     // If this reference is immediately after the variable being set
     if (this == next_Punit) {
       quick_ref = 1;
@@ -573,34 +576,74 @@ int build_conversion_tables()
 
     for (the_char=0; the_char < 256; the_char++) {
         switch(tolower(the_char)) {
-          case 'a': punit_to_code[the_char] = A_BIT; break;
-          case 'c': punit_to_code[the_char] = C_BIT; break;
-          case 'g': punit_to_code[the_char] = G_BIT; break;
-          case 't': punit_to_code[the_char] = T_BIT; break;
-          case 'u': punit_to_code[the_char] = T_BIT; break;
-          case 'm': punit_to_code[the_char] = (A_BIT | C_BIT); break;
-          case 'r': punit_to_code[the_char] = (A_BIT | G_BIT); break;
-          case 'w': punit_to_code[the_char] = (A_BIT | T_BIT); break;
-          case 's': punit_to_code[the_char] = (C_BIT | G_BIT); break;
-          case 'y': punit_to_code[the_char] = (C_BIT | T_BIT); break;
-          case 'k': punit_to_code[the_char] = (G_BIT | T_BIT); break;
-          case 'b': punit_to_code[the_char] = (C_BIT | G_BIT | T_BIT); break;
-          case 'd': punit_to_code[the_char] = (A_BIT | G_BIT | T_BIT); break;
-          case 'h': punit_to_code[the_char] = (A_BIT | C_BIT | T_BIT); break;
-          case 'v': punit_to_code[the_char] = (A_BIT | C_BIT | G_BIT); break;
-          case 'n': punit_to_code[the_char] = (A_BIT | C_BIT | G_BIT | T_BIT); break;
+          case 'a': punit_to_code[the_char] = A_BIT;
+            punit_to_code_for_data[the_char] = A_BIT;
+            break;
+          case 'c': punit_to_code[the_char] = C_BIT;
+            punit_to_code_for_data[the_char] = C_BIT;
+            break;
+          case 'g': punit_to_code[the_char] = G_BIT;
+            punit_to_code_for_data[the_char] = G_BIT;
+            break;
+          case 't': punit_to_code[the_char] = T_BIT;
+            punit_to_code_for_data[the_char] = T_BIT;
+            break;
+          case 'u': punit_to_code[the_char] = T_BIT;
+            punit_to_code_for_data[the_char] = NO_BIT;
+          case 'm': punit_to_code[the_char] = (A_BIT | C_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'r': punit_to_code[the_char] = (A_BIT | G_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'w': punit_to_code[the_char] = (A_BIT | T_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 's': punit_to_code[the_char] = (C_BIT | G_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'y': punit_to_code[the_char] = (C_BIT | T_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'k': punit_to_code[the_char] = (G_BIT | T_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'b': punit_to_code[the_char] = (C_BIT | G_BIT | T_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'd': punit_to_code[the_char] = (A_BIT | G_BIT | T_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'h': punit_to_code[the_char] = (A_BIT | C_BIT | T_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'v': punit_to_code[the_char] = (A_BIT | C_BIT | G_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
+          case 'n': punit_to_code[the_char] = (A_BIT | C_BIT | G_BIT | T_BIT);
+            punit_to_code_for_data[the_char] = NO_BIT;
+            break;
           default:
             punit_to_code[the_char] = 0;
+            punit_to_code_for_data[the_char] = 0;
             break;
         }
-        if (punit_to_code[the_char] & A_BIT)
+        if (punit_to_code[the_char] & A_BIT) {
             punit_to_code[the_char] |= T_BIT << 4;
-        if (punit_to_code[the_char] & C_BIT)
+            punit_to_code_for_data[the_char] |= T_BIT << 4;
+        }
+        if (punit_to_code[the_char] & C_BIT) {
             punit_to_code[the_char] |= G_BIT << 4;
-        if (punit_to_code[the_char] & G_BIT)
+            punit_to_code_for_data[the_char] |= G_BIT << 4;
+        }
+        if (punit_to_code[the_char] & G_BIT) {
             punit_to_code[the_char] |= C_BIT << 4;
-        if (punit_to_code[the_char] & T_BIT)
+            punit_to_code_for_data[the_char] |= C_BIT << 4;
+        }
+        if (punit_to_code[the_char] & T_BIT) {
             punit_to_code[the_char] |= A_BIT << 4;
+            punit_to_code_for_data[the_char] |= A_BIT << 4;
+        }
     }
 
     for (the_char=0; the_char < 256; the_char++)

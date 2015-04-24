@@ -16,10 +16,16 @@ def compare_files(scanfm_fname, scan_for_matches_fname):
     line1 = f1.readline();
     line2 = f2.readline();
     line2 += f2.readline();
+    if (line1[:5] == "Total" and line2[:5] == "Total"):
+      print "--------PASSED--------";
+      print "";
+      print "scanfm:           " + line1;
+      print "scan_for_matches: " + line2;
+      return;
     dline = deformat_line(line2);
     if (line1 == '' and line2 == ''):
       if (not fail):
-        print "PASSED";
+        print "--------PASSED--------";
       return;
     if (line1 == ''):
       fail = 1;

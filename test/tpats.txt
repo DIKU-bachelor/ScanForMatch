@@ -1,7 +1,0 @@
-ACCCGTGC 4...6 ACC
-ATTA 3...19 GCAGGTG
-TCTTT 12...19 TCT 3...5 AT
-p1=6...7 p1 ~p1
-AT p1=4...12 CG 4...5 p1 GCTCT
-AA p1=9...9 p1 p2=4...6 p1 p2
-C p1=6...8 3...4 ~p1 7...10 GT

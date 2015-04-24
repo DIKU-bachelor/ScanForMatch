@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define MAX_SEQ_LEN 250000000
 #define MAX_PAT_LINE_LN 32000
@@ -106,6 +107,7 @@ int main(argc,argv)
 int argc;
 char *argv[];
 {
+    clock_t tim = clock();
     extern char *optarg;
     extern int optind;
 
@@ -327,7 +329,8 @@ char *argv[];
 	}
     }
     /*    printf("successfully completed\n"); */
-
+  tim = clock() - tim;
+  printf("Total time: %f seconds\n", ((float) tim) / CLOCKS_PER_SEC);
     return(EXIT_SUCCESS);
 }
 
