@@ -103,14 +103,14 @@ class Exact: public Punit {
     char* cCode; //complementary code
     int comp;
     ret_t* loose_match(ret_t* retu, ret_t* new_retu);
-    void stack_next(stackent* st,int* nxtE, int N, 
+    void stack_next(stackent* st,int nxtE, int N, 
                        char* p1, char* d1, int one_len,
                        int two_len);
     void pop(stackent* st, int nxtent, 
                     char** pattern, char** data, int* p_len, int* d_len, 
                     int* p_mis, int* p_ins, int* p_del,
                     int* ins_nxt_p, int* del_nxt_p);
-    Exact(char* data_s, char* data_e, int data_len, int le, char* c, int i, int d, int m, int f);
+    Exact(char* data_s, char* data_e, int data_len, int le, char* c, int m, int d, int i, int f);
     void reset(void);
     ret_t* search(ret_t* retu);
 };
@@ -125,7 +125,7 @@ class Reference: public Exact {
     Punit* next_Punit;
     char* next_p_old_prev; // To test if code needs to be made complementary again
     Reference(char* data_s, char* data_e, int data_len, int comp, Range* var_p, 
-              Punit* next_p, int mis, int ins, int del, int flex);
+              Punit* next_p, int mis, int del, int ins, int flex);
     ret_t* search(ret_t* retu);
 };
 

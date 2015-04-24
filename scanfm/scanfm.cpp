@@ -189,7 +189,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       pu = pu.substr(brac + 1);
       int com = pu.find(',');
       if (com != string::npos) {
-        mis_s = pu.substr(0, com);
+        ins_s = pu.substr(0, com);
         pu = pu.substr(com + 1);
       } else {
         cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
@@ -199,7 +199,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
       }
       com = pu.find(',');
       if (com != string::npos) {
-        ins_s = pu.substr(0, com);
+        mis_s = pu.substr(0, com);
         pu = pu.substr(com + 1);
       } else {
         cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
@@ -249,7 +249,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
     // Checks if it's an Exact or Reference type punit
     if (ex_len == count) {
       Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) until_brac, 
-        conv_code, mis, ins, del, 0);
+        conv_code, mis, del, ins, 0);
       pat_list.push_back(ex);
       if (save_next == 1) {
         va->nxt_punit = ex;
@@ -263,7 +263,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data, int data
         complem = 1;
       }
       Reference* re = new Reference(start_of_data, end_of_data, data_len, complem, (Range*)
-        var_p, var_p_nxt, mis, ins, del, 0);
+        var_p, var_p_nxt, mis, del, ins, 0);
       pat_list.push_back(re);
       if (! re->next_Punit) {
         re->next_Punit = re;
@@ -298,11 +298,16 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   int comb_mlen = 0;
   int l = 0;
   int number_c = 0;
+  //for testing
+  list<Punit*>::iterator itn;
+  int pLength = 0;
+
   while (true) {
     if (it == pat_list.begin()) {
       retu->len = data_len;
     }
     retu = (*it)->search(retu);
+    //printf("len, %i \n", retu->len);
     // If the punit matched
     if (retu->startp) {
 //      cout << "punit match\n";
@@ -332,6 +337,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
     } else {
 //      cout << "punit NOT match\n";
 
+        
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
 //        cout << "whole pattern NOT match\n\n";

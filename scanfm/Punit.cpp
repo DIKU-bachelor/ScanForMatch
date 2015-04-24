@@ -74,17 +74,17 @@ Exact::Exact(char* data_s, char* data_e, int data_len, int le, char* c,
 }
 /* FUNCTION TO MISMATCHES INSERTIONS DELETIONS (kan udkommenteres hvis den ikke
 compiler*/
-void Exact::stack_next(stackent* st,int* nxtE, int N, 
+void Exact::stack_next(stackent* st,int nxtE, int N, 
                        char* p1, char* data, int one_len,
                        int two_len) {
-  st[*nxtE].p1=p1; 
-  st[*nxtE].p2=data; 
-  st[*nxtE].n1=one_len;
-  st[*nxtE].n2=two_len;
-  st[*nxtE].mis=c_mis;
-  st[*nxtE].ins=c_ins; 
-  st[*nxtE].del=c_del; 
-  st[*nxtE++].next_choice=N;
+  st[nxtE].p1=p1; 
+  st[nxtE].p2=data; 
+  st[nxtE].n1=one_len;
+  st[nxtE].n2=two_len;
+  st[nxtE].mis=c_mis;
+  st[nxtE].ins=c_ins; 
+  st[nxtE].del=c_del; 
+  st[nxtent++].next_choice=N;
 }
 
 void Exact::pop(stackent* st, int nxtent, 
@@ -103,11 +103,11 @@ void Exact::pop(stackent* st, int nxtent,
   if (stack[nxtent].next_choice == 1) {
     if (*p_del){
       st[nxtent].next_choice = 2;
-      *ins_nxt_p = 1;
     }
-    else{
-      *del_nxt_p = 1;
-    }
+    //printf("del next \n"); OLOLO
+    *ins_nxt_p = 1;
+  }else{
+    *del_nxt_p = 1;
   }
 }
 /* If start is NULL, the previous search failed, and this search starts at prev.
@@ -272,11 +272,13 @@ ret_t* Exact::search(ret_t* retu){
   } else {
     ret_t* new_retu = new ret_t;
     while (0 <= run_len-- && prev < data_end) {
+      //printf("run_len = %i, is it true o0 = %i \n", run_len, (0 <= run_len && prev < data_end));
       new_retu = loose_match(retu, new_retu);
+      //printf("new_retu->len = %i, new_retu->startp = %p \n", new_retu->len, new_retu->startp);
       if(new_retu->startp){
         return new_retu;
       }
-      prev++; retu->startp++; p2++;
+      prev++; retu->startp++; p2++; //run_len--;
     }
   }
   retu->startp = NULL;
@@ -287,10 +289,9 @@ ret_t* Exact::search(ret_t* retu){
 
 
 //Loose match, in the case of insertions, deletions and mismatches
+//new
 ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
   if (retu->startp != NULL) {
-    run_len = retu->len;
-    run_len_s = run_len;
     one_len = len;
     two_len = data_end-prev;
     del_nxt = 0;
@@ -303,8 +304,14 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
     c_ins = ins;
     c_del = del;
     lml.clear();
+    //printf("new\n");
   } 
-
+  else{
+    //printf("not new \n");  
+  }
+  if ((c_ins == 0) && (c_del == 0) && retu->startp == NULL){
+    return retu;
+  }
   // special-case for ins=del=0 
   if ((c_ins == 0) && (c_del == 0)){
     if (one_len > two_len)
@@ -332,6 +339,7 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
   // With insertions and deletions
   nxtent=0;
   while (two_len || nxtent){
+    //printf("ins = %i, del = %i, mis = %i, one_len = %i, p1 = %p, p2 = %p \n", c_ins, c_del, c_mis, one_len, p1, p2);
     if (!del_nxt && !ins_nxt && (two_len && one_len && known_char((*p2)&15) &&
       matches(*p2,*p1))){
       p2++; p1++; two_len--;
@@ -345,7 +353,6 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
         }
         if(succes){
           lml.push_back(p1);
-
           new_retu->startp = (char*)(p2);
           new_retu->len = 0;
           mlen  = (int) (p2 - prev);
@@ -355,12 +362,16 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
     }
     else if (!del_nxt && !ins_nxt &&(c_mis && (one_len >= 1) && (two_len >= 1))){
       if (c_ins){
-        stack_next(stack, &nxtent, 1, p1, p2, one_len, two_len);
+        //printf("nxt = %i \n",nxtent);
+        stack_next(stack, nxtent, 1, p1, p2, one_len, two_len);
+        //printf("nxt = %i \n",nxtent);
       }
       else if (c_del){
-        stack_next(stack, &nxtent, 2, p1, p2, one_len, two_len);
+        //printf("nxt = %i \n",nxtent);
+        stack_next(stack, nxtent, 2, p1, p2, one_len, two_len);
+        //printf("nxt = %i \n",nxtent);
       }
-      c_mis--; p2++; p2++; one_len--; two_len--;
+      c_mis--; p1++; p2++; one_len--; two_len--;
       if (! one_len)
       {
         int succes = 1;
@@ -372,7 +383,6 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
         }
         if(succes){
           lml.push_back(p1);
-
           new_retu->startp = (char*)(p2);
           new_retu->len = 0;
           mlen  = (int) (p2 - prev);
@@ -382,7 +392,9 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
     }
     else if (!del_nxt && (ins_nxt  || (c_ins) && (one_len >= 1))){
       if (!ins_nxt && (c_del) && (two_len >= 1)){
-        stack_next(stack, &nxtent, 2, p1, p2, one_len, two_len);
+        //printf("nxt = %i \n",nxtent);
+        stack_next(stack, nxtent, 2, p1, p2, one_len, two_len);
+        //printf("nxt = %i \n",nxtent);
       }
       ins_nxt = 0;
       c_ins--; p1++; one_len--;
@@ -424,6 +436,7 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
       }
     }
     else if (nxtent--){
+      //printf("pop, nxtent = %i \n", nxtent);
       pop(stack, nxtent, 
        &p1, &p2, &one_len, &two_len, 
        &c_mis, &c_ins, &c_del,
