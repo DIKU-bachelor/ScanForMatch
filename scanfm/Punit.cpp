@@ -6,7 +6,7 @@
 #include "Punit.h"
 using namespace std;
 
-int initialized = 1;
+int conv_table_init = 1;
 char punit_to_code[256];
 char punit_to_code_for_data[256];
 char code_to_punit[256];
@@ -724,7 +724,7 @@ int build_conversion_tables()
             break;
         }
     }
-    initialized=1;
+    conv_table_init = 1;
     return(0);
 }
 
