@@ -19,8 +19,7 @@ typedef struct ret {
   int quick_ref;
 } ret_t;
 
-
-/* for loose fitet patterns (inserts, deletions, mismatches) */
+// for loosely fitted patterns (inserts, deletions, mismatches)
 struct stackent {
   char* p1;
   char* p2;
@@ -59,7 +58,6 @@ class Punit {
     /* Match 2 given bases with eachother using the converted bit type*/
     bool matches(char C1, char C2);
 };
-
 
 typedef struct var {
   string name;
