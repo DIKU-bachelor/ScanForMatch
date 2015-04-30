@@ -40,6 +40,11 @@ Punit::Punit(char* data_s, char* data_e, int data_l, char* c, int typ){
     type = typ;
 }
 
+int Punit::get_flex() {
+  cout << "Punit get_flex called, shoud not happen...\n";
+  return 0;
+}
+
 void Punit::reset(void) {}
 
 ret_t* Punit::search(ret_t* start) {
@@ -70,7 +75,13 @@ Exact::Exact(char* data_s, char* data_e, int data_len, int le, char* c,
     c_del = del;
     c_mis = mis;
     c_flex = flex;
-    stack = (stackent*)malloc(sizeof(stackent)*100);
+    stack = (stackent*)malloc(sizeof(stackent)*1000);
+    match_stack = (stackent*)malloc(sizeof(stackent)*1000);
+    for(i = 0; i < 1000; i++){
+      match_lens[i] = 0;
+    }
+    found_matches = 0;
+    match_list_len = 0;
 }
 /* FUNCTION TO MISMATCHES INSERTIONS DELETIONS (kan udkommenteres hvis den ikke
 compiler*/
@@ -85,6 +96,7 @@ void Exact::stack_next(stackent* st,int nxtE, int N,
   st[nxtE].ins=c_ins; 
   st[nxtE].del=c_del; 
   st[nxtent++].next_choice=N;
+  //printf("stack_next nxtent = %i \n", nxtent);
 }
 
 void Exact::pop(stackent* st, int nxtent, 
@@ -110,6 +122,18 @@ void Exact::pop(stackent* st, int nxtent,
     *del_nxt_p = 1;
   }
 }
+
+
+/* Match saved in the match_stack */
+void Exact::match(){
+  //printf("match p2 = %p, c_mis = %i, c_ins = %i, c_del = %i \n", p2, c_mis, c_ins, c_del);
+  match_stack[found_matches].p2=p2;
+  match_stack[found_matches].mis=c_mis;
+  match_stack[found_matches].ins=c_ins; 
+  match_stack[found_matches++].del=c_del;
+}
+
+
 /* If start is NULL, the previous search failed, and this search starts at prev.
    If start is not NULL, prev in this punit is set to start and is initialized */ 
 
@@ -268,9 +292,11 @@ ret_t* Exact::search(ret_t* retu){
   /* Loose match in the case where there are:
      Insertions, deletions and mismatches */
   } else {
+    if (retu->startp == NULL){
+      run_len++;
+    }
     ret_t* new_retu = new ret_t;
     while (0 <= run_len-- && prev < data_end) {
-      //printf("run_len = %i, is it true o0 = %i \n", run_len, (0 <= run_len && prev < data_end));
       new_retu = loose_match(retu, new_retu);
       //printf("new_retu->len = %i, new_retu->startp = %p \n", new_retu->len, new_retu->startp);
       if(new_retu->startp){
@@ -289,7 +315,23 @@ ret_t* Exact::search(ret_t* retu){
 //Loose match, in the case of insertions, deletions and mismatches
 //new
 ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
+  //printf("first nxtent = %i \n",nxtent);
+  //printf("loose match \n");
+  if(retu->startp == NULL){
+    //printf("BACKTRACK \n");
+    if(match_list_len){
+      new_retu->startp = (char*)(match_list[match_list_len--]);
+      new_retu->len = 1;
+      mlen = new_retu->startp - prev;
+      return new_retu;
+    } else {
+      new_retu->startp = NULL;
+      new_retu->len = 0;
+      return new_retu;
+    }
+  }
   if (retu->startp != NULL) {
+    //Initiation at next position
     one_len = len;
     two_len = data_end-prev;
     del_nxt = 0;
@@ -301,157 +343,138 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
     c_mis = mis;
     c_ins = ins;
     c_del = del;
-    lml.clear();
-    //printf("new\n");
-  } 
-  else{
-    //printf("not new \n");  
-  }
-  if ((c_ins == 0) && (c_del == 0) && retu->startp == NULL){
-    return retu;
-  }
-  // special-case for ins=del=0 
-  if ((c_ins == 0) && (c_del == 0)){
-    if (one_len > two_len)
-    {
-      new_retu->startp = NULL;
-      new_retu->len = 0;
-      return new_retu;
-    }
-    int i;
-    for (i=one_len; i >= 1; i--){
-      if (!known_char((*p2)&15) ||
-         (!matches(*p2,*p1) && (--c_mis < 0))){
+    nxtent = 0;
+    found_matches = 0;
+    memset(match_lens, 0, sizeof(match_lens));
+    match_list_len = 0;
+    //printf("new\n\n\n");
+
+    //Search
+    //printf("c_mis = %i, c_ins = %i, c_del = %i \n", c_mis, c_ins, c_del);
+    // special-case for ins=del=0 
+    if ((c_ins == 0) && (c_del == 0)){
+      if (one_len > two_len)
+      {
         new_retu->startp = NULL;
         new_retu->len = 0;
         return new_retu;
-      } else {
-          p2++; p1++;
       }
-    }
-    new_retu->startp = (char*)(p2);
-    new_retu->len = 0;
-    mlen  = (int) (p2 - prev);
-    return new_retu;
-  }
-  // With insertions and deletions
-  nxtent=0;
-  while (two_len || nxtent){
-    //printf("ins = %i, del = %i, mis = %i, one_len = %i, p1 = %p, p2 = %p \n", c_ins, c_del, c_mis, one_len, p1, p2);
-    if (!del_nxt && !ins_nxt && (two_len && one_len && known_char((*p2)&15) &&
-      matches(*p2,*p1))){
-      p2++; p1++; two_len--;
-      if (!(--one_len)){
-        int succes = 1;
-        for(list<char*>::iterator list_iter = lml.begin(); 
-            list_iter != lml.end(); list_iter++){
-          if(*list_iter == p1){
-            succes = 0;
-          }
-        }
-        if(succes){
-          lml.push_back(p1);
-          new_retu->startp = (char*)(p2);
+      int i;
+      for (i=one_len; i >= 1; i--){
+        if (!known_char((*p2)&15) ||
+           (!matches(*p2,*p1) && (--c_mis < 0))){
+          new_retu->startp = NULL;
           new_retu->len = 0;
-          mlen  = (int) (p2 - prev);
           return new_retu;
+        } else {
+            p2++; p1++;
         }
       }
-    }
-    else if (!del_nxt && !ins_nxt &&(c_mis && (one_len >= 1) && (two_len >= 1))){
-      if (c_ins){
-        //printf("nxt = %i \n",nxtent);
-        stack_next(stack, nxtent, 1, p1, p2, one_len, two_len);
-        //printf("nxt = %i \n",nxtent);
-      }
-      else if (c_del){
-        //printf("nxt = %i \n",nxtent);
-        stack_next(stack, nxtent, 2, p1, p2, one_len, two_len);
-        //printf("nxt = %i \n",nxtent);
-      }
-      c_mis--; p1++; p2++; one_len--; two_len--;
-      if (! one_len)
-      {
-        int succes = 1;
-        for(list<char*>::iterator list_iter = lml.begin(); 
-            list_iter != lml.end(); list_iter++){
-          if(*list_iter == p1){
-            succes = 0;
-          }
-        }
-        if(succes){
-          lml.push_back(p1);
-          new_retu->startp = (char*)(p2);
-          new_retu->len = 0;
-          mlen  = (int) (p2 - prev);
-          return new_retu;
-        }
-      }
-    }
-    else if (!del_nxt && (ins_nxt  || (c_ins) && (one_len >= 1))){
-      if (!ins_nxt && (c_del) && (two_len >= 1)){
-        //printf("nxt = %i \n",nxtent);
-        stack_next(stack, nxtent, 2, p1, p2, one_len, two_len);
-        //printf("nxt = %i \n",nxtent);
-      }
-      ins_nxt = 0;
-      c_ins--; p1++; one_len--;
-      if (! one_len){
-        int succes = 1;
-        for(list<char*>::iterator list_iter = lml.begin(); 
-            list_iter != lml.end(); list_iter++){
-          if(*list_iter == p1){
-            succes = 0;
-          }
-        }
-        if(succes){
-          lml.push_back(p1);
-          new_retu->startp = (char*)(p2);
-          new_retu->len = 0;
-          mlen  = (int) (p2 - prev);
-          return new_retu;
-        }
-      }
-    }
-    else if (del_nxt || ((c_del) && (two_len >= 1))){
-      del_nxt = 0;
-      c_del--; p2++; two_len--;
-      if (! one_len){
-        int succes = 1;
-        for(list<char*>::iterator list_iter = lml.begin(); 
-            list_iter != lml.end(); list_iter++){
-          if(*list_iter == p1){
-            succes = 0;
-          }
-        }
-        if(succes){
-          lml.push_back(p1);
-            new_retu->startp = (char*)(p2);
-            new_retu->len = 0;
-            mlen  = (int) (p2 - prev);
-            return new_retu;
-        }
-      }
-    }
-    else if (nxtent--){
-      //printf("pop, nxtent = %i \n", nxtent);
-      pop(stack, nxtent, 
-       &p1, &p2, &one_len, &two_len, 
-       &c_mis, &c_ins, &c_del,
-       &ins_nxt, &del_nxt);
-    } else if (c_ins){
-      c_ins--;
-      p2--;
-      if(!one_len){
-            new_retu->startp = (char*)(p2);
-            new_retu->len = 0;
-            mlen  = (int) (p2 - prev);
-            return new_retu;
-      }
-    } else{
-      new_retu->startp = NULL;
+      new_retu->startp = (char*)(p2);
       new_retu->len = 0;
       mlen  = (int) (p2 - prev);
+      return new_retu;
+    }
+    // With insertions and deletions
+    //printf("nxtent = %i \n", nxtent);
+    while (1){
+      //printf("ins = %i, del = %i, mis = %i, one_len = %i, p1 = %p, p2 = %p \n", c_ins, c_del, c_mis, one_len, p1, p2);
+      //Match
+      if (!del_nxt && !ins_nxt 
+          && (two_len && one_len >= 1 && known_char((*p2)&15) 
+          && matches(*p2,*p1))){
+        p2++; p1++; two_len--;
+        if (!(--one_len)){
+          match();
+        }
+      }
+      // Mismatch
+      else if (!del_nxt && !ins_nxt &&(c_mis && (one_len >= 1) && (two_len >= 1))){
+        if (c_ins){
+          stack_next(stack, nxtent, 1, p1, p2, one_len, two_len);
+        }
+        else if (c_del){
+          stack_next(stack, nxtent, 2, p1, p2, one_len, two_len);
+        }
+        c_mis--; p1++; p2++; one_len--; two_len--;
+        if (! one_len)
+        {
+          match();
+        }
+      }
+      //Insertion
+      else if (!del_nxt && (ins_nxt  || (c_ins) && (one_len >= 1))){
+        if (!ins_nxt && (c_del) && (two_len >= 1)){
+          stack_next(stack, nxtent, 2, p1, p2, one_len, two_len);
+        }
+        ins_nxt = 0;
+        c_ins--; p1++; one_len--;
+        if (! one_len){
+          match();
+        }
+      }
+      //Deletion
+      else if (del_nxt || ((c_del) && (two_len >= 1))){
+        del_nxt = 0;
+        c_del--; p2++; two_len--;
+        if (! one_len){
+          match();
+        }
+      }
+      else if (nxtent--){
+        pop(stack, nxtent, 
+         &p1, &p2, &one_len, &two_len, 
+         &c_mis, &c_ins, &c_del,
+         &ins_nxt, &del_nxt);
+      } else{
+        break;
+      }
+    }
+    //printf("matches found = %i \n",found_matches);
+    int n;
+    if(found_matches-- > 0){
+      for(found_matches; found_matches >= 0; found_matches--){
+        
+        /*printf("match at %p, ins = %i, del = %i, mis = %i \n",
+               match_stack[found_matches].p2, 
+               match_stack[found_matches].ins, 
+               match_stack[found_matches].del, 
+               match_stack[found_matches].mis);*/
+        //Move match len with insertions
+        for(n = match_stack[found_matches].ins; 
+            n && match_stack[found_matches].p2 - prev - n > 0; 
+            n--){
+          if(!match_lens[match_stack[found_matches].p2 - prev - n]){
+            match_lens[match_stack[found_matches].p2 - prev - n] = 1;
+            match_list[match_list_len] = match_stack[found_matches].p2 - n;
+            //printf("ins match = %p \n", match_list[match_list_len]);
+            match_list_len++;
+          }
+        }
+        //Move match len with deletions
+        for(n = match_stack[found_matches].del; n; n--){
+          if(!match_lens[match_stack[found_matches].p2 - prev + n]){
+            match_lens[match_stack[found_matches].p2 - prev + n] = 1;
+            match_list[match_list_len] = match_stack[found_matches].p2 + n;
+            //printf("del match = %p \n", match_list[match_list_len]);
+            match_list_len++;
+          }
+        }
+        // save the original match length
+        if(!match_lens[match_stack[found_matches].p2 - prev]){
+          match_lens[match_stack[found_matches].p2 - prev] = 1;
+          match_list[match_list_len] = match_stack[found_matches].p2;
+          //printf("ori match = %p \n", match_list[match_list_len]);
+          match_list_len++;
+        }
+      }
+      match_list_len--;
+      for(n = match_list_len; n >= 0; n--){
+        //printf("match_list match = %p \n", match_list[n]);
+      }
+      new_retu->startp = match_list[match_list_len--];
+      new_retu->len = 1;
+      mlen = new_retu->startp - prev;
       return new_retu;
     }
   }

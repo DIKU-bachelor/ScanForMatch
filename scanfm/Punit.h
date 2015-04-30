@@ -88,6 +88,14 @@ class Exact: public Punit {
     char* p1;
     char* p2;
     int i, nxtent, one_len, two_len, del_nxt, ins_nxt;
+    //Integer array holding all tested match lengths
+    int match_lens [1000];
+    //list of the found match lengths
+    char* match_list [1000];
+    int match_list_len;
+    //Stack with all matches
+    stackent* match_stack;
+    int found_matches;
   public:
     int len;
     int ins;
@@ -100,22 +108,28 @@ class Exact: public Punit {
     int c_mis;
     int c_flex;
     stackent* stack;
-    //last match lengths
-    std::list<char*> lml;
     char* tmp;
     Range* variable;
     char* cCode; //complementary code
     int comp;
     ret_t* loose_match(ret_t* retu, ret_t* new_retu);
+
     void stack_next(stackent* st,int nxtE, int N, 
                        char* p1, char* d1, int one_len,
                        int two_len);
+
     void pop(stackent* st, int nxtent, 
                     char** pattern, char** data, int* p_len, int* d_len, 
                     int* p_mis, int* p_ins, int* p_del,
                     int* ins_nxt_p, int* del_nxt_p);
     Exact(char* data_s, char* data_e, int data_len, int le, char* c, int m, int d, int i, int f, int type);
+    /*
+    * Match: saves a match
+    */
+    void match();
+
     void reset(void);
+
     ret_t* search(ret_t* retu);
     int get_flex();
 };

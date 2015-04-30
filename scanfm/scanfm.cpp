@@ -328,7 +328,7 @@ opti_info_t* find_optimal(list<Punit*> pat_list) {
   for (it = pat_list.begin(); it != pat_list.end(); it++) {
     flex_sum = (*it)->get_flex();
     if (score < flex_sum) {
-      best_index = index
+      best_index = index;
       score = flex_sum;
     }
     index++;
