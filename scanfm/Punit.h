@@ -87,6 +87,8 @@ class Range: public Punit {
 class Exact: public Punit {
     char* p1;
     char* p2;
+    char* p3;
+    char* p4;
     char* code_s;
     int i, nxtent, one_len, two_len, del_nxt, ins_nxt, len_s;
     //Integer array holding all tested match lengths

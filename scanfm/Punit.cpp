@@ -32,6 +32,7 @@ void pprint(char* text, int len) {
 }
 
 Punit::Punit(char* data_s, char* data_e, int data_l, char* c, int typ){
+    data_start = data_s;
     data_end = data_e;
     data_len = data_l;
     mlen = 0;
@@ -183,7 +184,7 @@ ret_t* Exact::search(ret_t* retu){
         // If this punit is a complementary and previous punit is the variable being set
         while (prev_s <= prev_s + run_len-- && prev + len + (prev - prev_s) < data_end) {
           if (matches(*prev,*(code + run_len + 1))){
-            p2 = prev+1;char* p3 = code + run_len + 2;
+            p2 = prev+1;p3 = code + run_len + 2;
             c = prev - prev_s;
             for (i = (len + c) - 1; i && matches(*p2,*p3); i--,p3++,p2++)
               ;
@@ -201,7 +202,7 @@ ret_t* Exact::search(ret_t* retu){
       } else {
         while (prev_s <= prev_s + run_len-- && prev + len + (prev - prev_s) < data_end) {
           if (matches(*prev,*code)){
-            p2 = prev+1;char* p3 = code+1;
+            p2 = prev+1; p3 = code+1;
             c = prev - prev_s;
 //            cout << c << "\n";
             for (i = (len + c) - 1; i && matches(*p2,*p3); i--,p3++,p2++)
@@ -219,10 +220,12 @@ ret_t* Exact::search(ret_t* retu){
     } else {
     // If this Punit is complementary and the previous Punit was not the variable being set
       if (comp) {
-        while (prev_s <= prev_s + run_len-- && prev + len < data_end) {
-          if (matches(*prev,*(code))){
-            p2 = prev+1;char* p3 = code+1;
-            for (i = len - 1; i && matches(*p2,*p3); i--,p3++,p2++)
+//        cout << "hej\n";
+        p3 = code + len - 1;
+        while (0 <= run_len-- && data_end - (prev + len) > 0) {          
+          if (matches(*prev,((*(p3) >> 4) & 15))){
+            p2 = prev+1; p4 = p3 - 1;
+            for (i = len - 1; i && matches(*p2,(((*p4) >> 4) & 15)); i--,p4--,p2++)
               ;
             if (!i){
               c = prev - prev_s;
@@ -230,13 +233,14 @@ ret_t* Exact::search(ret_t* retu){
               break;
             }
           }
+//          cout << "loumi\n";
           prev++;
         }
       } else {
       // If this Punit is not complementary and the previous Puni was not the variable being set
         while (prev_s <= prev_s + run_len-- && prev + len < data_end) {
           if (matches(*prev,*code)){
-            p2 = prev+1;char* p3 = code+1;
+            p2 = prev+1;p3 = code+1;
             if (*p3 == '\0') {
               c = prev - prev_s;
               mlen = len;
@@ -463,7 +467,7 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
          &c_mis, &c_ins, &c_del,
          &ins_nxt, &del_nxt);
       } else{
-        break;
+        break; 
       }
     }
     //printf("matches found = %i \n",found_matches);
@@ -565,8 +569,8 @@ ret_t* Range::search(ret_t* retu){
       if (prev + len < data_end) {
         retu->len = width;
         retu->startp = prev + len;
-        orig_code = prev;
-        strncpy(code, orig_code, len + width);
+/*        orig_code = prev;
+        strncpy(code, orig_code, len + width); */
       }
       return retu;
     }
@@ -574,8 +578,8 @@ ret_t* Range::search(ret_t* retu){
   mlen = len;
   strech = 0;
   prev = retu->startp;
-  orig_code = retu->startp;
-  strncpy(code, orig_code, len + width);
+/*  orig_code = retu->startp;
+  strncpy(code, orig_code, len + width); */
 //  cout << "RANGE prev: " << prev << "\n";
   inc_width = retu->len;
   if(retu->startp + len < data_end){
@@ -610,13 +614,13 @@ Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Range* 
 
 //Reference search
 ret_t* Reference::search(ret_t* retu) {
-  if (retu->startp || first_ref) {
-    if (! retu->startp) {
-      strncpy(variable->code, variable->orig_code, next_Punit->prev - variable->prev);
+  if (retu->startp) {
+    if (retu->startp) {
+//      strncpy(variable->code, variable->orig_code, next_Punit->prev - variable->prev);
     } else {
       prev = retu->startp;
     }
-    code = variable->code;
+    code = variable->prev;
     len = next_Punit->prev - variable->prev;
 /*    is_amb = 0;
     for (int i = 0; i < len + variable->width; i++) {
@@ -631,7 +635,8 @@ ret_t* Reference::search(ret_t* retu) {
     } else {
       quick_ref = 0;
     }
-    if(complement){
+    comp = complement;
+/*    if(complement){
       comp = complement;
       counter1 = len - 1;
       if (quick_ref) {
@@ -641,8 +646,8 @@ ret_t* Reference::search(ret_t* retu) {
       while(counter1 >= 0){
         cCode[counter2++] = ((code[counter1--] >> 4) & 15);
       }
-      code = cCode;
-    }
+      code = cCode; 
+    } */
   }
   return Exact::search(retu);
 }
