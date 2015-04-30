@@ -116,7 +116,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       }
       range_min = atoi(range_min_s.c_str());
       range_max = atoi(range_max_s.c_str());
-      Range* ra = new Range(start_of_data, end_of_data, data_len, range_min, NULL, range_max - range_min);
+      Range* ra = new Range(start_of_data, end_of_data, data_len, range_min, NULL, range_max - range_min, 2);
       pat_list.push_back(ra);
 
       // If previous punit was being set as variable
@@ -211,9 +211,9 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
     ins = 0;
     del = 0;
     brac = pu.find('[');
-    if (brac != string::npos) {
 
-      // Fills mis_s, ins_s and del_s with the relevant parts of the "[?,?,?]" string
+    // Finds parses number of mismatches, insertions and deletions
+    if (brac != string::npos) {
       pu = pu.substr(brac + 1);
       com = pu.find(',');
       if (com != string::npos) {
@@ -277,7 +277,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
     // Checks if it's an Exact or Reference type punit
     if (ex_len == let_count) {
       Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) until_brac, 
-        conv_code, mis, del, ins, 0);
+        conv_code, mis, del, ins, 0, 1);
       pat_list.push_back(ex);
       if (save_next == 1) {
         va_tmp->nxt_punit = ex;
@@ -291,7 +291,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
         complem = 1;
       }
       Reference* re = new Reference(start_of_data, end_of_data, data_len, complem, (Range*)
-        var_p, var_nxt_p, first_ref, mis, del, ins, 0);
+        var_p, var_nxt_p, first_ref, mis, del, ins, 0, 3);
       pat_list.push_back(re);
       first_ref = 0;
       if (! re->next_Punit) {
@@ -310,6 +310,41 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
     }
   }
   return pat_list; 
+}
+
+typedef struct opti_info {
+  int opt_index;
+  int min_start_dist;
+  int max_start_dist;
+} opti_info_t;
+
+opti_info_t* find_optimal(list<Punit*> pat_list) {
+  list<Punit*>::iterator it;
+  opti_info_t* opt = new opti_info();
+  int index = 0;
+  int best_index = 0;
+  int score = 0;
+  int flex_sum = 0;
+  for (it = pat_list.begin(); it != pat_list.end(); it++) {
+    flex_sum = (*it)->get_flex();
+    if (score < flex_sum) {
+      best_index = index;
+      score = flex_sum;
+    }
+    index++;
+  }
+  for (it = pat_list.begin(); it != pat_list.end(); it++) {
+    // Løs dette problem ved at lave metoder i klasserne som beregner afstandende  
+    // MIN
+    // Exact's len skal lægges til
+    // Ranges min skal lægges til
+    // References' Range punit's len skal lægges til
+
+    // MAX
+    // Exact's insertions skal lægges til
+    // Ranges width skal lægges til
+    // References' Range punit's width + insertions skal lægges til
+  }
 }
 
 

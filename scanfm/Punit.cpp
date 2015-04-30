@@ -31,14 +31,18 @@ void pprint(char* text, int len) {
   cout << "\n";
 }
 
-//list<var_run*> vtable;
-
-Punit::Punit(char* data_s, char* data_e, int data_l, char* c){
+Punit::Punit(char* data_s, char* data_e, int data_l, char* c, int typ){
     data_end = data_e;
     data_len = data_l;
     mlen = 0;
     strech = 0;
     code = c;
+    type = typ;
+}
+
+int Punit::get_flex() {
+  cout << "Punit get_flex called, shoud not happen...\n";
+  return 0;
 }
 
 void Punit::reset(void) {}
@@ -61,7 +65,7 @@ bool Punit::matches(char C1, char C2) {
 
 /* exact constructer used by the parser */
 Exact::Exact(char* data_s, char* data_e, int data_len, int le, char* c, 
-             int i, int d, int m, int f) : Punit(data_s, data_e, data_len, c){
+             int i, int d, int m, int f, int type) : Punit(data_s, data_e, data_len, c, type){
     len = le;
     ins = i;
     del = d;
@@ -523,10 +527,13 @@ void Exact::reset(void) {
   c_flex = flex;
 }
 
+int Exact::get_flex() {
+  return len - (mis + ins + del);
+}
 
 /* Range constructer used by the parser */
 Range::Range(char* data_s, char* data_e, int data_l, int le, char* c, 
-             int w) : Punit(data_s, data_e, 0, c){
+             int w, int type) : Punit(data_s, data_e, 0, c, type){
     len = le;
     width = w;
     data_len = data_l;
@@ -587,10 +594,13 @@ void Range::reset(void) {
   mlen = 0;
 }
 
+int Range::get_flex() {
+  return 0;
+}
 
 Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Range* var_p, 
-              Punit* nxt_p, int first, int mis, int ins, int del, int flex)
-           : Exact(data_s, data_e, data_len, 0, NULL, mis, ins, del, flex) {
+              Punit* nxt_p, int first, int mis, int ins, int del, int flex, int type)
+           : Exact(data_s, data_e, data_len, 0, NULL, mis, ins, del, flex, type) {
   variable = var_p;
   next_Punit = nxt_p;
   complement = comp;
@@ -635,6 +645,10 @@ ret_t* Reference::search(ret_t* retu) {
     }
   }
   return Exact::search(retu);
+}
+
+int Reference::get_flex() {
+  return 0;
 }
 
 int build_conversion_tables()

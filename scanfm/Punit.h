@@ -32,6 +32,7 @@ int build_conversion_tables(void);
 
 class Punit {
   public:
+    int type;
     char* data_start;
     char* data_end;
     int data_len;
@@ -48,11 +49,12 @@ class Punit {
     //Loose match saved variables
     char* p1;
     char* p2;
-    Punit(char* data_s, char* data_e, int data_l, char* c);
+    Punit(char* data_s, char* data_e, int data_l, char* c, int typ);
     /* If start is NULL, the previous search failed, and this search starts at prev.
        If start is not NULL, prev in this punit is set to start and is initialized */
     virtual ret_t* search(ret_t* retu);
     virtual void reset(void);
+    virtual int get_flex();
     char known_char(char C);
 
     /* Match 2 given bases with eachother using the converted bit type*/
@@ -74,9 +76,10 @@ class Range: public Punit {
     int len;
     int width;
     int inc_width; //If range is called with a width, this is used
-    Range(char* data_s, char* data_e, int data_l, int le, char* c, int w);
+    Range(char* data_s, char* data_e, int data_l, int le, char* c, int w, int type);
     void reset(void);
     ret_t* search(ret_t* retu);
+    int get_flex();
 };
 
 /* punit exact inherites from punit, is used to search for a litteral
@@ -120,17 +123,16 @@ class Exact: public Punit {
                     char** pattern, char** data, int* p_len, int* d_len, 
                     int* p_mis, int* p_ins, int* p_del,
                     int* ins_nxt_p, int* del_nxt_p);
+    Exact(char* data_s, char* data_e, int data_len, int le, char* c, int m, int d, int i, int f, int type);
     /*
     * Match: saves a match
     */
     void match();
 
-    Exact(char* data_s, char* data_e, int data_len, int le, 
-          char* c, int m, int d, int i, int f);
-
     void reset(void);
 
     ret_t* search(ret_t* retu);
+    int get_flex();
 };
 
 
@@ -144,8 +146,9 @@ class Reference: public Exact {
     char* next_p_old_prev; // To test if code needs to be made complementary again
     int first_ref;
     Reference(char* data_s, char* data_e, int data_len, int comp, Range* var_p, 
-              Punit* next_p, int first, int mis, int del, int ins, int flex);
+              Punit* next_p, int first, int mis, int del, int ins, int flex, int type);
     ret_t* search(ret_t* retu);
+    int get_flex();
 };
 
 #endif
