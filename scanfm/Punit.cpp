@@ -136,7 +136,8 @@ void Exact::match(){
 ret_t* Exact::search(ret_t* retu){
   if(retu->startp != NULL) {
     prev = retu->startp;
-
+    len_s = len;
+    code_s = code;
     //variable declaration for loose matching pattern
     run_len = retu->len;
     run_len_s = run_len;
@@ -288,17 +289,52 @@ ret_t* Exact::search(ret_t* retu){
   /* Loose match in the case where there are:
      Insertions, deletions and mismatches */
   } else {
-    if (retu->startp == NULL){
-      run_len++;
-    }
+    int i;
+    int c = 0;
     ret_t* new_retu = new ret_t;
-    while (0 <= run_len-- && prev < data_end) {
-      new_retu = loose_match(retu, new_retu);
-      //printf("new_retu->len = %i, new_retu->startp = %p \n", new_retu->len, new_retu->startp);
-      if(new_retu->startp){
-        return new_retu;
+
+    char* prev_s = prev;
+    if (retu->startp == NULL && run_len >= 0) {
+      prev++;
+      //run_len++;
+    }
+    if (quick_ref) {
+      if (comp) {
+        // If this punit is a complementary and previous punit is the variable being set
+        while (prev_s <= prev_s + run_len-- && 
+               prev + len + (prev - prev_s) < data_end) {
+          code = code_s + run_len + 1;
+          len = len_s + prev - prev_s;
+          new_retu = loose_match(retu, new_retu);
+          if(new_retu->startp){
+            mlen = mlen + prev - prev_s;
+            return new_retu;
+          }
+          prev++; retu->startp++; p2++; //run_len--;
+        }
+
+      // If this punit is a non-complementary and previous punit is the variable being set
+      } else {
+        while (prev_s <= prev_s + run_len-- && 
+               prev + len + (prev - prev_s) < data_end) {
+          len = len_s + prev - prev_s;
+          new_retu = loose_match(retu, new_retu);
+          if(new_retu->startp){
+            mlen = mlen + prev - prev_s;
+            return new_retu;
+          }
+          prev++; retu->startp++; p2++; //run_len--;
+        }
       }
-      prev++; retu->startp++; p2++; //run_len--;
+    } else {
+      // If this Punit is not complementary and the previous Puni was not the variable being set
+      while (prev_s <= prev_s + run_len-- && prev + len < data_end) {
+        new_retu = loose_match(retu, new_retu);
+        if(new_retu->startp){
+          return new_retu;
+        }
+        prev++; retu->startp++; p2++; //run_len--;
+      }
     }
   }
   retu->startp = NULL;
