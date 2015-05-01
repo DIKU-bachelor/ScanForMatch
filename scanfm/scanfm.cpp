@@ -377,6 +377,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       if (++it == pat_list.end()) {
         for (it = pat_list.begin(); it != pat_list.end(); it++) {
           comb_mlen += (*it)->mlen;
+//          cout << (*it)->mlen << "\n";
         }
         dist_to_match = (retu->startp - comb_mlen) - start_of_data;
         printf("%i  %.*s\n", dist_to_match + 1, comb_mlen, real_data + dist_to_match);
@@ -473,7 +474,6 @@ int main(int argc, char* argv[]) {
   if (pat_list.empty()) {
     return -1;
   }
-
   pattern_match(pat_list, data, rdata, end_of_data);
   tim = clock() - tim;
   printf("Total time: %f seconds\n", ((float) tim) / CLOCKS_PER_SEC);
