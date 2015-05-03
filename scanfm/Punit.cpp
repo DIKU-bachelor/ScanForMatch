@@ -140,6 +140,7 @@ void Exact::match(){
 
 ret_t* Exact::search(ret_t* retu){
   if(retu->startp != NULL) {
+    //printf("new exact \n");
     prev = retu->startp;
     len_s = len;
     code_s = code;
@@ -158,6 +159,7 @@ ret_t* Exact::search(ret_t* retu){
 
   // Else we are at backtracking
   } else {
+    //printf("backtrack exact flex = %i\n", flex);
     mlen = 0;
   }
 
@@ -177,6 +179,7 @@ ret_t* Exact::search(ret_t* retu){
 
     char* prev_s = prev;
     if (retu->startp == NULL && run_len >= 0) {
+      //printf("hello\n");
       prev++;
     }
     if (quick_ref) {
@@ -238,6 +241,7 @@ ret_t* Exact::search(ret_t* retu){
         }
       } else {
       // If this Punit is not complementary and the previous Puni was not the variable being set
+        //printf("prev = %p, prevc = %c, codec = %c \n", prev, *prev, *code);
         while (prev_s <= prev_s + run_len-- && prev + len < data_end) {
           if (matches(*prev,*code)){
             p2 = prev+1;p3 = code+1;
@@ -302,23 +306,23 @@ ret_t* Exact::search(ret_t* retu){
     ret_t* new_retu = new ret_t;
 
     char* prev_s = prev;
-    if (retu->startp == NULL && run_len >= 0) {
+    /*if (retu->startp == NULL && run_len >= 0) {
       prev++;
       //run_len++;
-    }
+    }*/
     if (quick_ref) {
       if (comp) {
         // If this punit is a complementary and previous punit is the variable being set
-        while (prev_s <= prev_s + run_len-- && 
+        while (0 <= run_len && 
                prev + len + (prev - prev_s) < data_end) {
-          code = code_s + run_len + 1;
+          code = code_s + run_len;
           len = len_s + prev - prev_s;
           new_retu = loose_match(retu, new_retu);
           if(new_retu->startp){
             mlen = mlen + prev - prev_s;
             return new_retu;
           }
-          prev++; retu->startp++; p2++; //run_len--;
+          retu->startp = ++prev; p2++; run_len--;
         }
 
       // If this punit is a non-complementary and previous punit is the variable being set
@@ -331,17 +335,18 @@ ret_t* Exact::search(ret_t* retu){
             mlen = mlen + prev - prev_s;
             return new_retu;
           }
-          prev++; retu->startp++; p2++; //run_len--;
+          retu->startp = ++prev; p2++; //run_len--;
         }
       }
     } else {
       // If this Punit is not complementary and the previous Puni was not the variable being set
+      
       while (prev_s <= prev_s + run_len-- && prev + len < data_end) {
         new_retu = loose_match(retu, new_retu);
         if(new_retu->startp){
           return new_retu;
         }
-        prev++; retu->startp++; p2++; //run_len--;
+        retu->startp = ++prev; p2++; //run_len--;
       }
     }
   }
@@ -355,13 +360,13 @@ ret_t* Exact::search(ret_t* retu){
 //Loose match, in the case of insertions, deletions and mismatches
 //new
 ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
-  //printf("first nxtent = %i \n",nxtent);
-  //printf("loose match \n");
+  //printf("loosematch, prev = %p, prevc = %c, retu->startp = %p\n", prev, *prev, retu->startp);
+  //Backtracking
   if(retu->startp == NULL){
-    //printf("BACKTRACK \n");
-    if(match_list_len){
+    //printf("backtrack match_list_len = %i \n", match_list_len);
+    if(match_list_len >= 0){
       new_retu->startp = (char*)(match_list[match_list_len--]);
-      new_retu->len = 1;
+      new_retu->len = 0;
       mlen = new_retu->startp - prev;
       return new_retu;
     } else {
@@ -370,6 +375,7 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
       return new_retu;
     }
   }
+  //New position
   if (retu->startp != NULL) {
     //Initiation at next position
     one_len = len;
@@ -387,11 +393,9 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
     found_matches = 0;
     memset(match_lens, 0, sizeof(match_lens));
     match_list_len = 0;
-    //printf("new\n\n\n");
 
     //Search
-    //printf("c_mis = %i, c_ins = %i, c_del = %i \n", c_mis, c_ins, c_del);
-    // special-case for ins=del=0 
+    //Special-case for ins=del=0 
     if ((c_ins == 0) && (c_del == 0)){
       if (one_len > two_len)
       {
@@ -416,9 +420,8 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
       return new_retu;
     }
     // With insertions and deletions
-    //printf("nxtent = %i \n", nxtent);
     while (1){
-      //printf("ins = %i, del = %i, mis = %i, one_len = %i, p1 = %p, p2 = %p \n", c_ins, c_del, c_mis, one_len, p1, p2);
+    //printf("ins = %i, del = %i, mis = %i, one_len = %i, p2 = %p, p2c = %c, c = %p cc = %c\n", c_ins, c_del, c_mis, one_len, p2, *p2, p1, *p1);
       //Match
       if (!del_nxt && !ins_nxt 
           && (two_len && one_len >= 1 && known_char((*p2)&15) 
@@ -470,16 +473,11 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
         break; 
       }
     }
-    //printf("matches found = %i \n",found_matches);
     int n;
+    //printf("matches? = %i\n", found_matches);
     if(found_matches-- > 0){
+      //printf("found_matches = %i \n", found_matches);
       for(found_matches; found_matches >= 0; found_matches--){
-        
-        /*printf("match at %p, ins = %i, del = %i, mis = %i \n",
-               match_stack[found_matches].p2, 
-               match_stack[found_matches].ins, 
-               match_stack[found_matches].del, 
-               match_stack[found_matches].mis);*/
         //Move match len with insertions
         for(n = match_stack[found_matches].ins; 
             n && match_stack[found_matches].p2 - prev - n > 0; 
@@ -502,19 +500,21 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
         }
         // save the original match length
         if(!match_lens[match_stack[found_matches].p2 - prev]){
+          //printf("orig match = %p \n", match_stack[found_matches].p2);
           match_lens[match_stack[found_matches].p2 - prev] = 1;
           match_list[match_list_len] = match_stack[found_matches].p2;
-          //printf("ori match = %p \n", match_list[match_list_len]);
+          //printf("ori match = %p, prev = %p \n", match_list[match_list_len], prev);
           match_list_len++;
         }
       }
       match_list_len--;
-      for(n = match_list_len; n >= 0; n--){
+      /*for(n = match_list_len; n >= 0; n--){
         //printf("match_list match = %p \n", match_list[n]);
-      }
+      }*/
       new_retu->startp = match_list[match_list_len--];
-      new_retu->len = 1;
+      new_retu->len = 0;
       mlen = new_retu->startp - prev;
+      //printf("new_retu->startp = %p, match_list_len = %i\n", new_retu->startp, match_list_len);
       return new_retu;
     }
   }
@@ -621,6 +621,7 @@ ret_t* Reference::search(ret_t* retu) {
       prev = retu->startp;
     }
     code = variable->prev;
+    //printf("next_Punit->prev = %p, variable->prev = %p \n", next_Punit->prev, variable->prev);
     len = next_Punit->prev - variable->prev;
 /*    is_amb = 0;
     for (int i = 0; i < len + variable->width; i++) {
@@ -636,18 +637,28 @@ ret_t* Reference::search(ret_t* retu) {
       quick_ref = 0;
     }
     comp = complement;
-/*    if(complement){
+    if(complement && (ins != 0 || del != 0 || mis != 0)){
+      if(quick_ref){
+        len = variable->len;
+        len_s = variable->len;
+      }
+      //printf("loose match ref ins = %i, del = %i\n", ins, del);
       comp = complement;
       counter1 = len - 1;
       if (quick_ref) {
         counter1 += variable->width;
       }
+      /*if (ins) {
+        //printf("extra del used\n");
+        counter1 += ins;
+      }*/
       counter2 = 0;
-      while(counter1 >= 0){
+      while(counter1 >= 0 && code + counter1 <= data_end){
         cCode[counter2++] = ((code[counter1--] >> 4) & 15);
       }
+      //printf("1\n");
       code = cCode; 
-    } */
+    }
   }
   return Exact::search(retu);
 }

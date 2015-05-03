@@ -90,7 +90,7 @@ class Exact: public Punit {
     char* p3;
     char* p4;
     char* code_s;
-    int i, nxtent, one_len, two_len, del_nxt, ins_nxt, len_s;
+    int i, nxtent, one_len, two_len, del_nxt, ins_nxt;
     //Integer array holding all tested match lengths
     int match_lens [1000];
     //list of the found match lengths
@@ -100,7 +100,7 @@ class Exact: public Punit {
     stackent* match_stack;
     int found_matches;
   public:
-    int len;
+    int len, len_s;
     int ins;
     int del;
     int mis;
