@@ -1,18 +1,35 @@
 \documentclass[12pt]{article}
 \usepackage[margin=1.0 in]{geometry}
 \addtolength{\topmargin}{.25in}
-\usepackage[utf8x]{inputenc}  
+\usepackage[utf8]{inputenc}
+%\usepackage[T1]{fontenc}
+%\usepackage{textcomp}
+\DeclareUnicodeCharacter{00A0}{~}
 \usepackage{amsmath}
 \usepackage{calc}
 \usepackage{array}
+\usepackage{courier}
+\usepackage{relsize}
+\usepackage{float}
 \usepackage{amssymb}
 \usepackage{tikz}
-\usetikzlibrary{arrows}
+\usetikzlibrary{shapes,arrows}
 \usetikzlibrary{positioning}
 %\usepackage{pgfgantt}
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{upquote}
+\usepackage{natbib}
+% Natlib ignore hack start
+\let\bibhang\relax
+\let\citename\relax
+\let\bibfont\relax
+\let\Citeauthor\relax
+\expandafter\let\csname ver@natbib.sty\endcsname\relax
+% Natlib ignore hack end
+%\usepackage[style=numeric]{biblatex}
+\usepackage[backend=bibtex,style=numeric]{biblatex}
+\addbibresource{refs.bib}
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 \usepackage{hyperref}
 \newcommand{\Green}{\tikz\draw[green,fill=green] (0,0) circle (1 ex);}
@@ -20,7 +37,13 @@
 \newcommand{\Blue}{\tikz\draw[blue,fill=blue] (0,0) circle (1 ex);}
 \newcommand{\Yellow}{\tikz\draw[yellow,fill=yellow] (0,0) circle (1 ex);}
 \newcommand{\Red}{\tikz\draw[red,fill=red] (0,0) circle (1 ex);}
-\renewcommand*\contentsname{Indholdsfortegnelse}
+\renewcommand*\contentsname{Table of contents}
+\newcommand{\scm}{\texttt{scan\_for\_matches} }
+\newcommand{\sfm}{\texttt{scanfm} }
+\newcommand{\pu}{PU }
+\newcommand{\pus}{PU's }
+\newcommand{\pusp}{PU's. }
+\newcommand{\pup}{PU. }
 \definecolor{listinggray}{gray}{0.9}
 \usepackage{listings}
 \lstset{
@@ -56,71 +79,585 @@
 \begin{titlepage}
 \begin{center}
 
-\textsc{\Large Bachelor Thesis \\ Optimized pattern matching in genomic data\\[0.3cm]}
+\textsc{\Large Bachelor Thesis \\[0.2in]
+University of Copenhagen, DIKU}
 \HRule \\[0.4cm]
-{ \LARGE \bfseries Report}\\[0.4cm]
+\textsc{\LARGE \bfseries Optimized pattern matching in genomic data}\\[0.1cm]
 \HRule \\[1.2cm]
-\textsc{\large Martin Westh Petersen - mqt967 \\ Kasper Myrtue - vkl275}\\[1.0cm]
+\textsc{\large Martin Westh Petersen - mqt967 \\ Kasper Myrtue - vkl275 \\ -\\
+Supervisors: \\ Rasmus Fonseca \\ Martin Asser Hansen}\\[1.0cm]
 \end{center}
 \begin{center}
 \vfill
-{\large 20. April 2015}
+{\large 8. June 2015}
 \end{center}
 \end{titlepage}
 \tableofcontents \newpage
-
-\section{Analysis}
-\section{Loose\_match}
-All possibilities are tried out using mismatches, insertions, deletions in that order to accept chars that don't match.
-When all mismatches, insertions and deletions are used, and we still encounter a mismatch, the stack is popped, to
-try a different order of the mismatches, insertions and deletions tried.
-\subsection{Scan For Matches}
-In order to understand what is good from Scan for matches we needed to understand some code segments and the overall structure of the program, simply put we came to understand this flow in the code: \\
+\section{Introduction}
+\nocite{*}
+Analysis and research of genomic data such as DNA is beneficial in a variety of fields for example medicine, where
+scientists are now able to identify the genes responsible for causing genetic diseases like 
+Alzheimer's disease.~\cite{gen} \\ \\
+DNA consists of two biopolymer strands that coil around each other forming a double helix. The two strands
+connect along the way, binding pairs of molecules called nucleobases. There are four different nucleobases, called
+guanine (G), adenine (A), thymine (T), cytosine (C). They bind to each other in complementary pairs, T binds with A and
+G binds with C.~\cite{dna} \\ \\
+What holds the genetic information in DNA is the sequence of nucleobases along the strands, and thus sequencing DNA
+result in a long sequence of these four bases represented as just the letters A,T,G and C. \\ \\
+Pattern matching functionality is unavoidable when analyzing and searching for patterns in these sequences, but
+huge amounts of data makes it inefficient to manually find these patterns~\cite{gcn}, so there's a need for clever
+and efficient software to do this. \\ \\
+\scm ~\cite{scm} is a piece of software that serves this purpose, but big improvements in performance can be made.
+On top that, the code is poorly documented, lacks version control and is hard to read and maintain. \\ \\
+Our goal is therefore to re-implement \scm to contain the useful parts,
+while optimizing the algorithms to improve performance, and have version control and documentation.
+\section{Methods}
+\subsection{Analysis of \scm}
+\subsubsection{Defining patterns in \scm}
+\scm provides a simple and limited domain-specific language for defining patterns to look for in a text file consisting
+of a specific alphabet, e.g. the four letters (A, T, C and G) representing bases in a DNA sequence. \\ \\
+The language revolve around a basic building block called the pattern (\pu) which can take different forms
+and be used in combination to define an overall pattern to search for. \\ \\
+Each \pu can either match or not match a sub-sequence of data, but it may be able to match the data in several different ways.
+To declare an overall match, \scm has to be able to match each \pu in the given order with a consecutive sub-sequence in the
+data. It does so by trying to match the \pus one at a time going left to right with a specific starting position in data. 
+The algorithm uses backtracking which means that whenever a \pu (call it p2) is not able to match, the algorithm goes back to the
+previous \pu (call it p1) to try and find a different match for p1. If successful the algorithm continues to p2 again. The
+different way of matching p1 may have resulted in a different starting position for p2, which may enable p2 to 
+actually find a match this time. If there was not way of finding an overall match the algorithm increments the starting
+position for the first \pu and tries again. It continues like this until the end of the data file. \\ \\
+\scm offers some features besides the use of just \pusp These features apply to the \pus and alter their criteria
+for matching.
+The different formats of \pus and some of the extra features are described in the list below.
+\begin{itemize}
+\item An exact \pu consists of a specific sequence of letters from the alphabet which will
+only match if the compared sub-sequence in data has the exact same letters in the exact same order as the 
+exact \pu. \\ \\
+Example of exact \pu : \texttt{AGGT}
+\item A range \pu consists of 2 positive integers separated by three dots, where the first integer is less than or
+equal to the second. The \pu matches any combination of
+letters from the alphabet that has a length that is equal to one of the integers or any integer in between those integers. \\ \\
+Example of range \pu : \texttt{4...8} which matches any letter combination of length 4,5,6,7 or 8.
+\item A variable can be assigned a range \pu for later reference. The variable is specified by 
+any user defined name
+followed by an equality symbol and then followed by a range \pup \\
+The range \pu functions normally, and matches any combination of letters with the allowed range, 
+but at run-time the letter combination that it matches
+in data is saved, and one can reference it in a later \pu by simply writing the name of the variable. That is a
+reference \pu and functions as an exact \pu but uses the specific saved 
+letter combination to match with. \\ \\
+Example using variable/reference \pu : \texttt{p1=4...6\; ATG\; p1}, where
+the first \pu is the range \pu with added variable functionality, 
+and the third being the reference \pu that is linked to the first \pup
+\item Any exact or reference \pu can be made flexible by allowing a number of specified
+single-letter edits; insertions, deletions and mismatches. \\ \\
+A mismatch allows one letter from the \pu to match one letter in the data even though they're not the same.
+An insertion allows for a temporary insert of one letter in the \pu letter combination that matches one letter in
+the data, thus lengthening the \pup A deletion allows for temporarily ignoring one letter in the \pu letter combination
+and jumping straight the next letter, thus shortening the \pup \\ \\
+Example using single-letter edits : \texttt{p1=12...15\; ATTCC[1,0,3]\; p1[2,2,2]} 
+where the exact \pu is allowed 1 mismatch, 0
+deletions and 3 insertions and the reference \pu is allowed 2 of each.
+\item Putting a $\sim$ in front of a reference \pu means that \scm tries to match the reverse 
+complement of the letter-sequence saved in the variable. 
+The reverse complement of a letter sequence is a sequence of same length, where it has been reversed and every letter
+is substituted with its complementary counterpart (A swaps with T and vice versa, G swaps with C and vice versa).\\ \\
+Example using the $\sim$ feature : \texttt{p1=3...4\; GG\; $\sim$p1} would match the data sub-sequence:
+"TCACGGGTGA" since "GTGA" is the reverse complement of "TCAC".
+\item Ambiguous letters~\cite{ambi} are letters other than the standard letters of the used alphabet. These letters are used
+in exact \pus to allow matching with one of multiple of the standard letters in the alphabet.
+In \scm the letter "Y" in a \pu matches either a "C" or a "T" in data, a "D" matches either "A" or "G" or "T" 
+and "N" matches any of the standard letters. There is a letter for each different combination of the
+four standard letters. \\ \\
+Example using ambiguous letters : \texttt{CYDTDNA} matches the sub-sequence "CCGTACA" in data.
+\end{itemize}
+The above are what we have found to be the core features of \texttt{scan\_for\_matches}, 
+but other features are available as well. Here are some of them: 
+\begin{itemize}
+\item A logical "or" between \pus or sets of \pus, e.g. "(\texttt{AGGT} \text{\textbar} \texttt{CCCC})", or  \\
+"(\texttt{p1=3...6 TG ~p1[1,0,4]} \text{\textbar} \texttt{p1=3...6 AAA ~p1[2,2,0]})"
+allows either of the two sides of the \text{\textbar} to match.
+\item Custom pairing rules can be defined, with which the user can define custom letter pairings of in the given
+alphabet, instead of the standard rules (A pairs with T and C with G).
+\end{itemize}
+\subsubsection{Flow of \scm}
+\scm uses backtracking functionality~\cite{back} on two different levels to find the matches. 
+One is the outer backtracking system that backtracks between \pus, and the other is a backtracking algorithm
+for matching a single \pu if it has been allowed any mismatches, insertions or deletions. \\ \\
+\scm has an outer backtracking system that controls the flow of the outer pattern match, i.e. decides whether to
+move forward to the next \pu if the current \pu matched, or backtrack to the previous \pu if there was no match.
+When backtracking to a previous \pu the next possibility (if any) for matching is chosen and the algorithm moves
+forward again. This problem would normally be solved with recursion and/or loops, but \scm uses GOTO statements which has 
+both pros and cons. \\
+\begin{figure}[H]
 \begin{tikzpicture}
-  [->,node distance=2cm and 2cm,main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\Large\bfseries}] 
-  \node[main node]  	(ScanForMatches)                        {Scan For Matches};
-  \node[main node] 	(Parser) [below= of ScanForMatches]   {Parser};
-  \node[main node] 	(PUnit) [right= of Parser]   {PUnit};
-  \node[main node]  	(PatternMatch)  [below= of Parser]  {PatterMatches};
-  \node[main node]	(PUnit1)		[right= of PatternMatch] {First PUnit};
-  \node[main node]	(PUnit2)		[below= of PUnit1] {Secound PUnit};
-  \node[main node]	(PUnitn)		[below= of PUnit2] {n'th PUnit};
-  \node[main node]	(Result1)		[right= of PUnit1] {Result};
-  \node[main node]	(Result2)		[right= of PUnit2] {Result};
-  \node[main node]	(Resultn)		[right= of PUnitn] {Result};
+  [->,node distance=2cm and 2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
+  \node[main node]  	(ScanForMatches)                        {\scm};
+  \node[main node] 	(Parser) [below= of ScanForMatches]   {Parse \pus};
+%  \node[main node] 	(PUnit) [right= of Parser]   {PUnit};
+  \node[main node]  	(PatternMatch)  [below= of Parser]  {Begin match from data pointer p};
+  \node[main node]	(PUnit1)		[right= of PatternMatch] {First \pu match?};
+  \node[main node]	(PUnit2)		[below= of PUnit1] {Secound \pu match?};
+  \node[main node]	(PUnitn)		[below= of PUnit2] {n'th \pu match?};
+%  \node[main node]	(Result1)		[right= of PUnit1] {Result};
+%  \node[main node]	(Result2)		[right= of PUnit2] {Result};
+%  \node[main node]	(Resultn)		[right= of PUnitn] {Result};
   \node[]			(toNextHit)		[below= of PatternMatch] {};
   \node[	]			(to2NextHit)		[below= of toNextHit] {};
-  \node[main node]	(NextHit)		[below= of to2NextHit] {Next Hit};
-  \node[main node]	(Return)			[below= of NextHit] {Return Results};
+  \node[main node]	(NextHit)		[below= of to2NextHit] {End of file?};
+  \node[main node]	(Return)			[below= of NextHit] {Return};
   
   
   \path[every node/.style={font=\sffamily\small}]
     (ScanForMatches) 	edge node [left] {} (Parser)
-    (Parser) 			edge node [left] {} (PUnit)
-        					edge node [left] {} (PatternMatch)
-    (PatternMatch) 		edge node [left] {} (PUnit1)
-    						edge [bend right] node [left] {End og file} (Return)
-    (PUnit1) 			edge node [left] {} (Result1)
-    (PUnit2)				edge node [left] {} (Result2)
-    (PUnitn)				edge node [left] {} (Resultn)
-    (Result1)			edge node [left] {SUCCESS} (PUnit2)
-    						edge [bend right] node [below] {BACKTRACK} (PatternMatch)
-    (Result2)			edge node [above] {SUCCESS} (PUnitn)
-    						edge node [right] {BACKTRACK} (PUnit1)
-    (Resultn)			edge node [below] {SUCCESS} (NextHit)
-        					edge node [below] {BACKTRACK} (PUnit2)
-    (NextHit)			edge node [right] {Not end of file} (PatternMatch)
-        					edge node [right] {end of file} (Return)
+%    (Parser) 			edge node [left] {} (PUnit)
+	(Parser)			edge node [left] {} (PatternMatch)
+    (PatternMatch) 		edge node [above] {not EOF} (PUnit1)
+    						edge [bend right] node [left] {EOF} (Return)
+    (PUnit1)  				edge [bend right] node [left] {Yes: p+=len(PUnit1)} (PUnit2)
+    						edge [bend right] node [above] {No: p++} (PatternMatch)
+    (PUnit2)				edge [bend right] node [left] {Yes: p+=len(PUnit2)} (PUnitn)
+    						edge [bend right] node[align=center] [right] {No: p -= len(PUnit1)\\ try another match} (PUnit1)
+    (PUnitn)				edge node[align=center] [below] {Whole pattern match:\\ p+=len(n'th PUnit) \\ 
+    							print match} (NextHit)
+    						edge [bend right] node[align=center] [right] {No: p -=len(PUnit2)\\ try another match} (PUnit2)
+%    (Result1)			edge node [left] {SUCCESS} (PUnit2)
+%    						edge [bend right] node [below] {BACKTRACK} (PatternMatch)
+%    (Result2)			edge node [above] {SUCCESS} (PUnitn)
+%    						edge node [right] {BACKTRACK} (PUnit1)
+%    (Resultn)			edge node [below] {SUCCESS} (NextHit)
+%        					edge node [below] {BACKTRACK} (PUnit2)
+    (NextHit)			edge node [right] {not EOF} (PatternMatch)
+        					edge node [right] {EOF} (Return)
     ;
     
-\end{tikzpicture} \\
-This shows how Scan\_For\_Match uses a backtrack algorithm to search trough the data. When ever a PUnit fails it calls BACKTRACK, a case in the function patternMatch in Scan\_For\_Match. \\
+\end{tikzpicture} 
+\caption{\textit{Simplistic flow chart of pattern matching in} \texttt{scan\_for\_matches}\textit{. p is a pointer to
+data and is initially set to start of data. Notice that overlapping matches will no be found.}} 
+\end{figure} 
+\noindent The use of GOTO statements avoids some of the risks associated with the use of recursion like stack overflow. 
+How deep the recursion would go would depend on the size of the pattern, and it would therefore be hard to control and
+unsafe to use with respect to unwanted termination. Analyzing the possible depth of recursion and rejecting a queried search
+if too deep is hardly an option, as it may be necessary to find these large patterns. \\ \\
+Even though the use of GOTO statements uses a controllable fixed amount of
+memory, it is not necessarily safe. The big con is the missing modularity and structure. Every variable is defined in a
+global scope and has to be managed as such. It is very easy to make a mistake when creating or maintaining that sort of code
+(as \scm is a great example of)
+because the responsibility is not partitioned into functions or classes that can be unit-tested and proofed to work.
+One variable being set wrongly due to a particular input and searching in a particular part of the data may 
+escalate to either deliver wrong matches or just terminate. \\ \\
+Figure 1 shows the overall flow of finding patterns by backtracking back and forth between the PU's. \\ \\
+The other backtracking system happens internally in the pattern matching of a single \pu if that \pu has allowed
+mismatches, insertions and deletions. Figuring out a way to utilize the allowed edits to possibly find a match, requires
+trying out a lot of combinations so this part of the program is the most computationally heavy. 
+\subsubsection{Cooperability of multi-level backtracking}
+\scm uses a very certain type of backtracking to optimize performance. Starting from left going right in the pattern
+and data, the algorithm greedily matches as many characters as possible without using one of the allowed edits.
+Every time a character doesn't match, \scm spends an edit and uses a stack structure to keep track on which
+kind of edit should be tried next at this point in the sub-sequence, in case the rest of the \pu doesn't match and need to
+backtrack to this spot. The different edits are tried in the following order: mismatch, insertion, deletion, i.e.
+if a character doesn't match the character in data and this spot was approached from the left (not backtracking)
+then a mismatch is used. When backtracking to this spot then an insertions is tried, and if that failed as well further along 
+in the \pu the a deletion is tried. \\ \\
+The naive way of trying to fit a \pu to a sub-sequence in data using edits would be trying out every permutation of the edits
+applied on the characters, even those which actually matched the data. The number of permutations would be very large,
+so \scm uses dominance relation ~\cite{dom} to rule out many of the permutations and speed up the search. \\
+Dominance relation is a property that is used in many combinatorial problems, and allows for some of the solution
+space of a problem to be dismissed as an (optimal) solution due to a "dominant" other part of the solution space. 
+A good example is the classic knapsack problem; Given a set of items that each has a weight and value assigned to them,
+and then a bag that can contain items up to a certain weight limit, determine how many of the different items to
+include in order to maximize the total value but keeping the weight under the limit. If one of the items $I_1$ weighs
+X and is worth Y, but a combination of other items (say $I_2$ and $I_3$) weight less than X and is worth more than Y, 
+then item T can never be part of an optimal solution to this problem, since in any solution that contains T, 
+one could substitute T for $I_2$ and $I_3$ and get more value without breaking the weight limit, in which case the 
+original solution containing T was not optimal. \\ \\
+In this case dominance relation allows for greedily ruling out possible combinations of uses of 
+mismatches, insertions and deletions that applies any of the edits on characters that could match without an edit 
+(still looking at one character at a time from left to right). In other words, whenever \scm
+encounters a character that matched the character in data, spending a mismatch, insertion or deletion is never
+considered and never tried out, because the property of dominance relation promises that spending an edit
+here is not necessary for finding a match. \\ \\
+Figure 2 shows an example of a match between pattern and data that uses edits where it was not required,
+and how one can transform this into a match that uses its first edit at the first mismatching character.
+\begin{figure}[H]
+\begin{tikzpicture}
+[->,node distance=1.5cm and 0.2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
+\node[main node](1)    			  {A};
+\node[main node](2) [right= of 1] {T};
+\node[main node](3) [right= of 2] {T};
+\node[main node](4) [right= of 3] {T};
+\node[main node](5) [right= of 4] {T};
+\node[main node](6) [right= of 5] {G};
 
-We have found certain structures he uses to solve different functionality problems, in order to harvest these structures to achieve the same fast runtime in the base cases of the program (e.g. exact match for bases or the like) we need to understand them:
+\node[main node](7) [below= of 1] {A};
+\node[main node](8) [right= of 7] {--};
+\node[main node](9) [right= of 8] {--};
+\node[main node](10) [right= of 9] {T};
+\node[main node](11) [right= of 10] {T};
+\node[main node](12) [right= of 11] {G};
 
-\subsection{Ambiguous bases}
-In Scan\_For\_Match in order to compare strings of bases he needs to be able to compare with bases that can mean different other bases, (e.g. n is way to write (A or C or T or G), and m is a way of writing (A or C)) this is done by converting all bases to words of 4 bit. This makes it possible to use bit wise and to compare bases. \\
-in order to do this we need to define the different bases as 1 bit being true (e.g. A = 0001, C = 0010 ....) this makes it possible for ambiguous bases to say which bases it consists of. In Scan\_For\_Match he has made a conversion table for this:
+
+\node[main node](13) [right= of 6, xshift=+2cm] {A};
+\node[main node](14) [right= of 13] {T};
+\node[main node](15) [right= of 14] {T};
+\node[main node](16) [right= of 15] {T};
+\node[main node](17) [right= of 16] {T};
+\node[main node](18) [right= of 17] {G};
+
+\node[main node](19) [below= of 13] {A};
+\node[main node](20) [right= of 19] {T};
+\node[main node](21) [right= of 20] {T};
+\node[main node](22) [right= of 21] {--};
+\node[main node](23) [right= of 22] {--};
+\node[main node](24) [right= of 23] {G};
+
+\path[every node/.style={font=\sffamily\small}]
+(2) edge node [left] {deletion} (8)
+(3) edge node [right] {deletion} (9)
+(16) edge node [left] {deletion} (22)
+(17) edge node [right] {deletion} (23)
+;
+\end{tikzpicture}
+\caption{\textit{The leftmost match uses its two deletions where it was not necessary, and the rightmost example shows
+the same match where the use of the deletions have been postponed as much as possible before being used.}}
+\end{figure} 
+\noindent Using dominance relation \scm always finds a match for a \pu if it exists, but when used in combination
+with an outer backtracking system that is not enough! \\
+The technique described is useful only if the goal is determining if there exist a possible match or not.
+With an outer backtracking system it is often times required that several if not all possibilities are tried in
+order to find the overall match. Some \pus of the overall pattern may be required to be of a specific length in order to
+match the whole pattern, and the only way such a \pu can obtain the required length may very well be using unnecessary
+edits. Trying to match a \pu with allowed edits, \scm will always accept the first way of matching, and even if
+subsequent \pus fail and we backtrack to this \pu again, the same match with the same length will be found. \\
+It is therefore not guaranteed that \scm will find all the matches it's supposed to find. In fact every sub-sequence
+of data that should match with the pattern, but requires for one or more of its \pus to have a length only
+acquirable by using unnecessary edits, \scm will not find!
+\subsection{Backtracking}
+Backtracking is a commonly used technique in string searching functionality and is the foundational algorithm of the string
+search in \scm and in our re-implementation. The problem of determining a match between two strings are closely
+related to the Levenshtein distance problem although it has important differences. \\ \\
+The Levenshtein distance between two strings is defined as \textit{the minimum amount of single-character edits required
+to change on string into the other.} ~\citeyear{leve} \\ \\
+Figure 2 shows the available single-character edits. \\
+\begin{figure}[H]
+\begin{tikzpicture}
+[->,node distance=1.5cm and 0.2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
+\node[main node](1)    {A};
+\node[main node](2) [right= of 1] {G};
+\node[main node](3) [right= of 2] {G};
+\node[main node](4) [right= of 3] {A};
+
+\node[main node](5) [below= of 1] {A};
+\node[main node](6) [below= of 2] {G};
+\node[main node](7) [below= of 3] {T};
+\node[main node](8) [below= of 4] {A};
+
+\node[main node](9) [right= of 4, xshift=+2cm] {A};
+\node[main node](10) [right= of 9] {G};
+\node[main node](11) [right= of 10] {--};
+\node[main node](12) [right= of 11] {A};
+
+\node[main node](13) [right= of 8, xshift=+2cm] {A};
+\node[main node](14) [right= of 13] {G};
+\node[main node](15) [right= of 14] {T};
+\node[main node](16) [right= of 15] {A};
+
+\node[main node](17) [right= of 12, xshift=+2cm] {A};
+\node[main node](18) [right= of 17] {G};
+\node[main node](19) [right= of 18] {T};
+\node[main node](20) [right= of 19] {A};
+
+\node[main node](21) [right= of 16, xshift=+2cm] {A};
+\node[main node](22) [right= of 21] {G};
+\node[main node](23) [right= of 22] {--};
+\node[main node](24) [right= of 23] {A};
+
+\path[every node/.style={font=\sffamily\small}]
+(3) edge node [left] {mismatch} (7)
+(11) edge node [left] {insertion} (15)
+(19) edge node [left] {deletion} (23);
+\end{tikzpicture}
+\caption{\textit{The top character sequences are the patterns and the bottom the data. In the first example the G is simply
+substituted for a T. In the second example the pattern is AGA but matches the sub-sequence AGTA in data by insertion of a
+T. In the third example the pattern AGTA matches the data AGA by deleting the T}}
+\end{figure} 
+\noindent Calculating the Levenshtein distance does not include requirements for the distribution of the different 
+single-character edits, it just finds the minimum \textit{sum} of them. \\
+If the task at hand is to determine whether two strings are within a maximum allowed Levenshtein distance of each other,
+then simply calculating the Levenshtein distance would be enough. \\
+If however the task is to determine whether one string can be changed into another string with a maximum amount of $X$  mismatches, $Y$ insertions and $Z$ deletions one can \textit{not} simply calculate the Levenshtein distance of the two
+strings and compare the number to the sum of the different edits ($X+Y+Z$) since the Levenshtein distance may not live
+up to the additional requirements of a maximum of either of the different edits. An example of this is shown in Figure 3. \\
+\begin{figure}[H]
+\begin{tikzpicture}
+[->,node distance=1.5cm and 0.2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
+\node[main node](1)				  {A};
+\node[main node](2) [right= of 1] {C};
+\node[main node](3) [right= of 2] {T};
+\node[main node](4) [right= of 3] {G};
+\node[main node](5) [right= of 4] {--};
+\node[main node](6) [right= of 5] {C};
+\node[main node](7) [right= of 6] {A};
+
+\node[main node](8)	[below= of 1] {A};
+\node[main node](9) [right= of 8] {--};
+\node[main node](10)[right= of 9] {T};
+\node[main node](11)[right= of 10] {G};
+\node[main node](12)[right= of 11] {T};
+\node[main node](13)[right= of 12] {C};
+\node[main node](14)[right= of 13] {A};
+
+\node[main node](21)[right= of 7, xshift=+2cm] {A};
+\node[main node](22)[right= of 21] {--};
+\node[main node](23)[right= of 22] {T};
+\node[main node](24)[right= of 23] {G};
+\node[main node](25)[right= of 24] {T};
+\node[main node](26)[right= of 25] {C};
+\node[main node](27)[right= of 26] {A};
+
+\node[main node](15)[above= of 21] {A};
+\node[main node](16)[right= of 15] {C};
+\node[main node](17)[above= of 23] {T};
+\node[main node](18)[above= of 24] {G};
+\node[main node](19)[above= of 25] {C};
+\node[main node](20)[above= of 26] {A};
+
+
+\node[main node](28)[below= of 21] {A};
+\node[main node](29)[right= of 28] {C};
+\node[main node](30)[right= of 29] {T};
+\node[main node](31)[right= of 30] {G};
+\node[main node](32)[right= of 31] {C};
+\node[main node](33)[right= of 32] {A};
+
+\node[main node](34)[below= of 28] {A};
+\node[main node](35)[right= of 34] {T};
+\node[main node](36)[right= of 35] {--};
+\node[main node](37)[right= of 36] {G};
+\node[main node](38)[right= of 37] {T};
+\node[main node](39)[right= of 38] {C};
+\node[main node](40)[right= of 39] {A};
+
+\path[every node/.style={font=\sffamily\small}]
+(2) edge node [left] {deletion} (9)
+(5) edge node [left] {insertion} (12)
+(16) edge node [left] {deletion} (22)
+(19) edge node [left] {mismatch} (25)
+(20) edge [color=red] node [right, color=red] {no more edits} (26)
+(29) edge node [left] {mismatch} (35)
+(30) edge node [right] {deletion} (36)
+(32) edge [color=red] node [right, color=red] {no more edits} (38)
+;
+\end{tikzpicture}
+\caption{\textit{The Levenshtein distance between the pattern ACTGCA and the data ATGTCA is 2 
+(1 deletion, 1 insertion) as the leftmost example shows. If the pattern is allowed 1 deletion and 1 mismatch, then
+the two strings can not match, as the rightmost examples show, even though this also would be a sum of 2 edits.}}
+\end{figure}
+\subsubsection{Complexity of backtracking}
+Let's look at the implications backtracking has on performance of an implementation. An implementation similar to
+\scm that allows complex patterns to be defined by separable \pus would often require more than just finding \textit{one}
+match for a particular \pu with allowed single-character edits. One possible combination of the single-character
+edits used to find a match for one particular \pu may result in a valid match of the whole pattern, 
+where other combinations for that particular \pu may prevent a whole match from being possible. \\
+It is therefore necessary for our particular \pu to be able to find more than one way to make a valid match (if these are
+possible). Consider the example in Figure 4 where the pattern is \\ \\
+\texttt{CT\; AGCA[2,0,1]\; TT}, i.e. 2 mismatches and
+one deletion allowed for the second \texttt{PUnit}, and the data is \\ \\
+\texttt{CTAGAGGT}. 
+\begin{figure}[H]
+\begin{tikzpicture}
+[->,node distance=1.5cm and 0.2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
+\node[main node](1)				  {C};
+\node[main node](2) [right= of 1] {T};
+\node[main node](3) [right= of 2] {A};
+\node[main node](4) [right= of 3] {G};
+\node[main node](5) [right= of 4] {C};
+\node[main node](6) [right= of 5] {A};
+\node[main node](7) [right= of 6] {T};
+\node[main node](8) [right= of 7] {T};
+
+\node[main node](9)	[below= of 1] {C};
+\node[main node](10)[right= of 9] {T};
+\node[main node](11)[right= of 10] {A};
+\node[main node](12)[right= of 11] {G};
+\node[main node](13)[right= of 12] {A};
+\node[main node](14)[right= of 13] {G};
+\node[main node](15)[right= of 14] {G};
+\node[main node](16)[right= of 15] {T};
+
+\node[main node](17)[right= of 7, xshift=+3cm]  {C};
+\node[main node](18)[right= of 17] {T};
+\node[main node](19)[right= of 18] {A};
+\node[main node](20)[right= of 19] {G};
+\node[main node](21)[right= of 20] {C};
+\node[main node](22)[right= of 21] {A};
+\node[main node](23)[right= of 22] {T};
+\node[main node](24)[right= of 23] {T};
+
+\node[main node](25)[below= of 17] {C};
+\node[main node](26)[right= of 25] {T};
+\node[main node](27)[right= of 26] {A};
+\node[main node](28)[right= of 27] {G};
+\node[main node](29)[right= of 28] {*};
+\node[main node](30)[right= of 29] {A};
+\node[main node](31)[right= of 30] {G};
+\node[main node](32)[right= of 31] {G};
+\node[main node](33)[right= of 32] {T};
+
+\path[every node/.style={font=\sffamily\small}]
+(5) edge node [left] {mismatch} (13)
+(6) edge node {mismatch} (14)
+(7) edge [color=red] node [right, color=red] {only 1 deletion left} (15)
+(21) edge node [left] {deletion} (29)
+(23) edge node {mismatch} (31)
+(24) edge node [right] {mismatch} (32)
+;
+\end{tikzpicture}
+\caption{\textit{In the leftmost example the} \pu \texttt{AGCA} \textit{chose to use 2 mismatches to match the 
+data sub-sequence} \texttt{AGAG} \textit{and then move on the next} \pup \textit{The next} \pu
+\textit{would then have to match it's letters} \texttt{TT} \textit{with the data sub-sequence} \texttt{GT}
+\textit{which it can't do with its remaining deletion. The overall algorithm would have to backtrack the the second
+} \pu \textit{to try another possible match (if any) to see if that would make a difference. The rightmost example
+shows how using a deletion to delete the C in} \texttt{AGCA} \textit{would also match data} \texttt{AGA} \textit{and
+when moving forward to the next} \pu \texttt{TT} \textit{will actually match} \texttt{GG} \textit{by using the two
+remaining mismatches.}}
+\end{figure}
+\noindent For two different reasons can a \pu have multiple ways of matching with the data. Either it's a \pu with allowed mismatches,
+insertions and deletions like discussed, or it is a range \pu which allows matches of all the lengths
+included in the interval given (\texttt{7...9} would allow 3 possible matches). \\ \\
+Whenever backtracking to one of these, another of the possibilities will be chosen and the algorithm continues to the
+subsequent \pu again. The amount of checks that the algorithm would need to perform in order to try out
+all possibilities follow normal combinatorics, and would therefore grow exponentially. One could visualize this
+with a search tree structure, where each node is a possibility for a single \pup The nodes would
+have varying number of branches as not all \pus have the same number of ways to reach a match. The height of the tree
+may vary as well, because which branch is chosen may affect what possibilities the subsequent \pu has, and the final
+\pu may not be reached with every combination. \\
+Consider the example in Figure 5 where the pattern is \\ \\
+\texttt{AGC[1,0,1]\; TCT[0,0,1]\; TG $<$more} \texttt{PUnits}$>$ and the data \\ \\
+\texttt{ACCTCTTG$<$more data$>$}
+\begin{figure}[H]
+\begin{center}
+\begin{tikzpicture}
+[->,node distance=2cm and 0.2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
+\node[main node](1)				  {AGC[1,0,1]};
+\node[main node](2) [below= of 1] {TCT[0,0,1]};
+\node[main node](3) [below= of 2] {TG};
+\node[main node](4)[below= of 3] {more \pus};
+
+\node[main node](5) [right= of 1, xshift=+5cm] {ACC...};
+\node[main node](6) [right= of 2, xshift=+3cm] {CTC...};
+\node[main node](7) [right= of 3, xshift=+2cm] {CT...};
+\node[main node](8) [right= of 2, xshift=+7cm] {TCT...};
+\node[main node](9) [right= of 3, xshift=+6cm] {TTG};
+\node[main node](10)[right= of 3, xshift=+10cm] {TG};
+\node[main node](11)[right= of 4, xshift=+8.5cm] {more data};
+
+\path[every node/.style={font=\sffamily\small}]
+(5) edge node [left] {delete G} (6)
+(6) edge node [left] {delete first T} (7)
+(5) edge node [right] {mismatch G} (8)
+(8) edge node [left] {delete last T} (9)
+(8) edge node [right] {straight match} (10)
+(10) edge node [left] {straight match} (11)
+(7) edge [color=red] node [above] {no possible} (3)
+(7) edge [color=red] node [below] {match} (3)
+(9) edge [bend left, color=red] node [below, color=red] {no possible match} (3)
+;
+\end{tikzpicture}
+\end{center}
+\caption{\textit{Each node shows the relevant data that needs to match the} \texttt{PUnit} 
+\textit{on the left side of the tree, and each edge between nodes shows the combination chosen to match that data.
+The first} \pu \textit{has two ways of matching it's data. Say the G is deleted to match with data} \texttt{AC}.
+\textit{The second} \pu \textit{has only one way of matching with data} \texttt{CTC} \textit{that is by deleting the
+first T. The third} \pu \textit{can not match the data} \texttt{CT}. \textit{If mismatching with the G for the first}
+\pu \textit{was chosen instead, the second} \pu \textit{would have two possible ways of matching with the data} \texttt{TCT}.
+\textit{If the second T is deleted, the third} \pu \textit{would again have no way of matching with data} \texttt{TT}
+\textit{but if no edits are used and the straight match is chosen, the third} \pu \textit{would be able to do a
+straight match, and the tree would continue to branch downwards to the subsequent} PU's.}
+\end{figure}
+\noindent So even though the number of combinations that should possibly be tried outgrows exponentially, 
+it can often times be determined before
+reaching the bottom of the tree whether that particular way down is possible or not and if not, the combination does
+not have to be checked all the way to the end. \\ \\
+The worst case running time would still be exponential since it is possible for a pattern that no possible choice of match
+for any \pu would prevent any of the following choices, i.e. the tree would have a homogeneous height, and
+all the nodes would have their respective maximum amount of child nodes. \\ \\
+Let us define the function $children(input)$ to return the amount of possible matches with 
+\textit{different lengths} on any data, that the input \pu has.
+One should only distinguish between possible matches of different lengths since matches of same length would
+yield the same results in their child branches, so only one set of these child branches should be considered.
+In case of mismatches insertions and deletions, the number of characters a match can differ is determined by 
+the sum of the insertions (use of these makes the match shorter)
+and the deletions (use of these makes the match longer). The last option is using none of the insertions or deletions which
+result in yet another match length. \\ \\
+If it's a range \pu then the number of different lengths are given by the size of the interval. \\ \\
+$children(input)=
+\left\{
+\begin{array}{ll}
+(input.max - input.min) + 1 & \mbox{if } input=Range \\
+input.insertions+input.deletions+1 & otherwise 
+\end{array}
+\right.$
+ \\ \\
+Let $punits$ be an array of \pus in a given pattern $p$ indexed in the same order as $p$, $n$ be the number of \pus in $punits$, 
+and assume worst case where each node has its maximum number of edges: \\ \\
+$real\_number\_of\_edges(punits[i])=children(punits[i])$\;\; for all $i=\{1...n\}$ \\ \\
+Then the amount of combinations of the different matches of the \pus would be $comb(p)$ \\ \\
+$comb(p)=\mathlarger{\mathlarger{\prod}_{n=1}^{n}\;children(punits[i])}$ \\ \\
+Consider the pattern \texttt{AGGT[0,1,1]\; 4...5\; TTCTAA[0,2,1]}. \\ \\
+$children(AGGT[0,1,1]) \cdot children(4...5) \cdot children(TTCTAA[0,2,1])=3\cdot 2\cdot 4=24$ \\ \\
+A total of 24 leaves on the tree. \\
+As mentioned this is the maximum amount of checks that would need to be performed. Even if a tree has a homogeneous 
+height, the probability of checking the correct branch lastly is low.
+The average actual running time of an algorithm that uses these principles would therefore be significantly better.
+\subsection{Design}
+Our re-implementation of \scm called \sfm is developed in C++ rather than C, which was used to develop 
+\texttt{scan\_for\_matches}. We have used C++ classes instead of C structs as the base structure for the PU's. \\
+Figure 6 shows the class structure of \texttt{scanfm}. 
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.7]{classdia.png}
+\end{center}
+\caption{\textit{There is one generic} \pu \textit{class called "Punit". This class holds a lot of the common variables
+and flags that are needed no matter what kind of} \pup
+\textit{The "Range" class inherits from the "Punit" class and holds its own information, 
+for instance the interval of the range. 
+The "Exact" class also inherits from the "Punit", and lastly the "Reference" class inherits from the "Exact" class.
+Each class (except the "Punit" class itself) defines the method "search", which searches for a match given a start position
+and some extra information. A "Reference" object collects the letters it's supposed to search for at runtime from
+the referenced "Range"}}
+\end{figure}
+\noindent The control flow of \sfm is similar in idea to \scm but very different in implementation. While \scm uses a case/switch
+and GOTO statements, \sfm uses an outer loop to call the "search" function of the \pus and then either
+forward to the subsequent \pu on success or backtrack to the previous \pup \\
+Passing parameters between the calls and returns of the "search" methods sets the criteria for the particular search, for
+instance the search for the first \pu where the "search" function is told to search and increment data until a match is \\
+found. \\
+Figure 7 shows a simplistic model of the flow in \texttt{scanfm}.
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.7]{flowdia.png}
+\end{center}
+\caption{\textit{The yellow ellipsis indicates the list of Punit object. The cyan rectangle marks where most of the "search"
+method functionality is happening.}}
+\end{figure}
+\subsubsection{Optimizing character comparison using bitwise operations}
+One of the great tricks used in \scm is the use of bitwise operations in performance critical parts of the code.
+Comparing single characters is the most used operations and maximizing the speed of this particular operation 
+means everything for the performance of the program. Figure 8 shows how \scm transforms every normal C character into
+a custom 4-bit code. These 4 bits are used to represent each of the four letters (A,T,C and G) by having a 1 in one of
+the slots and 0 in the other three. The letter G for example is represented as 0100. All possible permutations of 
+combining these letters are also represented by a permutation of the bit field, e.g. the letter V is written in a \pu 
+represents either A,C or G and therefore has the bit field 0111 since A is 0001 and C is 0010. \\
+Prior to searching, the data input is of course also transformed to 4-bit representations.
+When comparing two characters \scm uses the bitwise AND operator and if the result is not 0000 the characters matches. \\ \\
+\scm also put the 4 bits left of our bit field to use. The complementary letter of the letter represented in the rightmost
+bit field is stored in the leftmost bit field, e.g. G would look like 0010 0100 although only on of the 4-bit fields would
+be used in a comparison. This leftmost bit field is used when comparing a complementary reference \pu instead
+of transforming back and forth between the letters every time a complementary \pu is encountered. \\ \\
+We are using this exact technique in \sfm to achieve the same optimal of comparing characters.
+\begin{figure}[H]
+\begin{center}
 \begin{lstlisting}
 int build_conversion_tables()
 {
@@ -128,133 +665,59 @@ int build_conversion_tables()
 
     for (the_char=0; the_char < 256; the_char++) {
         switch(tolower(the_char)) {
-          case 'a': punit_to_code[the_char] = A_BIT; break;
-          case 'c': punit_to_code[the_char] = C_BIT; break;
-          case 'g': punit_to_code[the_char] = G_BIT; break;
-          case 't': punit_to_code[the_char] = T_BIT; break;
-          case 'u': punit_to_code[the_char] = T_BIT; break;
-          case 'm': punit_to_code[the_char] = (A_BIT | C_BIT); break;
-          case 'r': punit_to_code[the_char] = (A_BIT | G_BIT); break;
-          case 'w': punit_to_code[the_char] = (A_BIT | T_BIT); break;
-          case 's': punit_to_code[the_char] = (C_BIT | G_BIT); break;
-          case 'y': punit_to_code[the_char] = (C_BIT | T_BIT); break;
-          case 'k': punit_to_code[the_char] = (G_BIT | T_BIT); break;
-          case 'b': punit_to_code[the_char] = (C_BIT | G_BIT | T_BIT); break;
-          case 'd': punit_to_code[the_char] = (A_BIT | G_BIT | T_BIT); break;
-          case 'h': punit_to_code[the_char] = (A_BIT | C_BIT | T_BIT); break;
-          case 'v': punit_to_code[the_char] = (A_BIT | C_BIT | G_BIT); break;
-          case 'n': punit_to_code[the_char] = (A_BIT | C_BIT | G_BIT | T_BIT); break;
+          case 'a': \pu_to_code[the_char] = A_BIT; break;
+          case 'c': \pu_to_code[the_char] = C_BIT; break;
+          case 'g': \pu_to_code[the_char] = G_BIT; break;
+          case 't': \pu_to_code[the_char] = T_BIT; break;
+          case 'u': \pu_to_code[the_char] = T_BIT; break;
+          case 'm': \pu_to_code[the_char] = (A_BIT | C_BIT); break;
+          case 'r': \pu_to_code[the_char] = (A_BIT | G_BIT); break;
+          case 'w': \pu_to_code[the_char] = (A_BIT | T_BIT); break;
+          case 's': \pu_to_code[the_char] = (C_BIT | G_BIT); break;
+          case 'y': \pu_to_code[the_char] = (C_BIT | T_BIT); break;
+          case 'k': \pu_to_code[the_char] = (G_BIT | T_BIT); break;
+          case 'b': \pu_to_code[the_char] = (C_BIT | G_BIT | T_BIT); break;
+          case 'd': \pu_to_code[the_char] = (A_BIT | G_BIT | T_BIT); break;
+          case 'h': \pu_to_code[the_char] = (A_BIT | C_BIT | T_BIT); break;
+          case 'v': \pu_to_code[the_char] = (A_BIT | C_BIT | G_BIT); break;
+          case 'n': \pu_to_code[the_char] = (A_BIT | C_BIT | G_BIT | T_BIT); break;
           default:
-            punit_to_code[the_char] = 0;
+            \pu_to_code[the_char] = 0;
             break;
         }
-        if (punit_to_code[the_char] & A_BIT)
-            punit_to_code[the_char] |= T_BIT << 4;
-        if (punit_to_code[the_char] & C_BIT)
-            punit_to_code[the_char] |= G_BIT << 4;
-        if (punit_to_code[the_char] & G_BIT)
-            punit_to_code[the_char] |= C_BIT << 4;
-        if (punit_to_code[the_char] & T_BIT)
-            punit_to_code[the_char] |= A_BIT << 4;
+        if (\pu_to_code[the_char] & A_BIT)
+            \pu_to_code[the_char] |= T_BIT << 4;
+        if (\pu_to_code[the_char] & C_BIT)
+            \pu_to_code[the_char] |= G_BIT << 4;
+        if (\pu_to_code[the_char] & G_BIT)
+            \pu_to_code[the_char] |= C_BIT << 4;
+        if (\pu_to_code[the_char] & T_BIT)
+            \pu_to_code[the_char] |= A_BIT << 4;
     }
 ...
 \end{lstlisting}
-
-This makes him able to use bit wise and to determine a match in the following way:
-\begin{lstlisting}
-#define KnownChar(C)  (punit_sequence_type == PEPTIDE ? 1 : known_char[(C)])
-
-#define Matches(C1,C2) (punit_sequence_type == PEPTIDE ? \
-                        ((C1 == C2) || (C2 == 'X')): \
-                        (KnownChar((C1) & 15) && ((((C1) & 15) & ((C2) & 15)) == (C1 & 15))))
-
-\end{lstlisting}
-In the code segment above C1 is a character from the data and C2 is a character from the pattern given. In the case where it is not PEPTIDE (PEPTIDE being not DNA) he starts by checking that the data character is a allowed base, if this is true and the two characters being bit wise "and" compared results in the same word taken from the data, it returns true. 
-
-When he grabs the two characters to compare, he doesn't just get 4bits in order to make sure it is only the 4bits he is interested in, that gets compared he bit wise "and" them with 15. This makes all other than the last 4 bits go to 0 because 15 is 4 ones in end of the Bite.
-
-The smart result of this comparing algorithm is that you only need to compare once even though the pattern can have multiple different ambiguous bases. It will always return the base from the data if the ambiguous base contains the base from the data. example: \\
-\begin{itemize}
-\item The base from the data is: A (0001)
-\item The ambiguous base from the pattern is: D (A or T or G) 1101
-\item The bit wise "and" operation: 0001 \& 1101 = 0001
-\item The result is then compared with A again to see if the compare was successful
-\end{itemize}
-In order to use this he has converted both the data and the pattern with the conversion\_table. \\
-\section{Design}
-
-\subsection{Program structure}
-
-A list of actions our program should do in order to execute a pattern search:
-\begin{itemize}
-\item Read and parse the input line. E.g. "scanFM 'ATTGCCCC[0,1,2]' 'data.txt'". Possibility of writing "$->$ 'output.txt'"
-which results in the matches not being displayed in the terminal but written the the specified file.
-\item Parse the pattern into units and save them as different types (objects of different classes that inherit
-from a common PUNIT class), e.g. EXACT\_PUNIT, AMBI\_PUNIT etc.
-\item Choose the order of which to search for the patterns and create a state that readies for this search, for example a 
-list of the punits in correct order with some way of keeping track of the different positions the punits have to with
-respect to each other.
-\item Search for the punits in the order chosen by simply calling a ".search()" method for each PUNIT-object.
-The PUNIT-object's search method invoked is unique for each different type of PUNIT, and returns either True or False.
-If the search for each PUNIT returns True the match is saved.
-\item The saved matches are either displayed in the terminal or written in a file, depending on the call of scanFM. 
-\end{itemize}
-
-
-\textbf{Types of PUNITs that we need}
-\begin{itemize}
-\item EXACT - A PUNIT of this type consists of either of the letters 'A', 'C', 'G' and 'T' or any number of the wildcards. Also includes begin able to search with a given number of mismatches, insertions, and deletions.
-\begin{itemize}
-  \item The two scenarios of a exact search is either, only literals without mismatches, insertions or deletions, or literals with insertions, deletions or mismatches.
-  \item Without mis, ins, and del, the algorithm runs through all the pattern bases, and compares them to all data bases with the same incrementation from a given point in the data. This means that worst case it has to run the pattern length for each data point, which gives O(n*m) worst case runtime, n being the data length, and m being the pattern length.
-  \item With mis, ins and del, the search function has to do the same as before but trying with all failed matches between data and pattern to insert a mismatch, deletion or insertion. This makes the worst case runtime increase to O(n*m*ins*del*mis) since insertions, deletions and mismatches has to be tryed in all different orders.
-  \item both scenarios is using the same algorithms as scan for matches.
-\end{itemize}
-\item COMPLEMENTARY - A PUNIT that takes the complementary of a literal.
-\begin{itemize}
-  \item complementary punit uses the code from exact to search, it only changes the code from the pattern to the complementary, which happens in O(m), m being the pattern length.
-\end{itemize}
-\item REPEAT - Saves another PUNITs result to search for it later.
-\begin{itemize}
-  \item repeat uses either complementary or exacts search function depending on which Punit it points to, not increasing the overall time consumption.
-\end{itemize}
-\item RANGE - Jumps all distances between to given parameters.
-\begin{itemize}
-  \item Range only jumps in the data file, which is done in constant time.
-\end{itemize}
-\end{itemize}
-
-\begin{figure}[h!]
-\includegraphics[scale=0.6]{UML.png}
-\caption{ULM class diagram of scanfm Punits}
+\end{center}
+\caption{\textit{The function that prepares the conversion table that is used for converting both data and} PU's. 
+\textit{The last 8 or so lines of code is where the left 4 bits is being set to the complementary of the letter
+represented in the rightmost 4 bits.}}
+\end{figure} 
+\subsubsection{Optimizing order of \pu matching}
+A possible optimization that \scm does \textit{not} exploit, is choosing an order of \pus to be searched for.
+Some \pus are more exclusive and rare to find in data than others. Specifically an exact \pu with the most
+letters is the \pu that statistically would be found the least times in random data. If starting the search by
+identifying this rarest \pu the search would save a lot of instructions. \scm starts every search with the 
+first \pu in the pattern, and it is therefore often guaranteed to run slower than if it used the other approach.
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=0.65]{opti1.jpg}
+\end{center}
+\caption{\textit{A pattern that consists of two} \pus \textit{where the second (say} \texttt{CTCGAATAG[1,0,0]}
+\textit{) is more rare in the data than the first} \pu \textit{(say(}\texttt{GGT}\textit{). Searching for the 
+second} \pu \textit{first needs three checks (with three additional check afterwards to verify the whole pattern)
+while choosing the look for the first} \pu \textit{needs 6 checks (with 6 following checks to verify whole pattern).}}
 \end{figure}
+\noindent As Figure 9 shows, this optimization presents a potential huge increase in running time of the program. \newpage
+\section{Results}
 
-\subsection{Optimization}
-\subsubsection{Skip length}
-The pattern is matched against the database sequence as usual with different orders of mismatches, insertions and
-deletions if necessary, however it stores the amount of occurrences of each letter in a list, in the interval
-(SR, SR + length(pattern) + insertions) (datlist). 
-It also stores the amount of occurrences of letters in the pattern (patlist). \\ \\
-Say there is not match in this first run. Normally we would increment the SR counter and try again, but instead we
-increment SR, and update the datlist with the new letters (the old first letter is decremented and the new letter in the
-end of the string in incremented in datlist). For any letter, if the number of occurrences in patlist p subtracted the
-number of allowed mismatches and deletions still is bigger than the number of occurrences of that letter in dalist, there is no 
-possible match between these 2 strings, in that particular search can be skipped. (Only subtract deletions if the last letter
-in the DB-subsequence is not the letter being checked.) Pseudo algorithm would be as follows: 
-\begin{enumerate}
-\item In the first search, count the number of occurrences of each letter in pattern (put them in patlist) 
-and DB-subsequence being checked, i.e. interval(SR, SR + length(pattern) + max\_insertions (put them in datlist)
-; Pattern match the two strings; if succes goto 6;
-\item SR++
-\item Update letter occurrences in datlist
-\item for each letter lt: if ((patlist[lt] - max\_mismatch) - (max\_deletions - 
-NumberOfLet(lt, interval(ER - max\_deletions, ER))) $>$ datlist[lt] then goto 2;
-\item Pattern match the 2 strings; goto 2;
-\item DONE
-\end{enumerate}
-Here's an example. Suppose the DB-sequence is "$<$something before$>$ACCCTTT$<$something after$>$" and the pattern we're
-looking for is "ATTTTTT[2,0,3]" (2 mismatches, 3 deletions.) For the letter "T" the check in 4 would be: \\
-((6 - 2) - (3 - NumberOfLet("T", "TTT")) = ((6 - 2) - (3 - 3)) = 4. 4 is bigger than datlist("T") = 3 so there is no
-possible match.
-
+\printbibliography
 \end{document}
