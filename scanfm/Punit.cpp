@@ -41,8 +41,18 @@ Punit::Punit(char* data_s, char* data_e, int data_l, char* c, int typ){
     type = typ;
 }
 
-int Punit::get_flex() {
-  cout << "Punit get_flex called, shoud not happen...\n";
+int Punit::get_score() {
+  cout << "Punit get_flex called, should not happen...\n";
+  return 0;
+}
+
+int Punit::get_min_len() {
+  cout << "Punit get_min_len called, should not happen...\n";
+  return 0;
+}
+
+int Punit::get_max_len() {
+  cout << "Punit get_max_len called, should not happen...\n";
   return 0;
 }
 
@@ -82,7 +92,7 @@ Exact::Exact(char* data_s, char* data_e, int data_len, int le, char* c,
       match_lens[i] = 0;
     }
     found_matches = 0;
-    match_list_len = 0;
+    match_list_len = -1;
 }
 /* FUNCTION TO MISMATCHES INSERTIONS DELETIONS (kan udkommenteres hvis den ikke
 compiler*/
@@ -141,6 +151,14 @@ void Exact::match(){
 ret_t* Exact::search(ret_t* retu){
   if(retu->startp != NULL) {
     //printf("new exact \n");
+    if (retu->opt) {
+      opti = 1;
+      retu->opt = 0;
+    }
+    if (retu->bst) {
+      best = 1;
+      retu->bst = 0;
+    }
     prev = retu->startp;
     len_s = len;
     code_s = code;
@@ -159,10 +177,10 @@ ret_t* Exact::search(ret_t* retu){
 
   // Else we are at backtracking
   } else {
+//    cout << "EXACT prev: " << prev - data_start << "\n";
     //printf("backtrack exact flex = %i\n", flex);
     mlen = 0;
   }
-
   int first = 0;
   if (run_len_s == data_len) {
     first = 1;
@@ -185,13 +203,16 @@ ret_t* Exact::search(ret_t* retu){
     if (quick_ref) {
       if (comp) {
         // If this punit is a complementary and previous punit is the variable being set
+        p3 = code + len + (run_len_s - run_len) - 1;
         while (prev_s <= prev_s + run_len-- && prev + len + (prev - prev_s) < data_end) {
-          if (matches(*prev,*(code + run_len + 1))){
-            p2 = prev+1;p3 = code + run_len + 2;
+//          cout << "EXACT PREV : " << prev << "\n";
+          if (matches(*prev,(((*p3++) >> 4) & 15))){
+            p2 = prev+1;p3 = p3 - 2;
             c = prev - prev_s;
-            for (i = (len + c) - 1; i && matches(*p2,*p3); i--,p3++,p2++)
+            for (i = (len + c) - 1; i && matches(*p2,(((*p3) >> 4) & 15)); i--,p3--,p2++)
               ;
             if (!i){
+//              cout << "MAUATCH\n";
               c = prev - prev_s;
               len += c;
               mlen = len;
@@ -272,7 +293,7 @@ ret_t* Exact::search(ret_t* retu){
     // If we have a match
     if(len == mlen){
 //      cout << len << "\n";
-      if (first != 1) {
+      if ((first != 1) && (opti != 1)) {
         mlen += c;
         mlen = (prev + len) - mlen_start;
       }
@@ -282,17 +303,6 @@ ret_t* Exact::search(ret_t* retu){
       if (retu->quick_ref) {
         mlen += c;
       }
-      // If this is a reference punit, ambiguous letters must be set to specific
-/*      if (is_amb) {
-        if (comp == 1) {
-          int k = 0;
-          for (int j = len - 1; j >= 0; j--) {
-            variable->code[k++] = ((prev[j] >> 4) & 15);
-          }
-        } else {
-          strncpy(variable->code, prev, len);
-        }
-      } */
       return retu;
     } else {
       retu->startp = NULL;
@@ -339,14 +349,25 @@ ret_t* Exact::search(ret_t* retu){
         }
       }
     } else {
-      // If this Punit is not complementary and the previous Puni was not the variable being set
-      
-      while (prev_s <= prev_s + run_len-- && prev + len < data_end) {
+//      cout << "MID prev: " << prev << "\n";
+//      cout << "MID runlen: " << run_len << "\n";
+//      cout << match_list_len << "\n";
+      if (match_list_len > 0) {
+        new_retu = loose_match(retu, new_retu);
+        return new_retu;
+      }
+      // If this Punit is not complementary and the previous Punit was not the variable being set
+      while (prev_s <= prev_s + run_len && prev + len < data_end) {
+//        cout << "loose start pos: " << prev << "\n";
         new_retu = loose_match(retu, new_retu);
         if(new_retu->startp){
+//          cout << "loose matched\n";
+          if ((! first) && (! opti)) {
+            mlen = mlen + prev - prev_s;
+          }
           return new_retu;
         }
-        retu->startp = ++prev; p2++; //run_len--;
+        retu->startp = ++prev; p2++; run_len--;
       }
     }
   }
@@ -360,11 +381,12 @@ ret_t* Exact::search(ret_t* retu){
 //Loose match, in the case of insertions, deletions and mismatches
 //new
 ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
-  //printf("loosematch, prev = %p, prevc = %c, retu->startp = %p\n", prev, *prev, retu->startp);
+ // printf("loosematch, prev = %p, prevc = %c, retu->startp = %p\n", prev, *prev, retu->startp);
   //Backtracking
   if(retu->startp == NULL){
-    //printf("backtrack match_list_len = %i \n", match_list_len);
+//    printf("backtrack match_list_len = %i \n", match_list_len);
     if(match_list_len >= 0){
+//      cout << "next len " <<  match_list[match_list_len] << "\n";
       new_retu->startp = (char*)(match_list[match_list_len--]);
       new_retu->len = 0;
       mlen = new_retu->startp - prev;
@@ -377,6 +399,7 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
   }
   //New position
   if (retu->startp != NULL) {
+//    cout << "LOOSE: ikke backtrack..." << retu->startp << "\n";
     //Initiation at next position
     one_len = len;
     two_len = data_end-prev;
@@ -474,8 +497,13 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
       }
     }
     int n;
-    //printf("matches? = %i\n", found_matches);
+
+//    printf("matches? = %i\n", found_matches);
+// match_list is list of pointers that points to different new starting positions
+//    cout << "LOOSE: foundmatches: " << found_matches << "\n";
     if(found_matches-- > 0){
+//      printf("m1: %s\n", match_stack[found_matches].p2);
+//      printf("m1i: %i\n", match_stack[found_matches].del);
       //printf("found_matches = %i \n", found_matches);
       for(found_matches; found_matches >= 0; found_matches--){
         //Move match len with insertions
@@ -514,7 +542,9 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
       new_retu->startp = match_list[match_list_len--];
       new_retu->len = 0;
       mlen = new_retu->startp - prev;
+//      cout << "LOOSE mlen: " << mlen << "\n";
       //printf("new_retu->startp = %p, match_list_len = %i\n", new_retu->startp, match_list_len);
+//      cout << "LOOSE: next pos: " <<  new_retu->startp << "\n";
       return new_retu;
     }
   }
@@ -531,8 +561,16 @@ void Exact::reset(void) {
   c_flex = flex;
 }
 
-int Exact::get_flex() {
+int Exact::get_score() {
   return len - (mis + ins + del);
+}
+
+int Exact::get_min_len() {
+  return len - ins;
+}
+
+int Exact::get_max_len() {
+  return len + del;
 }
 
 /* Range constructer used by the parser */
@@ -556,13 +594,14 @@ ret_t* Range::search(ret_t* retu){
   // The next punit will know that this is a variable being set
   if(retu->startp == NULL) {
     // it can't backtrack any more
+//    cout << "RANGE backtrack inc: " << inc_width << "\n"; 
     if(inc_width == 0){
       return retu;
     // backtracking one forward
     } else {
       inc_width--;
       strech++;
-      if (! first) {
+      if ((! first) && (! opti)) {
         mlen++;
       }
       prev++;
@@ -578,6 +617,10 @@ ret_t* Range::search(ret_t* retu){
   mlen = len;
   strech = 0;
   prev = retu->startp;
+  if (retu->opt) {
+    opti = 1;
+    retu->opt = 0;
+  }
 /*  orig_code = retu->startp;
   strncpy(code, orig_code, len + width); */
 //  cout << "RANGE prev: " << prev << "\n";
@@ -598,8 +641,16 @@ void Range::reset(void) {
   mlen = 0;
 }
 
-int Range::get_flex() {
+int Range::get_score() {
   return 0;
+}
+
+int Range::get_min_len() {
+  return len;
+}
+
+int Range::get_max_len() {
+  return len + width;
 }
 
 Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Range* var_p, 
@@ -621,6 +672,7 @@ ret_t* Reference::search(ret_t* retu) {
       prev = retu->startp;
     }
     code = variable->prev;
+    prev = retu->startp;
     //printf("next_Punit->prev = %p, variable->prev = %p \n", next_Punit->prev, variable->prev);
     len = next_Punit->prev - variable->prev;
 /*    is_amb = 0;
@@ -663,8 +715,16 @@ ret_t* Reference::search(ret_t* retu) {
   return Exact::search(retu);
 }
 
-int Reference::get_flex() {
+int Reference::get_score() {
   return 0;
+}
+
+int Reference::get_min_len() {
+  return variable->len - ins;
+}
+
+int Reference::get_max_len() {
+  return variable->len + variable->width + del;
 }
 
 int build_conversion_tables()
