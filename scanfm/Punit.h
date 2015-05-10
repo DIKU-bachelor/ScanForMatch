@@ -17,6 +17,8 @@ typedef struct ret {
   char* startp;
   int len;
   int quick_ref;
+  int opt;
+  int bst;
 } ret_t;
 
 // for loosely fitted patterns (inserts, deletions, mismatches)
@@ -54,7 +56,9 @@ class Punit {
        If start is not NULL, prev in this punit is set to start and is initialized */
     virtual ret_t* search(ret_t* retu);
     virtual void reset(void);
-    virtual int get_flex();
+    virtual int get_score();
+    virtual int get_min_len();
+    virtual int get_max_len();
     char known_char(char C);
 
     /* Match 2 given bases with eachother using the converted bit type*/
@@ -76,10 +80,13 @@ class Range: public Punit {
     int len;
     int width;
     int inc_width; //If range is called with a width, this is used
+    int opti;
     Range(char* data_s, char* data_e, int data_l, int le, char* c, int w, int type);
     void reset(void);
     ret_t* search(ret_t* retu);
-    int get_flex();
+    int get_score();
+    int get_min_len();
+    int get_max_len();
 };
 
 /* punit exact inherites from punit, is used to search for a litteral
@@ -115,6 +122,8 @@ class Exact: public Punit {
     Range* variable;
     char* cCode; //complementary code
     int comp;
+    int opti;
+    int best;
     ret_t* loose_match(ret_t* retu, ret_t* new_retu);
 
     void stack_next(stackent* st,int nxtE, int N, 
@@ -134,7 +143,9 @@ class Exact: public Punit {
     void reset(void);
 
     ret_t* search(ret_t* retu);
-    int get_flex();
+    int get_score();
+    int get_min_len();
+    int get_max_len();
 };
 
 
@@ -150,7 +161,9 @@ class Reference: public Exact {
     Reference(char* data_s, char* data_e, int data_len, int comp, Range* var_p, 
               Punit* next_p, int first, int mis, int del, int ins, int flex, int type);
     ret_t* search(ret_t* retu);
-    int get_flex();
+    int get_score();
+    int get_min_len();
+    int get_max_len();
 };
 
 #endif

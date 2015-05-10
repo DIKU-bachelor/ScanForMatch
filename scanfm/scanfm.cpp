@@ -1,4 +1,4 @@
-#include "Punit.h"
+#include "Punit.h" 
 #include <fstream>
 #include <iostream>
 #include "stdio.h"
@@ -324,28 +324,117 @@ opti_info_t* find_optimal(list<Punit*> pat_list) {
   int index = 0;
   int best_index = 0;
   int score = 0;
-  int flex_sum = 0;
+  int cur_score = 0;
   for (it = pat_list.begin(); it != pat_list.end(); it++) {
-    flex_sum = (*it)->get_flex();
-    if (score < flex_sum) {
+    cur_score = (*it)->get_score();
+    if (score < cur_score) {
       best_index = index;
-      score = flex_sum;
+      score = cur_score;
     }
     index++;
   }
+  index = 0;
   for (it = pat_list.begin(); it != pat_list.end(); it++) {
-    // Løs dette problem ved at lave metoder i klasserne som beregner afstandende  
-    // MIN
-    // Exact's len skal lægges til
-    // Ranges min skal lægges til
-    // References' Range punit's len skal lægges til
+    if (index++ >= best_index) {
+      break;
+    }
+    opt->min_start_dist += (*it)->get_min_len();
+    opt->max_start_dist += (*it)->get_max_len();
+  }
+  opt->opt_index = best_index;
+  return opt;
+}
 
-    // MAX
-    // Exact's insertions skal lægges til
-    // Ranges width skal lægges til
-    // References' Range punit's width + insertions skal lægges til
+
+
+void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char* end_of_data, opti_info_t* opt) {
+  list<Punit*>::iterator it = pat_list.begin();
+
+  int data_len = end_of_data - data;
+  char* start_of_data = data;
+
+  // Initializing return package that is passed and returned between punits
+  ret_t* retu = new ret();
+  retu->startp = data;
+  retu->len = data_len;
+  retu->quick_ref = 0;
+
+  int dist_to_match;
+  int prev_dist_to_match;
+  int comb_mlen = 0;
+  char* best_prev;
+  retu->bst = 1;
+  advance(it, opt->opt_index);
+  retu->len = data_len;
+//  cout << opt->max_start_dist << "\n";
+//  cout << opt->min_start_dist << "\n";
+  // Each iteration in loop finds optimal pu and tries to match PU's around it
+  while (true) {
+//    cout << retu->startp << "\n";
+//    cout << "search best\n";
+    retu = (*it)->search(retu);
+    if (retu->startp) { 
+      if ((*it)->prev - data <= opt->max_start_dist) {
+        retu->startp = data;
+      } else {
+        retu->startp = (*it)->prev - opt->max_start_dist;
+      }
+//      cout << opt->max_start_dist << "\n";
+      retu->len = opt->max_start_dist - opt->min_start_dist;
+      retu->quick_ref = 0;
+      retu->opt = 1;
+      best_prev = (*it)->prev;
+      it = pat_list.begin();
+//      cout << "start pos to pass: " <<  retu->startp << "\n";
+//      cout << "BEFORE normal search\n";
+
+      // Now we match every PU around the found one
+      while (true) {
+        retu = (*it)->search(retu);
+        if (retu->startp) {
+//          cout << "PU match!!\n";
+          // If whole pattern matched
+          if (++it == pat_list.end()) {
+            for (it = pat_list.begin(); it != pat_list.end(); it++) {
+              comb_mlen += (*it)->mlen;
+//              cout << "MLEN: " << (*it)->mlen << "\n";
+    //          printf("%p\n",(*it)->prev);
+            }
+            dist_to_match = (retu->startp - comb_mlen) - start_of_data;
+            if (dist_to_match != prev_dist_to_match) {
+              printf("%i  %.*s\n", dist_to_match + 1, comb_mlen, real_data + dist_to_match);
+            }
+            prev_dist_to_match = dist_to_match;
+            comb_mlen = 0;
+            it = pat_list.begin();
+            advance(it, opt->opt_index);
+            retu->len = data_len;
+//            retu->startp = best_prev + 1;
+            break;
+          }
+          continue;
+        } else {
+//          cout << "PU not match...\n";
+          if (it == pat_list.begin()) {
+            advance(it, opt->opt_index);
+            retu->len = data_len;
+//            cout << "BEFORE INCREMENT: " << (*it)->prev << "\n";
+            retu->startp = best_prev + 1;
+//            cout << "Counter: " << (*it)->prev - start_of_data << "\n";
+//            cout << "Before break\n";
+            break;
+          }
+          it--;
+        }
+      }
+    } else {
+      return;
+    }
   }
 }
+
+
+
 
 
 // Looks through the data string to find pattern specified in list pat_list
@@ -372,12 +461,12 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
     //printf("retu startp = %p \n", retu->startp);
     // If the punit matched
     if (retu->startp) {
-
       // If the whole pattern matched
       if (++it == pat_list.end()) {
         for (it = pat_list.begin(); it != pat_list.end(); it++) {
           comb_mlen += (*it)->mlen;
 //          cout << (*it)->mlen << "\n";
+//          printf("%p\n",(*it)->prev);
         }
         dist_to_match = (retu->startp - comb_mlen) - start_of_data;
         printf("%i  %.*s\n", dist_to_match + 1, comb_mlen, real_data + dist_to_match);
@@ -393,7 +482,6 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
 
     // If the punit didn't match
     } else {
-
       // If whole pattern didn't match
       if (it == pat_list.begin()) {
         return;
@@ -474,7 +562,9 @@ int main(int argc, char* argv[]) {
   if (pat_list.empty()) {
     return -1;
   }
-  pattern_match(pat_list, data, rdata, end_of_data);
+  opti_info_t* op = find_optimal(pat_list);
+  pattern_match_opti(pat_list, data, rdata, end_of_data, op);
+//  pattern_match(pat_list, data, rdata, end_of_data);
   tim = clock() - tim;
   printf("Total time: %f seconds\n", ((float) tim) / CLOCKS_PER_SEC);
   return 0;
