@@ -139,6 +139,7 @@ void Exact::match(){
    If start is not NULL, prev in this punit is set to start and is initialized */ 
 
 ret_t* Exact::search(ret_t* retu){
+  //printf("new exact, retu->startp = %p, retu->len = %i\n", retu->startp, retu->len);
   if(retu->startp != NULL) {
     //printf("new exact \n");
     prev = retu->startp;
@@ -183,6 +184,7 @@ ret_t* Exact::search(ret_t* retu){
       prev++;
     }
     if (quick_ref) {
+      //printf("  problem?! retu->startp = %p, retu->len = %i, comp = %i \n", retu->startp, retu->len, comp);
       if (comp) {
         // If this punit is a complementary and previous punit is the variable being set
         while (prev_s <= prev_s + run_len-- && prev + len + (prev - prev_s) < data_end) {
@@ -203,6 +205,7 @@ ret_t* Exact::search(ret_t* retu){
 
       // If this punit is a non-complementary and previous punit is the variable being set
       } else {
+        //printf("looking?!\n");
         while (prev_s <= prev_s + run_len-- && prev + len + (prev - prev_s) < data_end) {
           if (matches(*prev,*code)){
             p2 = prev+1; p3 = code+1;
@@ -268,7 +271,7 @@ ret_t* Exact::search(ret_t* retu){
     }
     retu->quick_ref = 0;
     retu->len = 0;
-
+    //printf("len = %i, mlen = %i \n", len, mlen);
     // If we have a match
     if(len == mlen){
 //      cout << len << "\n";
@@ -557,6 +560,7 @@ ret_t* Range::search(ret_t* retu){
   if(retu->startp == NULL) {
     // it can't backtrack any more
     if(inc_width == 0){
+      //printf("range retu = %p \n", retu->startp);
       return retu;
     // backtracking one forward
     } else {
@@ -572,6 +576,7 @@ ret_t* Range::search(ret_t* retu){
 /*        orig_code = prev;
         strncpy(code, orig_code, len + width); */
       }
+      //printf("range 2 retu = %p \n", retu->startp);
       return retu;
     }
   }
@@ -615,15 +620,11 @@ Reference::Reference(char* data_s, char* data_e, int data_len, int comp, Range* 
 //Reference search
 ret_t* Reference::search(ret_t* retu) {
   if (retu->startp) {
-    if (retu->startp) {
-//      strncpy(variable->code, variable->orig_code, next_Punit->prev - variable->prev);
-    } else {
-      prev = retu->startp;
-    }
     code = variable->prev;
     //printf("next_Punit->prev = %p, variable->prev = %p \n", next_Punit->prev, variable->prev);
+    prev = retu->startp;
     len = next_Punit->prev - variable->prev;
-/*    is_amb = 0;
+    /*is_amb = 0;
     for (int i = 0; i < len + variable->width; i++) {
       if ((code[i] & 15) & ((code[i] >> 4) & 15)) {
         is_amb = 1;

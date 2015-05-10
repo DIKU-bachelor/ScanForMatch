@@ -111,6 +111,7 @@ and efficient software to do this. \\ \\
 On top that, the code is poorly documented, lacks version control and is hard to read and maintain. \\ \\
 Our goal is therefore to re-implement \scm to contain the useful parts,
 while optimizing the algorithms to improve performance, and have version control and documentation.
+
 \section{Methods}
 \subsection{Analysis of \scm}
 \subsubsection{Defining patterns in \scm}
@@ -177,9 +178,10 @@ but other features are available as well. Here are some of them:
 \item A logical "or" between \pus or sets of \pus, e.g. "(\texttt{AGGT} \text{\textbar} \texttt{CCCC})", or  \\
 "(\texttt{p1=3...6 TG ~p1[1,0,4]} \text{\textbar} \texttt{p1=3...6 AAA ~p1[2,2,0]})"
 allows either of the two sides of the \text{\textbar} to match.
-\item Custom pairing rules can be defined, with which the user can define custom letter pairings of in the given
+\item Custom pairing rules can be defined, with which the user can define custom letter pairings in the given
 alphabet, instead of the standard rules (A pairs with T and C with G).
 \end{itemize}
+
 \subsubsection{Flow of \scm}
 \scm uses backtracking functionality~\cite{back} on two different levels to find the matches. 
 One is the outer backtracking system that backtracks between \pus, and the other is a backtracking algorithm
@@ -243,13 +245,14 @@ Even though the use of GOTO statements uses a controllable fixed amount of
 memory, it is not necessarily safe. The big con is the missing modularity and structure. Every variable is defined in a
 global scope and has to be managed as such. It is very easy to make a mistake when creating or maintaining that sort of code
 (as \scm is a great example of)
-because the responsibility is not partitioned into functions or classes that can be unit-tested and proofed to work.
+because the responsibility is not partitioned into functions or classes that can be unit-tested and proved to work.
 One variable being set wrongly due to a particular input and searching in a particular part of the data may 
 escalate to either deliver wrong matches or just terminate. \\ \\
 Figure 1 shows the overall flow of finding patterns by backtracking back and forth between the PU's. \\ \\
 The other backtracking system happens internally in the pattern matching of a single \pu if that \pu has allowed
 mismatches, insertions and deletions. Figuring out a way to utilize the allowed edits to possibly find a match, requires
 trying out a lot of combinations so this part of the program is the most computationally heavy. 
+
 \subsubsection{Cooperability of multi-level backtracking}
 \scm uses a very certain type of backtracking to optimize performance. Starting from left going right in the pattern
 and data, the algorithm greedily matches as many characters as possible without using one of the allowed edits.
@@ -328,7 +331,7 @@ With an outer backtracking system it is often times required that several if not
 order to find the overall match. Some \pus of the overall pattern may be required to be of a specific length in order to
 match the whole pattern, and the only way such a \pu can obtain the required length may very well be using unnecessary
 edits. Trying to match a \pu with allowed edits, \scm will always accept the first way of matching, and even if
-subsequent \pus fail and we backtrack to this \pu again, the same match with the same length will be found. \\
+subsequent \pus fail and we backtrack to this \pu again, it will simply fail. \\
 It is therefore not guaranteed that \scm will find all the matches it's supposed to find. In fact every sub-sequence
 of data that should match with the pattern, but requires for one or more of its \pus to have a length only
 acquirable by using unnecessary edits, \scm will not find!
@@ -709,7 +712,7 @@ identifying this rarest \pu the search would save a lot of instructions. \scm st
 first \pu in the pattern, and it is therefore often guaranteed to run slower than if it used the other approach.
 \begin{figure}[H]
 \begin{center}
-\includegraphics[scale=0.65]{opti1.jpg}
+%\includegraphics[scale=0.65]{opti1.jpg}
 \end{center}
 \caption{\textit{A pattern that consists of two} \pus \textit{where the second (say} \texttt{CTCGAATAG[1,0,0]}
 \textit{) is more rare in the data than the first} \pu \textit{(say(}\texttt{GGT}\textit{). Searching for the 

@@ -369,7 +369,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       retu->len = data_len;
     }
     retu = (*it)->search(retu);
-
+    //printf("retu startp = %p \n", retu->startp);
     // If the punit matched
     if (retu->startp) {
 

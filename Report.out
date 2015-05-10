@@ -1,8 +1,12 @@
-\BOOKMARK [1][-]{section.1}{Analysis}{}
-\BOOKMARK [1][-]{section.2}{Loose\137match}{}
-\BOOKMARK [2][-]{subsection.2.1}{Scan For Matches}{section.2}
-\BOOKMARK [2][-]{subsection.2.2}{Ambiguous bases}{section.2}
-\BOOKMARK [1][-]{section.3}{Design}{}
-\BOOKMARK [2][-]{subsection.3.1}{Program structure}{section.3}
-\BOOKMARK [2][-]{subsection.3.2}{Optimization}{section.3}
-\BOOKMARK [3][-]{subsubsection.3.2.1}{Skip length}{subsection.3.2}
+\BOOKMARK [1][-]{section.1}{Introduction}{}
+\BOOKMARK [1][-]{section.2}{Methods}{}
+\BOOKMARK [2][-]{subsection.2.1}{Analysis of scan\137for\137matches }{section.2}
+\BOOKMARK [3][-]{subsubsection.2.1.1}{Defining patterns in scan\137for\137matches }{subsection.2.1}
+\BOOKMARK [3][-]{subsubsection.2.1.2}{Flow of scan\137for\137matches }{subsection.2.1}
+\BOOKMARK [3][-]{subsubsection.2.1.3}{Cooperability of multi-level backtracking}{subsection.2.1}
+\BOOKMARK [2][-]{subsection.2.2}{Backtracking}{section.2}
+\BOOKMARK [3][-]{subsubsection.2.2.1}{Complexity of backtracking}{subsection.2.2}
+\BOOKMARK [2][-]{subsection.2.3}{Design}{section.2}
+\BOOKMARK [3][-]{subsubsection.2.3.1}{Optimizing character comparison using bitwise operations}{subsection.2.3}
+\BOOKMARK [3][-]{subsubsection.2.3.2}{Optimizing order of PU matching}{subsection.2.3}
+\BOOKMARK [1][-]{section.3}{Results}{}

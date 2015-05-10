@@ -1,0 +1,52 @@
+This is BibTeX, Version 0.99c (TeX Live 2009/Debian)
+The top-level auxiliary file: Report.aux
+The style file: biblatex.bst
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: Report-blx.bib
+Database file #2: refs.bib
+Warning--I didn't find a database entry for "dom"
+Warning--I didn't find a database entry for "leve"
+Biblatex version: 1.7
+Reallocated wiz_functions (elt_size=4) to 9000 items from 6000.
+You've used 7 entries,
+            6019 wiz_defined-function locations,
+            1154 strings with 8759 characters,
+and the built_in function-call counts, 17173 in all, are:
+= -- 642
+> -- 537
+< -- 177
++ -- 171
+- -- 194
+* -- 1053
+:= -- 1123
+add.period$ -- 0
+call.type$ -- 7
+change.case$ -- 77
+chr.to.int$ -- 34
+cite$ -- 12
+duplicate$ -- 1882
+empty$ -- 1902
+format.name$ -- 283
+if$ -- 3970
+int.to.chr$ -- 0
+int.to.str$ -- 12
+missing$ -- 0
+newline$ -- 137
+num.names$ -- 234
+pop$ -- 1930
+preamble$ -- 1
+purify$ -- 85
+quote$ -- 0
+skip$ -- 1057
+stack$ -- 0
+substring$ -- 359
+swap$ -- 598
+text.length$ -- 167
+text.prefix$ -- 6
+top$ -- 1
+type$ -- 254
+warning$ -- 0
+while$ -- 139
+width$ -- 0
+write$ -- 129
+(There were 2 warnings)

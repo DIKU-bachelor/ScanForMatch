@@ -1,0 +1,137 @@
+% $ biblatex auxiliary file $
+% $ biblatex version 1.7 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated as
+% required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+\entry{gen}{article}{}
+  \name{author}{1}{}{%
+    {{}%
+     {A.}{A.}%
+     {Adnan}{A.}%
+     {}{}%
+     {}{}}%
+  }
+  \strng{namehash}{AA1}
+  \strng{fullhash}{AA1}
+  \field{sortinit}{A}
+  \field{note}{Accessed online 03-May 2015}
+  \field{title}{DNA Sequencing: Method, Benefits and Applications}
+  \verb{url}
+  \verb http://www.biotecharticles.com/Genetics-Article/DNA-Sequencing-Method-B
+  \verb enefits-and-Applications-248.html
+  \endverb
+  \field{year}{2010}
+\endentry
+
+\entry{back}{misc}{}
+  \name{author}{1}{}{%
+    {{}%
+     {D.}{D.}%
+     {Matuszek}{M.}%
+     {}{}%
+     {}{}}%
+  }
+  \strng{namehash}{DM1}
+  \strng{fullhash}{DM1}
+  \field{sortinit}{D}
+  \field{note}{Accessed online 03-May 2015}
+  \field{title}{Backtracking}
+  \verb{url}
+  \verb http://www.cis.upenn.edu/~matuszek/cit594-2012/Pages/backtracking.html
+  \endverb
+  \field{year}{2002}
+\endentry
+
+\entry{dna}{book}{}
+  \name{author}{2}{}{%
+    {{}%
+     {D.~L.}{D.~L.}%
+     {Nelson}{N.}%
+     {}{}%
+     {}{}}%
+    {{}%
+     {M.M.}{M.}%
+     {Cox}{C.}%
+     {}{}%
+     {}{}}%
+  }
+  \list{publisher}{1}{%
+    {Macmillan Higher Education}%
+  }
+  \strng{namehash}{DLNMC1}
+  \strng{fullhash}{DLNMC1}
+  \field{sortinit}{D}
+  \field{edition}{6}
+  \field{isbn}{978-1-4641-0962-1}
+  \field{pages}{281\bibrangedash 297}
+  \field{title}{Principles of Biochemistry}
+  \field{year}{2013}
+\endentry
+
+\entry{ambi}{article}{}
+  \name{author}{2}{}{%
+    {{}%
+     {M.}{M.}%
+     {Borodowsky}{B.}%
+     {}{}%
+     {}{}}%
+    {{}%
+     {J.}{J.}%
+     {McIninch}{M.}%
+     {}{}%
+     {}{}}%
+  }
+  \strng{namehash}{MBJM1}
+  \strng{fullhash}{MBJM1}
+  \field{sortinit}{M}
+  \field{title}{Recognition of genes in DNA sequence with ambiguities}
+  \field{year}{1993}
+\endentry
+
+\entry{gcn}{misc}{}
+  \name{author}{1}{}{%
+    {{}%
+     {P.}{P.}%
+     {McCloskey}{M.}%
+     {}{}%
+     {}{}}%
+  }
+  \strng{namehash}{PM1}
+  \strng{fullhash}{PM1}
+  \field{sortinit}{P}
+  \field{note}{Accessed online 03-May 2015}
+  \field{title}{Genome research creating data that's too big for IT}
+  \verb{url}
+  \verb http://gcn.com/Articles/2013/04/18/Genome-research-creating-data-too-bi
+  \verb g-for-IT.aspx
+  \endverb
+  \field{year}{2013}
+\endentry
+
+\entry{scm}{manual}{}
+  \field{sortinit}{S}
+  \field{note}{Accessed online 03-May 2015}
+  \field{title}{Scan For Matches}
+  \verb{url}
+  \verb http://blog.theseed.org/servers/2010/07/scan-for-matches.html
+  \endverb
+  \field{year}{2010}
+\endentry
+
+\lossort
+\endlossort
+
+\endinput

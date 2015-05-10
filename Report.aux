@@ -11,12 +11,40 @@
 \global \let \hyper@last\relax 
 \fi
 
-\@writefile{toc}{\contentsline {section}{\numberline {1}Analysis}{2}{section.1}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Loose\_match}{2}{section.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Scan For Matches}{2}{subsection.2.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Ambiguous bases}{3}{subsection.2.2}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Design}{5}{section.3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Program structure}{5}{subsection.3.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Optimization}{6}{subsection.3.2}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}Skip length}{6}{subsubsection.3.2.1}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces ULM class diagram of scanfm Punits}}{7}{figure.1}}
+\bibstyle{biblatex}
+\bibdata{Report-blx,refs}
+\citation{biblatex-control}
+\@writefile{toc}{\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax }
+\@writefile{lof}{\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax }
+\@writefile{lot}{\boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax }
+\citation{*}
+\citation{gen}
+\citation{dna}
+\citation{gcn}
+\citation{scm}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{2}{section.1}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {2}Methods}{2}{section.2}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Analysis of \texttt  {scan\_for\_matches} }{2}{subsection.2.1}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.1}Defining patterns in \texttt  {scan\_for\_matches} }{2}{subsubsection.2.1.1}}
+\citation{ambi}
+\citation{back}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.2}Flow of \texttt  {scan\_for\_matches} }{4}{subsubsection.2.1.2}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textit  {Simplistic flow chart of pattern matching in} \texttt  {scan\_for\_matches}\textit  {. p is a pointer to data and is initially set to start of data. Notice that overlapping matches will no be found.}}}{5}{figure.1}}
+\citation{dom}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.1.3}Cooperability of multi-level backtracking}{6}{subsubsection.2.1.3}}
+\citation{leve}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \textit  {The leftmost match uses its two deletions where it was not necessary, and the rightmost example shows the same match where the use of the deletions have been postponed as much as possible before being used.}}}{7}{figure.2}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Backtracking}{7}{subsection.2.2}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textit  {The top character sequences are the patterns and the bottom the data. In the first example the G is simply substituted for a T. In the second example the pattern is AGA but matches the sub-sequence AGTA in data by insertion of a T. In the third example the pattern AGTA matches the data AGA by deleting the T}}}{8}{figure.3}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textit  {The Levenshtein distance between the pattern ACTGCA and the data ATGTCA is 2 (1 deletion, 1 insertion) as the leftmost example shows. If the pattern is allowed 1 deletion and 1 mismatch, then the two strings can not match, as the rightmost examples show, even though this also would be a sum of 2 edits.}}}{9}{figure.4}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.2.1}Complexity of backtracking}{9}{subsubsection.2.2.1}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textit  {In the leftmost example the} PU \texttt  {AGCA} \textit  {chose to use 2 mismatches to match the data sub-sequence} \texttt  {AGAG} \textit  {and then move on the next} PU. \textit  {The next} PU \textit  {would then have to match it's letters} \texttt  {TT} \textit  {with the data sub-sequence} \texttt  {GT} \textit  {which it can't do with its remaining deletion. The overall algorithm would have to backtrack the the second } PU \textit  {to try another possible match (if any) to see if that would make a difference. The rightmost example shows how using a deletion to delete the C in} \texttt  {AGCA} \textit  {would also match data} \texttt  {AGA} \textit  {and when moving forward to the next} PU \texttt  {TT} \textit  {will actually match} \texttt  {GG} \textit  {by using the two remaining mismatches.}}}{10}{figure.5}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \textit  {Each node shows the relevant data that needs to match the} \texttt  {PUnit} \textit  {on the left side of the tree, and each edge between nodes shows the combination chosen to match that data. The first} PU \textit  {has two ways of matching it's data. Say the G is deleted to match with data} \texttt  {AC}. \textit  {The second} PU \textit  {has only one way of matching with data} \texttt  {CTC} \textit  {that is by deleting the first T. The third} PU \textit  {can not match the data} \texttt  {CT}. \textit  {If mismatching with the G for the first} PU \textit  {was chosen instead, the second} PU \textit  {would have two possible ways of matching with the data} \texttt  {TCT}. \textit  {If the second T is deleted, the third} PU \textit  {would again have no way of matching with data} \texttt  {TT} \textit  {but if no edits are used and the straight match is chosen, the third} PU \textit  {would be able to do a straight match, and the tree would continue to branch downwards to the subsequent} PU's.}}{11}{figure.6}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Design}{12}{subsection.2.3}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces \textit  {There is one generic} PU \textit  {class called "Punit". This class holds a lot of the common variables and flags that are needed no matter what kind of} PU. \textit  {The "Range" class inherits from the "Punit" class and holds its own information, for instance the interval of the range. The "Exact" class also inherits from the "Punit", and lastly the "Reference" class inherits from the "Exact" class. Each class (except the "Punit" class itself) defines the method "search", which searches for a match given a start position and some extra information. A "Reference" object collects the letters it's supposed to search for at runtime from the referenced "Range"}}}{13}{figure.7}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces \textit  {The yellow ellipsis indicates the list of Punit object. The cyan rectangle marks where most of the "search" method functionality is happening.}}}{14}{figure.8}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.1}Optimizing character comparison using bitwise operations}{14}{subsubsection.2.3.1}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces \textit  {The function that prepares the conversion table that is used for converting both data and} PU's. \textit  {The last 8 or so lines of code is where the left 4 bits is being set to the complementary of the letter represented in the rightmost 4 bits.}}}{15}{figure.9}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.3.2}Optimizing order of PU matching}{15}{subsubsection.2.3.2}}
+\@writefile{lof}{\defcounter {refsection}{0}\relax }\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces \textit  {A pattern that consists of two} PU's \textit  {where the second (say} \texttt  {CTCGAATAG[1,0,0]} \textit  {) is more rare in the data than the first} PU \textit  {(say(}\texttt  {GGT}\textit  {). Searching for the second} PU \textit  {first needs three checks (with three additional check afterwards to verify the whole pattern) while choosing the look for the first} PU \textit  {needs 6 checks (with 6 following checks to verify whole pattern).}}}{16}{figure.10}}
+\@writefile{toc}{\defcounter {refsection}{0}\relax }\@writefile{toc}{\contentsline {section}{\numberline {3}Results}{17}{section.3}}
