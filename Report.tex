@@ -15,7 +15,6 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows}
 \usetikzlibrary{positioning}
-\usepackage{textcomp}
 \newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
 %\usepackage{pgfgantt}
 \usepackage{hyperref}
@@ -30,7 +29,7 @@
 \expandafter\let\csname ver@natbib.sty\endcsname\relax
 % Natlib ignore hack end
 %\usepackage[style=numeric]{biblatex}
-\usepackage[backend=bibtex,style=numeric]{biblatex}
+\usepackage[backend=bibtex,style=numeric,sorting=none]{biblatex}
 \addbibresource{refs.bib}
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
 \usepackage{hyperref}
@@ -281,7 +280,7 @@ goes down 2 levels in the tree before it becomes impossible to go further. Choos
 and then matching \texttt{TG} with "TG" without using edits lets us further down the tree (and possibly to the last PU). \\
 \begin{figure}[H]
 \begin{center}
-\includegraphics[scale=0.75]{Diagrams/tree.png}
+\includegraphics[scale=0.65]{Diagrams/tree.png}
 \end{center}
 \caption{\textit{The rectangles on the left show the \pus and each horizontal level of the tree represents the \pu 
 which is horizontally aligned with it. The letter combination inside each node in the tree shows the part of the data sequence
@@ -299,34 +298,35 @@ Many of the sub-paths in a tree like this may yield the same result on the sub-p
 level in the tree there may be several identical nodes, and the children of these identical nodes will of course be
 identical as well, so when counting towards the number of \emph{different} overall matches, only one of these identical
 branches should be considered. \\ \\
-Let us define the function $children(input)$ to return the amount of possible matches with 
-\textit{different lengths} on any data, that the input \pu has.
-One should only distinguish between possible matches of different lengths since matches of same length would
-yield the same results in their child branches, so only one set of these child branches should be considered.
+Let us define the function $children(\pu)$ to take the a \pu as input and return the amount of possible matches with	
+\textit{different lengths} on any data, that the input \pu can have.
 In case of mismatches insertions and deletions, the number of characters a match can differ is determined by 
-the sum of the insertions (use of these makes the match shorter)
-and the deletions (use of these makes the match longer). The last option is using none of the insertions or deletions which
+the sum of the insertions (use of these makes the match longer)
+and the deletions (use of these makes the match shorter). The last option is using none of the insertions or deletions which
 result in yet another match length. \\ \\
 If it's a range \pu then the number of different lengths are given by the size of the interval. \\ \\
-$children(input)=
+$children(PU)=
 \left\{
 \begin{array}{ll}
-(input.max - input.min) + 1 & \mbox{if } input=Range \\
-input.insertions+input.deletions+1 & otherwise 
+(PU.max - PU.min) + 1 & \mbox{if } PU=Range \\
+PU.insertions+PU.deletions+1 & otherwise 
 \end{array}
 \right.$
  \\ \\
-Let $punits$ be an array of \pus in a given pattern $p$ indexed in the same order as $p$, $n$ be the number of \pus in $punits$, 
-and assume worst case where each node has its maximum number of edges: \\ \\
-$real\_number\_of\_edges(punits[i])=children(punits[i])$\;\; for all $i=\{1...n\}$ \\ \\
-Then the amount of combinations of the different matches of the \pus would be $comb(p)$ \\ \\
-$comb(p)=\mathlarger{\mathlarger{\prod}_{n=1}^{n}\;children(punits[i])}$ \\ \\
-Consider the pattern \texttt{AGGT[0,1,1]\; 4...5\; TTCTAA[0,2,1]}. \\ \\
-$children(AGGT[0,1,1]) \cdot children(4...5) \cdot children(TTCTAA[0,2,1])=3\cdot 2\cdot 4=24$ \\ \\
+Let $p$ be a pattern and $p[i]$ be the i'th \pu in $p$, and let $n$ be the number of \pus in $p$,
+then the amount of combinations of the different matches of the \pus would be $comb(p)$ \\ \\
+$comb(p,n)=\mathlarger{\mathlarger{\prod}_{i=1}^{n}\;children(p[i])}$ \\ \\
+Consider the pattern \texttt{AGGT[0,1,1]\; 4...5\; TTCTAA[0,2,1]} called $p1$: \\ \\
+$comb(p1,n)=\mathlarger{\mathlarger{\prod}_{i=1}^{3}\;children(p1[i])}= \\ \\
+children(\texttt{AGGT[0,1,1]})\;\cdot \;children(\texttt{4...5})\;\cdot \;children(\texttt{TTCTAA[0,2,1]})=
+3\cdot 2\cdot 4=24$ \\ \\
 A total of 24 leaves on the tree. \\
-As mentioned this is the maximum amount of checks that would need to be performed. Even if a tree has a homogeneous 
+As mentioned this is the maximum amount of checks that would need to be performed in order to determine if there is a 
+possible match at a specific starting position in the data. Even if a tree has a homogeneous 
 height, the probability of checking the correct branch lastly is low.
-The average actual running time of an algorithm that uses these principles would therefore be significantly better.
+The average actual running time of an algorithm that uses these principles would therefore be significantly better, 
+but worst case is: \\ \\
+$comb(p,n)$ given a pattern $p$ and the the number of \pus $n$ in that $p$.
 \subsection{Flow of \scm}
 \scm uses backtracking functionality~\cite{back} on two different levels to find the matches. 
 One is the outer backtracking system that backtracks between \pus, and the other is a backtracking algorithm
@@ -344,52 +344,6 @@ both pros and cons. \\
 the purple diamonds indicate decisions being made, the green rounded rectangles indicate start and end of the program
 and the orange parallelogram indicates output.}}
 \end{figure}
-%\begin{figure}[H]
-%\begin{tikzpicture}
-%  [->,node distance=2cm and 2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
-%  \node[main node]  	(ScanForMatches)                        {\scm};
-%  \node[main node] 	(Parser) [below= of ScanForMatches]   {Parse \pus};
-%%  \node[main node] 	(PUnit) [right= of Parser]   {PUnit};
-%  \node[main node]  	(PatternMatch)  [below= of Parser]  {Begin match from data pointer p};
-%  \node[main node]	(PUnit1)		[right= of PatternMatch] {First \pu match?};
-%  \node[main node]	(PUnit2)		[below= of PUnit1] {Secound \pu match?};
-%  \node[main node]	(PUnitn)		[below= of PUnit2] {n'th \pu match?};
-%%  \node[main node]	(Result1)		[right= of PUnit1] {Result};
-%%  \node[main node]	(Result2)		[right= of PUnit2] {Result};
-%%  \node[main node]	(Resultn)		[right= of PUnitn] {Result};
-%  \node[]			(toNextHit)		[below= of PatternMatch] {};
-%  \node[	]			(to2NextHit)		[below= of toNextHit] {};
-%  \node[main node]	(NextHit)		[below= of to2NextHit] {End of file?};
-%  \node[main node]	(Return)			[below= of NextHit] {Return};
-%  
-%  
-%  \path[every node/.style={font=\sffamily\small}]
-%    (ScanForMatches) 	edge node [left] {} (Parser)
-%%    (Parser) 			edge node [left] {} (PUnit)
-%	(Parser)			edge node [left] {} (PatternMatch)
-%    (PatternMatch) 		edge node [above] {not EOF} (PUnit1)
-%    						edge [bend right] node [left] {EOF} (Return)
-%    (PUnit1)  				edge [bend right] node [left] {Yes: p+=len(PUnit1)} (PUnit2)
-%    						edge [bend right] node [above] {No: p++} (PatternMatch)
-%    (PUnit2)				edge [bend right] node [left] {Yes: p+=len(PUnit2)} (PUnitn)
-%    						edge [bend right] node[align=center] [right] {No: p -= len(PUnit1)\\ try another match} (PUnit1)
-%    (PUnitn)				edge node[align=center] [below] {Whole pattern match:\\ p+=len(n'th PUnit) \\ 
-%    							print match} (NextHit)
-%    						edge [bend right] node[align=center] [right] {No: p -=len(PUnit2)\\ try another match} (PUnit2)
-%%    (Result1)			edge node [left] {SUCCESS} (PUnit2)
-%%    						edge [bend right] node [below] {BACKTRACK} (PatternMatch)
-%%    (Result2)			edge node [above] {SUCCESS} (PUnitn)
-%%    						edge node [right] {BACKTRACK} (PUnit1)
-%%    (Resultn)			edge node [below] {SUCCESS} (NextHit)
-%%        					edge node [below] {BACKTRACK} (PUnit2)
-%    (NextHit)			edge node [right] {not EOF} (PatternMatch)
-%        					edge node [right] {EOF} (Return)
-%    ;
-%    
-%\end{tikzpicture} 
-%\caption{\textit{Simplistic flow chart of pattern matching in} \texttt{scan\_for\_matches}\textit{. p is a pointer to
-%data and is initially set to start of data. Notice that overlapping matches will no be found.}} 
-%\end{figure} 
 \noindent The use of GOTO statements avoids some of the risks associated with the use of recursion like stack overflow. 
 How deep the recursion would go would depend on the size of the pattern, and it would therefore be hard to control and
 unsafe to use with respect to unwanted termination. Analyzing the possible depth of recursion and rejecting a queried search
@@ -404,7 +358,7 @@ jump back and forth between the GOTO's all variables and flags must be set just 
 is undefined. 
 One variable being set wrongly due to a particular input and searching in a particular part of the data may 
 escalate to either deliver wrong matches or just terminate. \\ \\
-Figure 1 shows the overall flow of finding patterns in \scm by backtracking back and forth between the PU's. When
+Figure 4 shows the overall flow of finding patterns in \scm by backtracking back and forth between the PU's. When
 a match is found it is printed to the user, the list of \pus is reset to start with the first \pu and the 
 starting position in data is incremented accordingly so the search for other matches can continue. \\ \\
 The other backtracking system happens internally in the pattern matching of a single \pu if that \pu has allowed
@@ -438,7 +392,7 @@ In other words, whenever \scm
 encounters a character that matched the character in data, spending a mismatch, insertion or deletion is never
 considered and never tried out, because the property of dominance relation promises that spending an edit
 here is not necessary for finding a match. \\ \\
-Figure 2 shows an example of a match between pattern and data that uses edits where it was not required,
+Figure 5 shows an example of a match between pattern and data that uses edits where it was not required,
 and how one can transform this into a match that uses its first edit at the first mismatching characters.
 The pattern is \texttt{ATTTTG[0,2,0]} and the data is "ATTG".
 \begin{figure}
@@ -448,48 +402,6 @@ The pattern is \texttt{ATTTTG[0,2,0]} and the data is "ATTG".
 \caption{\textit{The leftmost example uses its two deletions where it was not necessary, and the rightmost example shows
 the same match where the use of the deletions have been postponed as much as possible before being used.}}
 \end{figure}
-%\begin{figure}[H]
-%\begin{tikzpicture}
-%[->,node distance=1.5cm and 0.2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
-%\node[main node](1)    			  {A};
-%\node[main node](2) [right= of 1] {T};
-%\node[main node](3) [right= of 2] {T};
-%\node[main node](4) [right= of 3] {T};
-%\node[main node](5) [right= of 4] {T};
-%\node[main node](6) [right= of 5] {G};
-%
-%\node[main node](7) [below= of 1] {A};
-%\node[main node](8) [right= of 7] {--};
-%\node[main node](9) [right= of 8] {--};
-%\node[main node](10) [right= of 9] {T};
-%\node[main node](11) [right= of 10] {T};
-%\node[main node](12) [right= of 11] {G};
-%
-%
-%\node[main node](13) [right= of 6, xshift=+2cm] {A};
-%\node[main node](14) [right= of 13] {T};
-%\node[main node](15) [right= of 14] {T};
-%\node[main node](16) [right= of 15] {T};
-%\node[main node](17) [right= of 16] {T};
-%\node[main node](18) [right= of 17] {G};
-%
-%\node[main node](19) [below= of 13] {A};
-%\node[main node](20) [right= of 19] {T};
-%\node[main node](21) [right= of 20] {T};
-%\node[main node](22) [right= of 21] {--};
-%\node[main node](23) [right= of 22] {--};
-%\node[main node](24) [right= of 23] {G};
-%
-%\path[every node/.style={font=\sffamily\small}]
-%(2) edge node [left] {deletion} (8)
-%(3) edge node [right] {deletion} (9)
-%(16) edge node [left] {deletion} (22)
-%(17) edge node [right] {deletion} (23)
-%;
-%\end{tikzpicture}
-%\caption{\textit{The leftmost example uses its two deletions where it was not necessary, and the rightmost example shows
-%the same match where the use of the deletions have been postponed as much as possible before being used.}}
-%\end{figure} 
 \noindent Using dominance relation \scm always finds a match for a \pu if it exists, but when used in combination
 with an outer backtracking system that is not enough! \\ \\
 The technique described is useful only if the goal is determining if there exist a possible match or not.
@@ -501,7 +413,7 @@ subsequent \pus fail and we backtrack to this \pu again, the same match with the
 It is therefore not guaranteed that \scm will find all the matches it's supposed to find. In fact every sub-sequence
 of data that should match with the pattern, but requires for one or more of its \pus to have a length only
 acquirable by using unnecessary edits, \scm will not find! \\ \\
-Figure 3 shows an example of an overall pattern that will only match the data if unnecessary edits are used in a \pup
+Figure 6 shows an example of an overall pattern that will only match the data if unnecessary edits are used in a \pup
 The pattern is: \texttt{AAA[0,2,0] AT} and the data is "AAAT". Only by using an unnecessary deletion in the first
 \pu will the second \pu match.
 \begin{figure}[H]
@@ -512,34 +424,27 @@ The pattern is: \texttt{AAA[0,2,0] AT} and the data is "AAAT". Only by using an 
 \end{figure}
 \subsection{Design}
 Our re-implementation of \scm called \sfm is developed in C++ rather than C, which was used to develop 
-\texttt{scan\_for\_matches}. We have used C++ classes instead of C structs as the base structure for the PU's. \\
-Figure 6 shows the class structure of \texttt{scanfm}. 
-\begin{figure}[H]
-\begin{center}
-\includegraphics[scale=0.7]{classdia.png}
-\end{center}
-\caption{\textit{There is one generic} \pu \textit{class called "Punit". This class holds a lot of the common variables
-and flags that are needed no matter what kind of} \pup
-\textit{The "Range" class inherits from the "Punit" class and holds its own information, 
-for instance the interval of the range. 
-The "Exact" class also inherits from the "Punit", and lastly the "Reference" class inherits from the "Exact" class.
-Each class (except the "Punit" class itself) defines the method "search", which searches for a match given a start position
-and some extra information. A "Reference" object collects the letters it's supposed to search for at runtime from
-the referenced "Range"}}
-\end{figure}
-\noindent The control flow of \sfm is similar in idea to \scm but very different in implementation. While \scm uses a case/switch
+\texttt{scan\_for\_matches}. We have used C++ classes instead of C structs as the base structure for the PU's. \\ \\ 
+Figure 7 shows the class structure of \texttt{scanfm}. The "Sequence" and "Range" classes inherit from the overall
+class "PUnit", and the "Reference" class inherit from the "Sequence" class, since a reference \pu works exactly like a 
+sequence \pu at run-time when it has collected its letter sequence from either a sequence \pu or a range \pup \\ \\
+The control flow of \sfm is similar in idea to \scm but very different in implementation. While \scm uses a case/switch
 and GOTO statements, \sfm uses an outer loop to call the "search" function of the \pus and then either
 forward to the subsequent \pu on success or backtrack to the previous \pup \\
-Passing parameters between the calls and returns of the "search" methods sets the criteria for the particular search, for
+Passing parameters between the calls and returns of the "search" functions sets the criteria for the particular search, for
 instance the search for the first \pu where the "search" function is told to search and increment data until a match is \\
-found. \\
-Figure 7 shows a simplistic model of the flow in \texttt{scanfm}.
+found.
+\subsubsection{Correctness of \sfm}
 \begin{figure}[H]
 \begin{center}
-\includegraphics[scale=0.7]{flowdia.png}
+\includegraphics[scale=0.7]{Diagrams/classdia.png}
 \end{center}
-\caption{\textit{The yellow ellipsis indicates the list of Punit object. The cyan rectangle marks where most of the "search"
-method functionality is happening.}}
+\caption{\textit{A simplified class diagram which only shows the most important varibles and functions.
+There is one generic} \pu \textit{class called "PUnit". This class holds a lot of the common variables
+and flags that are needed no matter what kind of} \pup
+\textit{
+Each class (except the "PUnit" class itself) defines the method "search", which searches for a match given a start position. 
+The function "loosematch" is used for trying to find a match when single-character edits are allowed.}}
 \end{figure}
 \subsubsection{Optimizing character comparison using bitwise operations}
 One of the great tricks used in \scm is the use of bitwise operations in performance critical parts of the code.
@@ -547,16 +452,16 @@ Comparing single characters is the most used operations and maximizing the speed
 means everything for the performance of the program. Figure 8 shows how \scm transforms every normal C character into
 a custom 4-bit code. These 4 bits are used to represent each of the four letters (A,T,C and G) by having a 1 in one of
 the slots and 0 in the other three. The letter G for example is represented as 0100. All possible permutations of 
-combining these letters are also represented by a permutation of the bit field, e.g. the letter V is written in a \pu 
+combining these letters are also represented by a permutation of the bit field, e.g.\ the letter V is written in a \pu 
 represents either A,C or G and therefore has the bit field 0111 since A is 0001 and C is 0010. \\
 Prior to searching, the data input is of course also transformed to 4-bit representations.
 When comparing two characters \scm uses the bitwise AND operator and if the result is not 0000 the characters matches. \\ \\
-\scm also put the 4 bits left of our bit field to use. The complementary letter of the letter represented in the rightmost
+\scm actually stores 4 more bits (left of our 4-bit field) The complementary letter of the letter represented in the rightmost
 bit field is stored in the leftmost bit field, e.g. G would look like 0010 0100 although only on of the 4-bit fields would
 be used in a comparison. This leftmost bit field is used when comparing a complementary reference \pu instead
 of transforming back and forth between the letters every time a complementary \pu is encountered. \\ \\
-We are using this exact technique in \sfm to achieve the same optimal of comparing characters.
-\begin{figure}[H]
+We are using this exact technique in \sfm to achieve the same optimal way of comparing characters.
+\begin{figure}
 \begin{center}
 \begin{lstlisting}
 int build_conversion_tables()
@@ -601,110 +506,52 @@ int build_conversion_tables()
 \textit{The last 8 or so lines of code is where the left 4 bits is being set to the complementary of the letter
 represented in the rightmost 4 bits.}}
 \end{figure}
-\subsubsection{Levenshtein distance}
+\subsubsection{Why not Levenshtein distance?}
 The Levenshtein distance between two strings is defined as \textit{the minimum amount of single-character edits required
-to change on string into the other.} ~\citeyear{leve} \\ \\
-Calculating the Levenshtein distance does not include requirements for the distribution of the different 
-single-character edits, it just finds the minimum \textit{sum} of them. \\
+to change on string into the other.}~\cite{leve} \\ \\
+Calculating the Levenshtein distance can be done quite efficiently, at least faster than our implementation calculates
+every possible match given the specific three amounts of single-character edits. One could think that a faster 
+implementation would be just summing
+the number of allowed mismatches, insertions and deletions, calculating the Levenshtein distance between data sub-sequence
+and \pu and then comparing to see if the allowed sum was exceeded. This would not be correct since
+calculating the Levenshtein distance does not include requirements for the distribution of the different 
+single-character edits, it just finds the minimum \textit{sum} of them. \\ \\
 If the task at hand is to determine whether two strings are within a maximum allowed Levenshtein distance of each other,
-then simply calculating the Levenshtein distance would be enough. \\
+then simply calculating the Levenshtein distance would be enough. 
 If however the task is to determine whether one string can be changed into another string with a maximum amount of $X$  mismatches, $Y$ insertions and $Z$ deletions one can \textit{not} simply calculate the Levenshtein distance of the two
 strings and compare the number to the sum of the different edits ($X+Y+Z$) since the Levenshtein distance may not live
-up to the additional requirements of a maximum of either of the different edits. An example of this is shown in Figure 3. \\
+up to the additional requirements of a maximum of either of the different edits. An example of this is shown in Figure 9. \\
 \begin{figure}[H]
-\begin{tikzpicture}
-[->,node distance=1.5cm and 0.2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
-\node[main node](1)				  {A};
-\node[main node](2) [right= of 1] {C};
-\node[main node](3) [right= of 2] {T};
-\node[main node](4) [right= of 3] {G};
-\node[main node](5) [right= of 4] {--};
-\node[main node](6) [right= of 5] {C};
-\node[main node](7) [right= of 6] {A};
-
-\node[main node](8)	[below= of 1] {A};
-\node[main node](9) [right= of 8] {--};
-\node[main node](10)[right= of 9] {T};
-\node[main node](11)[right= of 10] {G};
-\node[main node](12)[right= of 11] {T};
-\node[main node](13)[right= of 12] {C};
-\node[main node](14)[right= of 13] {A};
-
-\node[main node](21)[right= of 7, xshift=+2cm] {A};
-\node[main node](22)[right= of 21] {--};
-\node[main node](23)[right= of 22] {T};
-\node[main node](24)[right= of 23] {G};
-\node[main node](25)[right= of 24] {T};
-\node[main node](26)[right= of 25] {C};
-\node[main node](27)[right= of 26] {A};
-
-\node[main node](15)[above= of 21] {A};
-\node[main node](16)[right= of 15] {C};
-\node[main node](17)[above= of 23] {T};
-\node[main node](18)[above= of 24] {G};
-\node[main node](19)[above= of 25] {C};
-\node[main node](20)[above= of 26] {A};
-
-
-\node[main node](28)[below= of 21] {A};
-\node[main node](29)[right= of 28] {C};
-\node[main node](30)[right= of 29] {T};
-\node[main node](31)[right= of 30] {G};
-\node[main node](32)[right= of 31] {C};
-\node[main node](33)[right= of 32] {A};
-
-\node[main node](34)[below= of 28] {A};
-\node[main node](35)[right= of 34] {T};
-\node[main node](36)[right= of 35] {--};
-\node[main node](37)[right= of 36] {G};
-\node[main node](38)[right= of 37] {T};
-\node[main node](39)[right= of 38] {C};
-\node[main node](40)[right= of 39] {A};
-
-\path[every node/.style={font=\sffamily\small}]
-(2) edge node [left] {deletion} (9)
-(5) edge node [left] {insertion} (12)
-(16) edge node [left] {deletion} (22)
-(19) edge node [left] {mismatch} (25)
-(20) edge [color=red] node [right, color=red] {no more edits} (26)
-(29) edge node [left] {mismatch} (35)
-(30) edge node [right] {deletion} (36)
-(32) edge [color=red] node [right, color=red] {no more edits} (38)
-;
-\end{tikzpicture}
+\begin{center}
+\includegraphics[scale=0.8]{Diagrams/leven.png}
+\end{center}
 \caption{\textit{The Levenshtein distance between the pattern ACTGCA and the data ATGTCA is 2 
 (1 deletion, 1 insertion) as the leftmost example shows. If the pattern is allowed 1 deletion and 1 mismatch, then
 the two strings can not match, as the rightmost examples show, even though this also would be a sum of 2 edits.}}
 \end{figure}
 \subsubsection{Optimizing order of \pu matching}
 A possible optimization that \scm does \textit{not} exploit, is choosing an order of \pus to be searched for.
-Some \pus are more exclusive and rare to find in data than others. Specifically an exact \pu with the most
-letters is the \pu that statistically would be found the least times in random data. If starting the search by
+Some \pus are more exclusive and rare to find in data than others. Specifically the sequence \pu with the most
+letters is the \pu that is probably found least times in a big data file. If starting the search by
 identifying this rarest \pu the search would save a lot of instructions. \scm starts every search with the 
 first \pu in the pattern, and it is therefore often guaranteed to run slower than if it used the other approach.
+As Figure 10 shows, this optimization presents a potential huge increase in running time of the program. \newpage
 \begin{figure}[H]
 \begin{center}
-\includegraphics[scale=0.65]{opti1.jpg}
+\includegraphics[scale=0.8]{Diagrams/opti.png}
 \end{center}
 \caption{\textit{A pattern that consists of two} \pus \textit{where the second (say} \texttt{CTCGAATAG[1,0,0]}
 \textit{) is more rare in the data than the first} \pu \textit{(say(}\texttt{GGT}\textit{). Searching for the 
 second} \pu \textit{first needs three checks (with three additional check afterwards to verify the whole pattern)
 while choosing the look for the first} \pu \textit{needs 6 checks (with 6 following checks to verify whole pattern).}}
 \end{figure}
-\noindent As Figure 9 shows, this optimization presents a potential huge increase in running time of the program. \newpage
-
-
-\section{Test}
-In order to thoroughly show that the scanfm works, testing goes a long way. Scanfm is divided up in \pus in order to
-show these \pus work and returns the correct and expected results, they need to be tested individually and in specific
-combinations.
-
+\section{Correctness Test}
+In order to
+show that each \pu works and returns the correct and expected results, they need to be tested individually and in specific
+combinations. (Forklaring af ækvivalensklasser kommer næste gang...)
 \subsection{Individual \pu}
-For each \pu it is needed to show that they function in every scenario, this is done by testing the individual cases a \pu
-can exhibit, because of known error with length until EOF of the data a ambiguous N is placed 3 times in the end of all data files:
-
 \subsubsection{Sequence}
-\begin{table}[h]
+\begin{table}[H]
 \begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 Empty string		& " " & ACGTNNN & suiting error message & No matches \\ \hline
@@ -719,19 +566,17 @@ Single ambiguous base & "R"(R is A or G) & ATTGNNN & Match at 1 and 4 & Match at
 Ambiguous bases	& "RRGGWW" & AAGGTANN N & Match at 1 & Match at 1
 \end{tabular}
 \end{table}
-
 \subsubsection{Range}
-\begin{table}[h]
+\begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 Range from 0...0	& "0...0" & ACCNNN & Match at 1, 2 and 3 & Never ending loop \\ \hline
 Smallest range 	& "0...1" & ACCNNN & Match at 1, 2 and 3 & Never ending loop \\ \hline
 Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1, 5 and 9
 \end{tabular}
-\end{table}
-
+\end{table} 
 \subsubsection{Reference}
-\begin{table}[h]
+\begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 0 reference 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 & Match at 1 \\ \hline
@@ -748,13 +593,8 @@ Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCC 
 Reference MID complementary use after assignment & "p1=3...4 \textapprox p1[1,0,0]" & AAATACTT NNN & Match at 1 & Match at 1
 \end{tabular}
 \end{table}
-
-
 \subsection{Multiple \pus}
-To make sure scanfm runs correctly, in as many scenarios as possible testing \pus running
-in different orders is needed also.
-
- \begin{table}[h]
+\begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 Multiple exacts 	& "ACGT TGCA" & ACGTTGCA NNN & Match at 1 & Match at 1\\ \hline
@@ -763,13 +603,9 @@ Backtracking MID & "TTTT[0,1,1] TTA" & TTTTTAAN NN & Match at 1 & Match at 1\\ \
 Multiple references & "p1=2...3 p2=2...2 p1 p2" & TTTCCTTT CCNNN & Match at 1 & Match at 1\\ \hline
 Mulitple complementary reffenreces & p1=3...3 p2=2...3 2...3 \textapprox p2 \textapprox p1" & 
 AAATTCCT TAATTTNN N & Match at 1 & Match at 1
-
 \end{tabular}
-\end{table}
-
-
-
-\section{Results}
-
+\end{table} 
+\section{Speed test}
+\newpage
 \printbibliography
 \end{document}
