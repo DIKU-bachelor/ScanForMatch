@@ -15,6 +15,8 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows}
 \usetikzlibrary{positioning}
+\usepackage{textcomp}
+\newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
 %\usepackage{pgfgantt}
 \usepackage{hyperref}
 \usepackage{graphicx}
@@ -690,6 +692,82 @@ second} \pu \textit{first needs three checks (with three additional check afterw
 while choosing the look for the first} \pu \textit{needs 6 checks (with 6 following checks to verify whole pattern).}}
 \end{figure}
 \noindent As Figure 9 shows, this optimization presents a potential huge increase in running time of the program. \newpage
+
+
+\section{Test}
+In order to thoroughly show that the scanfm works, testing goes a long way. Scanfm is divided up in \pus in order to
+show these \pus work and returns the correct and expected results, they need to be tested individually and in specific
+combinations.
+
+\subsection{Individual \pu}
+For each \pu it is needed to show that they function in every scenario, this is done by testing the individual cases a \pu
+can exhibit, because of known error with length until EOF of the data a ambiguous N is placed 3 times in the end of all data files:
+
+\subsubsection{Sequence}
+\begin{table}[h]
+\begin{tabular}{l|l|l|l|l}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+Empty string		& " " & ACGTNNN & suiting error message & No matches \\ \hline
+Single base 		& "A" & ANNN & Match at 1 & Match at 1\\ \hline
+Multiple bases	& "ACCGT" & ACCGTNNN & Match at 1 & Match at 1 \\ \hline
+MID 1 miss		& "ACC[1,0,0]" & ACGNNN & Match at 1 & Match at 1\\ \hline
+MID 1 del		& "ATG[0,1,0]" & AGNNN & Match at 1 & Match at 1 \\ \hline
+MID 1 ins		& "ACC[0,0,1]" & ATCCNNN & Match at 1 & Match at 1\\ \hline
+MID multiple		& "ACTTT[1,2,0]" & GCTNNN & Match at 1 & Match at 1\\ \hline
+MID all			& "ATTCCCTT[2,2,1]" & TTCCGTANNN & Match at 1 & Match at 1\\ \hline
+Single ambiguous base & "R"(R is A or G) & ATTGNNN & Match at 1 and 4 & Match at 1 and 4 \\ \hline
+Ambiguous bases	& "RRGGWW" & AAGGTANNN & Match at 1 & Match at 1
+\end{tabular}
+\end{table}
+
+\subsubsection{Range}
+\begin{table}[h]
+\begin{tabular}{p{4cm}|l|l|p{3cm}|l}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+Range from 0...0	& "0...0" & ACCNNN & Match at 1, 2 and 3 & \\ \hline
+Smallest range 	& "0...1" & ACCNNN & Match at 1, 2 and 3 & \\ \hline
+Standard case	& "4...9" & AAAAAAAAAANNN & Match at 1 and 5 &
+\end{tabular}
+\end{table}
+
+\subsubsection{Reference}
+\begin{table}[h]
+\begin{tabular}{p{4cm}|l|l|p{3cm}|l}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+0 reference 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 & \\ \hline
+Smallest reference 	& "p1=1...1 2...2 p1" & ACCANNN & Match at 1 & \\ \hline
+Standard case	& "p1=3...5 2...2 p1" & CCCCAACCCCNNN & Match at 1 & \\ \hline
+Reference after assignment & "p1=3...5 p1" & CACCCACCNNN & Match at 1 & \\ \hline
+Complementary 0 reference & "p1=0...0 2...2 \textapprox p1" & AAAANNN & Match at 1, 2, 3 and 4 & \\ \hline
+Complementary smallest reference & "p1=1...1 2...2 \textapprox p1" & ACCTNNN & Match at 1 & \\ \hline
+Complementary standard case & "p1=3..5 2...2 \textapprox p1" & AATTCCAATTNNN & Match at 1 & \\ \hline
+Complementary reference after assignment & "p1=3...3 \textapprox p1" & AAATTTNNN & Match at 1 & \\ \hline
+Reference MID & "p1=3..4 2...2 p1[2,1,1]" & AAAATTCGTANNN & Match at 1 & \\ \hline
+Reference MID complementary smallest & "p1=1...1 2...3 \textapprox p1[0,1,0]" & ACGGGNNN & Match at 1 & \\ \hline
+Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCCTNNN & Match at 1 & \\ \hline 
+Reference MID complementary use after assignment & "p1=3...4 \textapprox p1[1,0,0] & AAATACTTNNN & Match at 1
+\end{tabular}
+\end{table}
+
+
+\subsection{Multiple \pus}
+To make sure scanfm runs correctly, in as many scenarios as possible testing \pus running
+in different orders is needed also.
+
+ \begin{table}[h]
+\begin{tabular}{p{4cm}|l|l|p{3cm}|l}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+Multiple exacts 	& "ACGT TGCA" & ACGTTGCAN & Match at 1 & \\ \hline
+Range MID		& "4...5 TTTT[1,1,1]" & AAAAATTCGN & Match at 1 & \\ \hline
+Backtracking MID & "TTTT[0,1,1] TTA" & TTTTTAAN & Match at 1 & \\ \hline
+Multiple references & "p1=2...3 p2=2...2 p1 p2" & TTTCCTTTCCN & Match at 1 & \\ \hline
+Mulitple complementary reffenreces & p1=3...3 p2=2...3 2...3 \textapprox p2 \textapprox p1" & AAATTCCTTAATTTN & Match at 1 &
+
+\end{tabular}
+\end{table}
+
+
+
 \section{Results}
 
 \printbibliography

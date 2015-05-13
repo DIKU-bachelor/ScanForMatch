@@ -36,6 +36,30 @@
   \field{year}{2010}
 \endentry
 
+\entry{dom}{article}{}
+  \name{author}{2}{}{%
+    {{}%
+     {A.}{A.}%
+     {Jouglet}{J.}%
+     {}{}%
+     {}{}}%
+    {{}%
+     {J.}{J.}%
+     {Carlier}{C.}%
+     {}{}%
+     {}{}}%
+  }
+  \strng{namehash}{AJJC1}
+  \strng{fullhash}{AJJC1}
+  \field{sortinit}{A}
+  \field{note}{Accessed online 03-May 2015}
+  \field{title}{Dominance rules in combinatorial optimization problems}
+  \verb{url}
+  \verb https://www.google.dk/?gws_rd=ssl#q=dominance+relation+combinatorics
+  \endverb
+  \field{year}{2011}
+\endentry
+
 \entry{back}{misc}{}
   \name{author}{1}{}{%
     {{}%
@@ -79,6 +103,15 @@
   \field{pages}{281\bibrangedash 297}
   \field{title}{Principles of Biochemistry}
   \field{year}{2013}
+\endentry
+
+\entry{knap}{misc}{}
+  \field{sortinit}{K}
+  \field{note}{Accessed online 03-May 2015}
+  \field{title}{Knapsack problem}
+  \verb{url}
+  \verb http://en.wikipedia.org/wiki/Knapsack_problem
+  \endverb
 \endentry
 
 \entry{ambi}{article}{}

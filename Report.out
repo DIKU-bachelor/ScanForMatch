@@ -1,12 +1,17 @@
 \BOOKMARK [1][-]{section.1}{Introduction}{}
 \BOOKMARK [1][-]{section.2}{Methods}{}
-\BOOKMARK [2][-]{subsection.2.1}{Analysis of scan\137for\137matches }{section.2}
-\BOOKMARK [3][-]{subsubsection.2.1.1}{Defining patterns in scan\137for\137matches }{subsection.2.1}
-\BOOKMARK [3][-]{subsubsection.2.1.2}{Flow of scan\137for\137matches }{subsection.2.1}
-\BOOKMARK [3][-]{subsubsection.2.1.3}{Cooperability of multi-level backtracking}{subsection.2.1}
+\BOOKMARK [2][-]{subsection.2.1}{Defining patterns in scan\137for\137matches }{section.2}
 \BOOKMARK [2][-]{subsection.2.2}{Backtracking}{section.2}
-\BOOKMARK [3][-]{subsubsection.2.2.1}{Complexity of backtracking}{subsection.2.2}
-\BOOKMARK [2][-]{subsection.2.3}{Design}{section.2}
-\BOOKMARK [3][-]{subsubsection.2.3.1}{Optimizing character comparison using bitwise operations}{subsection.2.3}
-\BOOKMARK [3][-]{subsubsection.2.3.2}{Optimizing order of PU matching}{subsection.2.3}
-\BOOKMARK [1][-]{section.3}{Results}{}
+\BOOKMARK [2][-]{subsection.2.3}{Flow of scan\137for\137matches }{section.2}
+\BOOKMARK [3][-]{subsubsection.2.3.1}{Multi-level backtracking}{subsection.2.3}
+\BOOKMARK [2][-]{subsection.2.4}{Design}{section.2}
+\BOOKMARK [3][-]{subsubsection.2.4.1}{Optimizing character comparison using bitwise operations}{subsection.2.4}
+\BOOKMARK [3][-]{subsubsection.2.4.2}{Levenshtein distance}{subsection.2.4}
+\BOOKMARK [3][-]{subsubsection.2.4.3}{Optimizing order of PU matching}{subsection.2.4}
+\BOOKMARK [1][-]{section.3}{Test}{}
+\BOOKMARK [2][-]{subsection.3.1}{Individual PU }{section.3}
+\BOOKMARK [3][-]{subsubsection.3.1.1}{Sequence}{subsection.3.1}
+\BOOKMARK [3][-]{subsubsection.3.1.2}{Range}{subsection.3.1}
+\BOOKMARK [3][-]{subsubsection.3.1.3}{Reference}{subsection.3.1}
+\BOOKMARK [2][-]{subsection.3.2}{Multiple PU's }{section.3}
+\BOOKMARK [1][-]{section.4}{Results}{}
