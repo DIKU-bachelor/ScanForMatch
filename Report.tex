@@ -705,7 +705,7 @@ can exhibit, because of known error with length until EOF of the data a ambiguou
 
 \subsubsection{Sequence}
 \begin{table}[h]
-\begin{tabular}{l|l|l|l|l}
+\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 Empty string		& " " & ACGTNNN & suiting error message & No matches \\ \hline
 Single base 		& "A" & ANNN & Match at 1 & Match at 1\\ \hline
@@ -714,38 +714,38 @@ MID 1 miss		& "ACC[1,0,0]" & ACGNNN & Match at 1 & Match at 1\\ \hline
 MID 1 del		& "ATG[0,1,0]" & AGNNN & Match at 1 & Match at 1 \\ \hline
 MID 1 ins		& "ACC[0,0,1]" & ATCCNNN & Match at 1 & Match at 1\\ \hline
 MID multiple		& "ACTTT[1,2,0]" & GCTNNN & Match at 1 & Match at 1\\ \hline
-MID all			& "ATTCCCTT[2,2,1]" & TTCCGTANNN & Match at 1 & Match at 1\\ \hline
+MID all			& "ATTCCCTT[2,2,1]" & TTCCGTAN NN & Match at 1 & Match at 1\\ \hline
 Single ambiguous base & "R"(R is A or G) & ATTGNNN & Match at 1 and 4 & Match at 1 and 4 \\ \hline
-Ambiguous bases	& "RRGGWW" & AAGGTANNN & Match at 1 & Match at 1
+Ambiguous bases	& "RRGGWW" & AAGGTANN N & Match at 1 & Match at 1
 \end{tabular}
 \end{table}
 
 \subsubsection{Range}
 \begin{table}[h]
-\begin{tabular}{p{4cm}|l|l|p{3cm}|l}
+\begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Range from 0...0	& "0...0" & ACCNNN & Match at 1, 2 and 3 & \\ \hline
-Smallest range 	& "0...1" & ACCNNN & Match at 1, 2 and 3 & \\ \hline
-Standard case	& "4...9" & AAAAAAAAAANNN & Match at 1 and 5 &
+Range from 0...0	& "0...0" & ACCNNN & Match at 1, 2 and 3 & Never ending loop \\ \hline
+Smallest range 	& "0...1" & ACCNNN & Match at 1, 2 and 3 & Never ending loop \\ \hline
+Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1, 5 and 9
 \end{tabular}
 \end{table}
 
 \subsubsection{Reference}
 \begin{table}[h]
-\begin{tabular}{p{4cm}|l|l|p{3cm}|l}
+\begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-0 reference 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 & \\ \hline
-Smallest reference 	& "p1=1...1 2...2 p1" & ACCANNN & Match at 1 & \\ \hline
-Standard case	& "p1=3...5 2...2 p1" & CCCCAACCCCNNN & Match at 1 & \\ \hline
-Reference after assignment & "p1=3...5 p1" & CACCCACCNNN & Match at 1 & \\ \hline
-Complementary 0 reference & "p1=0...0 2...2 \textapprox p1" & AAAANNN & Match at 1, 2, 3 and 4 & \\ \hline
-Complementary smallest reference & "p1=1...1 2...2 \textapprox p1" & ACCTNNN & Match at 1 & \\ \hline
-Complementary standard case & "p1=3..5 2...2 \textapprox p1" & AATTCCAATTNNN & Match at 1 & \\ \hline
-Complementary reference after assignment & "p1=3...3 \textapprox p1" & AAATTTNNN & Match at 1 & \\ \hline
-Reference MID & "p1=3..4 2...2 p1[2,1,1]" & AAAATTCGTANNN & Match at 1 & \\ \hline
-Reference MID complementary smallest & "p1=1...1 2...3 \textapprox p1[0,1,0]" & ACGGGNNN & Match at 1 & \\ \hline
-Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCCTNNN & Match at 1 & \\ \hline 
-Reference MID complementary use after assignment & "p1=3...4 \textapprox p1[1,0,0] & AAATACTTNNN & Match at 1
+0 reference 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 & Match at 1 \\ \hline
+Smallest reference 	& "p1=1...1 2...2 p1" & ACCANNN & Match at 1 & Match at 1 \\ \hline
+Standard case	& "p1=3...5 2...2 p1" & CCCCAACC CCNNN & Match at 1 & Match at 1\\ \hline
+Reference after assignment & "p1=3...5 p1" & CACCCACC NNN & Match at 1 & Match at 1\\ \hline
+Complementary 0 reference & "p1=0...0 2...2 \textapprox p1" & AAAANNN & Match at 1, 2, 3 and 4 & Match at 1 and 4\\ \hline
+Complementary smallest reference & "p1=1...1 2...2 \textapprox p1" & ACCTNNN & Match at 1 & Match at 1\\ \hline
+Complementary standard case & "p1=3...5 2...2 \textapprox p1" & AATTCCAA TTNNN & Match at 1 & Match at 1\\ \hline
+Complementary reference after assignment & "p1=3...3 \textapprox p1" & AAATTTNN N & Match at 1 & Match at 1\\ \hline
+Reference MID & "p1=3...4 2...2 p1[2,1,1]" & AAAATTCG TANNN & Match at 1 & Match at 1\\ \hline
+Reference MID complementary smallest & "p1=1...1 2...3 \textapprox p1[0,1,0]" & ACGGGNNN & Match at 1 & Match at 1 and 4 \\ \hline
+Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCC TNNN & Match at 1 & Match at 1 \\ \hline 
+Reference MID complementary use after assignment & "p1=3...4 \textapprox p1[1,0,0]" & AAATACTT NNN & Match at 1 & Match at 1
 \end{tabular}
 \end{table}
 
@@ -755,13 +755,14 @@ To make sure scanfm runs correctly, in as many scenarios as possible testing \pu
 in different orders is needed also.
 
  \begin{table}[h]
-\begin{tabular}{p{4cm}|l|l|p{3cm}|l}
+\begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Multiple exacts 	& "ACGT TGCA" & ACGTTGCAN & Match at 1 & \\ \hline
-Range MID		& "4...5 TTTT[1,1,1]" & AAAAATTCGN & Match at 1 & \\ \hline
-Backtracking MID & "TTTT[0,1,1] TTA" & TTTTTAAN & Match at 1 & \\ \hline
-Multiple references & "p1=2...3 p2=2...2 p1 p2" & TTTCCTTTCCN & Match at 1 & \\ \hline
-Mulitple complementary reffenreces & p1=3...3 p2=2...3 2...3 \textapprox p2 \textapprox p1" & AAATTCCTTAATTTN & Match at 1 &
+Multiple exacts 	& "ACGT TGCA" & ACGTTGCA NNN & Match at 1 & Match at 1\\ \hline
+Range MID		& "4...5 TTTT[1,1,1]" & AAAAATTC GNNN & Match at 1 & Match at 1\\ \hline
+Backtracking MID & "TTTT[0,1,1] TTA" & TTTTTAAN NN & Match at 1 & Match at 1\\ \hline
+Multiple references & "p1=2...3 p2=2...2 p1 p2" & TTTCCTTT CCNNN & Match at 1 & Match at 1\\ \hline
+Mulitple complementary reffenreces & p1=3...3 p2=2...3 2...3 \textapprox p2 \textapprox p1" & 
+AAATTCCT TAATTTNN N & Match at 1 & Match at 1
 
 \end{tabular}
 \end{table}
