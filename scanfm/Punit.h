@@ -112,6 +112,7 @@ class Exact: public Punit {
     int del;
     int mis;
     int flex;
+    char* prev_s;
     /* current insertions, deletions, and mismatches */
     int c_ins;
     int c_del;

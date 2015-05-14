@@ -360,7 +360,8 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
   retu->quick_ref = 0;
 
   int dist_to_match;
-  int prev_dist_to_match;
+  int prev_dist_to_match = 0;
+  int prev_comb_mlen = 0;
   int comb_mlen = 0;
   char* best_prev;
   retu->bst = 1;
@@ -387,7 +388,7 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
       it = pat_list.begin();
 //      cout << "start pos to pass: " <<  retu->startp << "\n";
 //      cout << "BEFORE normal search\n";
-
+//      cout << "distance to startp: " << (retu->startp - start_of_data) << "\n";
       // Now we match every PU around the found one
       while (true) {
         retu = (*it)->search(retu);
@@ -401,15 +402,16 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
     //          printf("%p\n",(*it)->prev);
             }
             dist_to_match = (retu->startp - comb_mlen) - start_of_data;
-            if (dist_to_match != prev_dist_to_match) {
+            if (dist_to_match - prev_dist_to_match >= prev_comb_mlen) {
               printf("%i  %.*s\n", dist_to_match + 1, comb_mlen, real_data + dist_to_match);
             }
+            prev_comb_mlen = comb_mlen;
             prev_dist_to_match = dist_to_match;
             comb_mlen = 0;
             it = pat_list.begin();
             advance(it, opt->opt_index);
             retu->len = data_len;
-//            retu->startp = best_prev + 1;
+            retu->startp = best_prev + 1;
             break;
           }
           continue;
@@ -465,7 +467,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       if (++it == pat_list.end()) {
         for (it = pat_list.begin(); it != pat_list.end(); it++) {
           comb_mlen += (*it)->mlen;
-//          cout << (*it)->mlen << "\n";
+          cout << (*it)->mlen << "\n";
 //          printf("%p\n",(*it)->prev);
         }
         dist_to_match = (retu->startp - comb_mlen) - start_of_data;

@@ -242,6 +242,7 @@ ret_t* Exact::search(ret_t* retu){
     prev = retu->startp;
     len_s = len;
     code_s = code;
+    prev_s = prev;
     //variable declaration for loose matching pattern
     run_len = retu->len;
     run_len_s = run_len;
@@ -273,7 +274,7 @@ ret_t* Exact::search(ret_t* retu){
     int i;
     int c = 0;
 
-    char* prev_s = prev;
+    prev_s = prev;
     if (retu->startp == NULL && run_len >= 0) {
       prev++;
     }
@@ -380,17 +381,24 @@ ret_t* Exact::search(ret_t* retu){
     int c = 0;
     ret_t* new_retu = new ret_t;
 
-    char* prev_s = prev;
+//    char* prev_s = prev;
     if (quick_ref) {
       if (comp) {
+//        cout << "MID quickcomb\n";
         // If this punit is a complementary and previous punit is the variable being set
-        while (0 <= run_len && 
-               prev + len + (prev - prev_s) < data_end) {
+        if (match_list_len > 0) {
+//          cout << "still matches left to try\n";
+          new_retu = loose_match(retu, new_retu);
+          mlen = mlen + (prev - prev_s);
+          return new_retu;
+        }
+        while (0 <= run_len && prev + len + (prev - prev_s) < data_end) {
+//          cout << "MID runlen: " << run_len << "\n";
           code = code_s + run_len;
-          len = len_s + prev - prev_s;
+          len = len_s + (prev - prev_s);
           new_retu = loose_match(retu, new_retu);
           if(new_retu->startp){
-            mlen = mlen + prev - prev_s;
+            mlen = mlen + (prev - prev_s);
             return new_retu;
           }
           retu->startp = ++prev; p2++; run_len--;
@@ -398,7 +406,12 @@ ret_t* Exact::search(ret_t* retu){
 
       // If this punit is a non-complementary and previous punit is the variable being set
       } else {
-        while (prev_s <= prev_s + run_len-- && 
+        if (match_list_len > 0) {
+          new_retu = loose_match(retu, new_retu);
+          mlen = mlen + (prev - prev_s);
+          return new_retu;
+        }
+        while (prev_s <= prev_s + run_len && 
                prev + len + (prev - prev_s) < data_end) {
           len = len_s + prev - prev_s;
           new_retu = loose_match(retu, new_retu);
@@ -406,7 +419,7 @@ ret_t* Exact::search(ret_t* retu){
             mlen = mlen + prev - prev_s;
             return new_retu;
           }
-          retu->startp = ++prev; p2++; //run_len--;
+          retu->startp = ++prev; p2++; run_len--;
         }
       }
     } else {
