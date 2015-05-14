@@ -546,54 +546,170 @@ second} \pu \textit{first needs three checks (with three additional check afterw
 while choosing the look for the first} \pu \textit{needs 6 checks (with 6 following checks to verify whole pattern).}}
 \end{figure}
 \section{Correctness Test}
-In order to
-show that each \pu works and returns the correct and expected results, they need to be tested individually and in specific
-combinations. (Forklaring af ækvivalensklasser kommer næste gang...)
+In order to show that each \pu works and returns the correct and expected results, they need to be tested individually and in specific combinations. This is done with the use of equivalence classes, this means proving that the edge scenarios of each 
+\pu and average scenarios returns the expected result, and by doing so providing a by statistically solid foundation that 
+the \pu is correct. 
 \subsection{Individual \pu}
 \subsubsection{Sequence}
+To create exhaustive equivalence classes for the \pu sequence, there are multiple scenarios needed to be proven.
+A sequence can be exact by having no mismatches, insertions or deletions, it can be loose fitting by having 
+mismatches, insertions and deletions or it can be combined with ambiguous bases.
+The equivalence class for the exact sequence, needs a test at 0, the smallest possible length and one with multiple
+bases:
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 Empty string		& " " & ACGTNNN & suiting error message & No matches \\ \hline
 Single base 		& "A" & ANNN & Match at 1 & Match at 1\\ \hline
 Multiple bases	& "ACCGT" & ACCGTNNN & Match at 1 & Match at 1 \\ \hline
+\end{tabular}
+\end{table}
+
+The equivalence class for the loose sequence, with mismatches, insertions and deletions has more edge scenarios.
+A case with 0 is needed, but in this class there are multiple scenarios for the smallest possible amount of 
+mismatches, insertions and deletions, since these are not equivalent they are all needed to be tested. Also the 
+combinations of the mismatches, insertions and deletions needs to be tested with both the smallest possible
+scenarios and average cases. Finally the scenarios with all of the possible mismatches, insertions and deletions 
+being used needs to be tested with both the smallest scenario and a average case.
+With deletions and mismatches there are also the scenario where they exceed the pattern length. This also needs to 
+be tested.
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+MID 0			& "ACGT[0,0,0]" & ACGTNNN & Match at 1 & \\ \hline
 MID 1 miss		& "ACC[1,0,0]" & ACGNNN & Match at 1 & Match at 1\\ \hline
 MID 1 del		& "ATG[0,1,0]" & AGNNN & Match at 1 & Match at 1 \\ \hline
 MID 1 ins		& "ACC[0,0,1]" & ATCCNNN & Match at 1 & Match at 1\\ \hline
+MID 2 			& "AGGT[1,1,0]" & ACTNNN & Match at 1 & \\ \hline
+MID 2			& "ACGT[1,0,1]" & AGTGTNNN & Match at 1 & \\ \hline
+MID 2 			& "ATTGT[0,1,1]" & ATCGTNNN & Match at 1 & \\ \hline
+MID 3			& "AACGT[1,1,1]" & CAGGTNNN & Match at 1 & \\ \hline
+MID miss multiple & "ACCT[2,0,0]" & ATTTNNN & Match at 1 & \\ \hline
+MID del multiple & "AGTTT[0,2,0]" & AGTNNN & Match at 1 & \\ \hline
+MID ins multiple & "ACGT[0,0,2]" & ACTTGTNNN & Match at 1 & \\ \hline 
 MID multiple		& "ACTTT[1,2,0]" & GCTNNN & Match at 1 & Match at 1\\ \hline
+MID multiple		& "TCGAT[3,0,2]" & CGCTTATNNN & Match at 1 & \\ \hline
+MID multiple		& "TCGGT[0,2,3]" & GGGGGTNNN & Match at 1 & \\ \hline
 MID all			& "ATTCCCTT[2,2,1]" & TTCCGTAN NN & Match at 1 & Match at 1\\ \hline
-Single ambiguous base & "R"(R is A or G) & ATTGNNN & Match at 1 and 4 & Match at 1 and 4 \\ \hline
-Ambiguous bases	& "RRGGWW" & AAGGTANN N & Match at 1 & Match at 1
+MID more del		& "ATTC[0,6,0]" & CCCCCCNNN & A unknown number of matches not equal to 0
+\footnote{Since the code does not specify a order of used deletions, the 
+length of the match can be everywhere from 0 to 4, making it hard to predict a result. 
+This does not mean that different results can't all be correct. } & \\ \hline
+MID more mis		& "ATTCG[8,0,0]" & GGGGTNNN & Match at 1 & \\ \hline
 \end{tabular}
 \end{table}
+
+
+
+In order to create a equivalence class for ambiguous bases in a exact sequence \pu, the same
+scenarios as a exact sequence is needed with the addition that all ambiguous bases needs to be
+shown to work individually. 
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+Single ambiguous base & "R"(R is A or G) & ATTGNNN & Match at 1 and 4 & Match at 1 and 4 \\ \hline
+Ambiguous bases	& "RRGGWW" & AAGGTANN N & Match at 1 & Match at 1 \\ \hline
+All ambiguous bases & "UMMRRWWS SYYKKBBB DDDHHHVV VNNNN" & TACAGATC GCTGTCGT AGTACTAC GACTGNNN & Match at 1 & \\ \hline
+\end{tabular}
+\end{table}
+
+In order to make sure that ambiguous bases work correctly with the defined bases, a equivalence class is needed
+to show that the smallest mixed scenario and a average scenario works correctly.
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+Smallest mix		& "AM" & ACAA & Match at 1 and 3 & \\ \hline
+Average mix		& "TTATMTNYY" & TTATATGTC & Match at 1 & 
+\end{tabular}
+\end{table}
+
+
 \subsubsection{Range}
+Range by itself does not make room for a large difference in possibilities, in order to create a 
+equivalence class only a few scenarios are needed, the smallest possible cases, a 0 case and a average case.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 Range from 0...0	& "0...0" & ACCNNN & Match at 1, 2 and 3 & Never ending loop \\ \hline
 Smallest range 	& "0...1" & ACCNNN & Match at 1, 2 and 3 & Never ending loop \\ \hline
+Smallest range without 0 & "1...1" & AGTNNN & Match at 1, 2, 3, 4, 5 and 6 & \\ \hline
 Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1, 5 and 9
 \end{tabular}
 \end{table} 
+
+
+\subsection{Multiple \pus}
+
 \subsubsection{Reference}
+
+Reference can't be tested and proved correct as a individual \pu since it needs to refer to another \pu
+to function. 
+In order to make sure the reference \pu works correctly the equivalence class needs to obtain references with and
+without another \pu between the refereed \pu and the reference \pu. Both a 0, edge and average case is needed for both
+scenarios.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-0 reference 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 & Match at 1 \\ \hline
-Smallest reference 	& "p1=1...1 2...2 p1" & ACCANNN & Match at 1 & Match at 1 \\ \hline
-Standard case	& "p1=3...5 2...2 p1" & CCCCAACC CCNNN & Match at 1 & Match at 1\\ \hline
-Reference after assignment & "p1=3...5 p1" & CACCCACC NNN & Match at 1 & Match at 1\\ \hline
+0 reference with 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 & Match at 1 \\ \hline
+Smallest reference with 	& "p1=1...1 2...2 p1" & ACCANNN & Match at 1 & Match at 1 \\ \hline
+Standard case with	& "p1=3...5 2...2 p1" & CCCCAACC CCNNN & Match at 1 & Match at 1\\ \hline
+0 reference without	& "p1=0...0 p1" & TTGTANNN & Undefined & \\ \hline
+1...1 reference without & "p1=1...1 p1" & AANNN & Match at 1 & \\ \hline
+Standard case without & "p1=3...5 p1" & CACCCACC NNN & Match at 1 & Match at 1\\ \hline
+\end{tabular}
+\end{table}
+
+In order to show correctness of complementary reference \pu a equivalence class needs to contain the same scenarios
+as the equivalence class showing the simple reference scenario.
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
 Complementary 0 reference & "p1=0...0 2...2 \textapprox p1" & AAAANNN & Match at 1, 2, 3 and 4 & Match at 1 and 4\\ \hline
 Complementary smallest reference & "p1=1...1 2...2 \textapprox p1" & ACCTNNN & Match at 1 & Match at 1\\ \hline
 Complementary standard case & "p1=3...5 2...2 \textapprox p1" & AATTCCAA TTNNN & Match at 1 & Match at 1\\ \hline
+Complementary 0 reference without & "p1=0...0 \textapprox p1" & AATNNN & Undefined behaviour & \\ \hline
+Complementary smallest reference withour & "p1=1...1 \textapprox p1 & ATNNN & Match at 1 & \\ \hline 
 Complementary reference after assignment & "p1=3...3 \textapprox p1" & AAATTTNN N & Match at 1 & Match at 1\\ \hline
-Reference MID & "p1=3...4 2...2 p1[2,1,1]" & AAAATTCG TANNN & Match at 1 & Match at 1\\ \hline
-Reference MID complementary smallest & "p1=1...1 2...3 \textapprox p1[0,1,0]" & ACGGGNNN & Match at 1 & Match at 1 and 4 \\ \hline
-Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCC TNNN & Match at 1 & Match at 1 \\ \hline 
-Reference MID complementary use after assignment & "p1=3...4 \textapprox p1[1,0,0]" & AAATACTT NNN & Match at 1 & Match at 1
 \end{tabular}
 \end{table}
-\subsection{Multiple \pus}
+
+Reference with mismatches, insertions and deletions equivalence class has the same basic steps as the simple reference
+scenario, but because MID are all ready tested in the sequence, there is no difference in the reference and we don't
+need to test with every single case of mismatches, insertions and deletions. Instead the use of the standard scenario is 
+used.
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+Reference MID 0 & "p1=0...0 2...2 p1[1,2,1]" & AACTGNNN & Undefined & \\ \hline
+Reference MID smallest & "p1=1...1 2...3 p1[1,1,2]" & AACCNNN & Match at 1 & \\ \hline
+Reference MID & "p1=3...4 2...2 p1[2,1,1]" & AAAATTCG TANNN & Match at 1 & Match at 1\\ \hline
+Reference MID 0 without & "p1=0...0 p1[1,1,1]" & ACTNNN & Undefined & \\ \hline
+Reference MID smallest without & "p1=1...1 p1[2,1,2]" & ACGTNNN & Match at 1 & \\ \hline
+Reference MID without & "p1=3...5 p1[2,1,1]" & ACTTACNNN & Match at 1 & \\ \hline
+\end{tabular}
+\end{table}
+
+
+Complementary reference with mismatches, insertions and deletions, in this case we make the same assumptions as above
+that mismatches, insertions and deletions are proved to be correct in the individual cases from the sequence test.
+Because of that we test with the same scenarios as the simple reference tests, to obtain a exhaustive equivalence class.
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+Reference MID complementary 0 & "p1=0...0 2...3 \textapprox p1[1,2,1]" & ACGTGNNN & Undefined & \\ \hline
+Reference MID complementary smallest & "p1=1...1 2...3 \textapprox p1[0,1,0]" & ACGGGNNN & Match at 1 & Match at 1 and 4 \\ \hline
+Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCC TNNN & Match at 1 & Match at 1 \\ \hline
+Reference MID complementary 0 without & "p1=0...0 \textapprox p1[0,1,2] & ACCTNNN & Undefined & \\ \hline 
+Reference MID complementary smallest without & "p1=1...1 \textapprox p1[0,0,2] & CTTCNNN & Match at 1 & \\ \hline
+Reference MID complementary without & "p1=3...4 \textapprox p1[1,0,0]" & AAATACTT NNN & Match at 1 & Match at 1 \\ \hline
+\end{tabular}
+\end{table}
+
+
+In order to make a exhaustive equivalence class for multiple \pus or multiple exhaustive equivalence classes for \pus
+a great number of different combinations and scenarios would be needed. Instead the following tests performed gives a 
+statistically approximation to this by looking at the scenarios that are most likely to produce false results.
+
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
@@ -602,7 +718,8 @@ Range MID		& "4...5 TTTT[1,1,1]" & AAAAATTC GNNN & Match at 1 & Match at 1\\ \hl
 Backtracking MID & "TTTT[0,1,1] TTA" & TTTTTAAN NN & Match at 1 & Match at 1\\ \hline
 Multiple references & "p1=2...3 p2=2...2 p1 p2" & TTTCCTTT CCNNN & Match at 1 & Match at 1\\ \hline
 Mulitple complementary reffenreces & p1=3...3 p2=2...3 2...3 \textapprox p2 \textapprox p1" & 
-AAATTCCT TAATTTNN N & Match at 1 & Match at 1
+AAATTCCT TAATTTNN N & Match at 1 & Match at 1 \\ \hline
+0 refference with bounding \pus & "AATCC p1=0...1 0...3 p1 TTG" & AATCCTTGGGGGGGNNN & Match at 1 & \\ \hline
 \end{tabular}
 \end{table} 
 \section{Speed test}
