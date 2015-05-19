@@ -545,12 +545,46 @@ As Figure 10 shows, this optimization presents a potential huge increase in runn
 second} \pu \textit{first needs three checks (with three additional check afterwards to verify the whole pattern)
 while choosing the look for the first} \pu \textit{needs 6 checks (with 6 following checks to verify whole pattern).}}
 \end{figure}
+
+
+
 \section{Correctness Test}
 In order to show that each \pu works and returns the correct and expected results, they need to be tested individually and in specific combinations. This is done with the use of equivalence classes, this means proving that the edge scenarios of each 
 \pu and average scenarios returns the expected result, and by doing so providing a by statistically solid foundation that 
 the \pu is correct. 
-\subsection{Individual \pu}
-\subsubsection{Sequence}
+
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+Empty string		& " " & ACGTNNN & suiting error message & No matches \\ \hline
+Single base 		& "A" & ANNN & Match at 1 & Match at 1\\ \hline
+Multiple bases	& "ACCGT" & ACCGTNNN & Match at 1 & Match at 1 \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Speed test}
+
+\newpage
+\printbibliography
+
+
+
+
+
+
+
+
+
+\section{Appendics}
+
+
+\subsection{Correctnes test results}
+
+
+\subsubsection{Individual \pu}
+
+
+\subsubsubsection{Sequence}
 To create exhaustive equivalence classes for the \pu sequence, there are multiple scenarios needed to be proven.
 A sequence can be exact by having no mismatches, insertions or deletions, it can be loose fitting by having 
 mismatches, insertions and deletions or it can be combined with ambiguous bases.
@@ -624,7 +658,7 @@ Average mix		& "TTATMTNYY" & TTATATGTC & Match at 1 &
 \end{table}
 
 
-\subsubsection{Range}
+\subsubsubsection{Range}
 Range by itself does not make room for a large difference in possibilities, in order to create a 
 equivalence class only a few scenarios are needed, the smallest possible cases, a 0 case and a average case.
 \begin{table}[H]
@@ -638,9 +672,9 @@ Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1, 5 and 
 \end{table} 
 
 
-\subsection{Multiple \pus}
+\subsubsection{Multiple \pus}
 
-\subsubsection{Reference}
+\subsubsubsection{Reference}
 
 Reference can't be tested and proved correct as a individual \pu since it needs to refer to another \pu
 to function. 
@@ -722,7 +756,4 @@ AAATTCCT TAATTTNN N & Match at 1 & Match at 1 \\ \hline
 0 refference with bounding \pus & "AATCC p1=0...1 0...3 p1 TTG" & AATCCTTGGGGGGGNNN & Match at 1 & \\ \hline
 \end{tabular}
 \end{table} 
-\section{Speed test}
-\newpage
-\printbibliography
 \end{document}
