@@ -4,6 +4,7 @@
 \usepackage[utf8]{inputenc}
 %\usepackage[T1]{fontenc}
 %\usepackage{textcomp}
+\usepackage{xcolor,colortbl}
 \DeclareUnicodeCharacter{00A0}{~}
 \usepackage{amsmath}
 \usepackage{calc}
@@ -47,6 +48,8 @@
 \newcommand{\pusp}{PU's. }
 \newcommand{\pup}{PU. }
 \definecolor{listinggray}{gray}{0.9}
+\definecolor{lightgreen}{HTML}{E8FFE1}
+\definecolor{lightred}{HTML}{FFE1E1}
 \usepackage{listings}
 \lstset{
 	language=C,
@@ -422,6 +425,9 @@ The pattern is: \texttt{AAA[0,2,0] AT} and the data is "AAAT". Only by using an 
 \end{center}
 \caption{\textit{The top sequences are the \pus and the bottom the data.}}
 \end{figure}
+
+
+
 \subsection{Design}
 Our re-implementation of \scm called \sfm is developed in C++ rather than C, which was used to develop 
 \texttt{scan\_for\_matches}. We have used C++ classes instead of C structs as the base structure for the PU's. \\ \\ 
@@ -434,6 +440,8 @@ forward to the subsequent \pu on success or backtrack to the previous \pup \\
 Passing parameters between the calls and returns of the "search" functions sets the criteria for the particular search, for
 instance the search for the first \pu where the "search" function is told to search and increment data until a match is \\
 found.
+
+
 \subsubsection{Correctness of \sfm}
 \begin{figure}[H]
 \begin{center}
@@ -446,6 +454,8 @@ and flags that are needed no matter what kind of} \pup
 Each class (except the "PUnit" class itself) defines the method "search", which searches for a match given a start position. 
 The function "loosematch" is used for trying to find a match when single-character edits are allowed.}}
 \end{figure}
+
+
 \subsubsection{Optimizing character comparison using bitwise operations}
 One of the great tricks used in \scm is the use of bitwise operations in performance critical parts of the code.
 Comparing single characters is the most used operations and maximizing the speed of this particular operation 
@@ -506,6 +516,8 @@ int build_conversion_tables()
 \textit{The last 8 or so lines of code is where the left 4 bits is being set to the complementary of the letter
 represented in the rightmost 4 bits.}}
 \end{figure}
+
+
 \subsubsection{Why not Levenshtein distance?}
 The Levenshtein distance between two strings is defined as \textit{the minimum amount of single-character edits required
 to change on string into the other.}~\cite{leve} \\ \\
@@ -529,6 +541,8 @@ up to the additional requirements of a maximum of either of the different edits.
 (1 deletion, 1 insertion) as the leftmost example shows. If the pattern is allowed 1 deletion and 1 mismatch, then
 the two strings can not match, as the rightmost examples show, even though this also would be a sum of 2 edits.}}
 \end{figure}
+
+
 \subsubsection{Optimizing order of \pu matching}
 A possible optimization that \scm does \textit{not} exploit, is choosing an order of \pus to be searched for.
 Some \pus are more exclusive and rare to find in data than others. Specifically the sequence \pu with the most
@@ -546,23 +560,86 @@ second} \pu \textit{first needs three checks (with three additional check afterw
 while choosing the look for the first} \pu \textit{needs 6 checks (with 6 following checks to verify whole pattern).}}
 \end{figure}
 
+\subsection{Clean code}
+Writing clean code is meant as writing understandable code, that provides overview of the programs
+structure. This is necessary when dealing with code that needs to be updated, further developed,
+checked for correctness, and debugged. \\ \\
+Clean code has been valued when creating \sfm, by dividing responsibilities into classes, and splitting 
+those classes into suitable methods. This being said in cases where dividing into different methods 
+started to cost running time, the fastest solution has been chosen. This has lead to a larger number of if statements where it can be more difficult to understand the larger picture of certain pieces algorithms. \\ \\
+The structure of the \pus has been constructed in a way that it should be possible without to much understanding of the other individual \pus code to create a new \pu. This is so further updating and
+development should be as easy as possible. \\ \\
+Correctness can be a very strong ally when creating code that needs to be used scientifically, but also
+just in cases where correct outputs are important. Splitting the responsibilities into smaller classes 
+can make it easier to find faults in the code. It can also be used to create unit tests for each method in
+the class. \\ \\
+Unit tests in \sfm would further help provide a certainty of correctness to the program, but because
+of the complexity of outputs and inputs in \sfm creating unit tests would be very time consuming and
+has not been done currently. 
 
 
 \section{Correctness Test}
 In order to show that each \pu works and returns the correct and expected results, they need to be tested individually and in specific combinations. This is done with the use of equivalence classes, this means proving that the edge scenarios of each 
 \pu and average scenarios returns the expected result, and by doing so providing a by statistically solid foundation that 
-the \pu is correct. 
+the \pu is correct.
+In order to create the largest number of tested features with the least needed tests, the correctness groups has been constructed to create the largest equivalence classes possible. 
 
 \begin{table}[H]
-\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
-Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Empty string		& " " & ACGTNNN & suiting error message & No matches \\ \hline
-Single base 		& "A" & ANNN & Match at 1 & Match at 1\\ \hline
-Multiple bases	& "ACCGT" & ACCGTNNN & Match at 1 & Match at 1 \\ \hline
+\begin{tabular}{p{2cm}|p{3cm}|p{5cm}|p{4.5cm}}
+Feature grouping & Example & Explained & Result  \\ \hline
+
+Simple sequence		& "ACCG"  & A sequence of bases only consisting of basic bases & Empty sequence returns unexpected results\\ \hline
+
+MID sequence 		& "GGGT[2,1,1]" & A sequence og bases with the possibility of mismatches, insertions, and deletions & Pass \\ \hline
+
+Ambiguous base sequence	& "MMNN" & A sequence consisting of only ambiguous bases & Ambiguous base "U" does not function\\ \hline
+
+Ambiguous and basic bases & "MSGGTM" & A sequence consisting of both ambiguous and basic bases & Ambiguous base " does not function\\ \hline
+
+Range & "4...8" & A range of jumps in the data & Range with 0 does not terminate\\ \hline
+
+Simple reference & "p1=3...5 p1" & A reference being made and then searched for  & Ranges with 0 results in wrong found matches\\ \hline
+
+Compleme- ntary reference & "p1=4...7 \textapprox p1" & A reference being made and then the complementary is searched for & Ranges with 0 results in wrong found matches \\ \hline
+
+MID reference & "p1=5...6 p1[2,1,3]" & A reference being made and then searched for with the possibility for mismatches, insertions and deletions & Ranges with 0 results in wrong found matches\\ \hline
+
+MID complementary reference & "p1=3...8 \textapprox p1[1,2,1]" & A reference being made and then the complementary is searched for with the possibility of mismatches, insertions and deletions & Ranges with 0 results in wrong found matches\\ \hline
+
+Multiple \pus & "ACCGMG[1,1,1] 2...8 ACC" & Multiple \pus in a single pattern & Multiple errors described below
+
 \end{tabular}
 \end{table}
+\subsection{Found errors}
+When performing the correctness tests certain errors emerged. None of the found errors where alone
+enough to argue that the program is not correct, but if future development ever occurs they would
+need attention.
+In order to explain what these errors does in a search and how they could be fixed, they are put into
+categories:
 
-\section{Speed test}
+\subsubsection{Empty sequences}
+If a empty sequence occurs in a pattern, the parser should return a error, this does not happen.
+This should be changed in the parser, if 2 spaces occurs without anything in between a error message
+should be written explaining empty sequences are not allowed.
+
+\subsubsection{Ranges from 0 to 0}
+Ranges that does not move the pattern will alone cause a never ending loop. This is not a 
+pattern that can be used to find a meaningful match and should not be allowed by the scanfm.
+A potent solution would then be to return a error.
+
+\subsubsection{Ranges from 0}
+Range from 0 without a \pu after results in a never ending loop. This should not be the case, if a the last
+\pu of a pattern is a range from 0, a parse error should occur, since it does not give a meaningful solution
+since everything reaching that \pu is true. Another way of handling the error could be to always return successful in the event it reaches the range from 0.
+
+\subsubsection{References with ranges from 0}
+In the event a reference contains a range from 0, scanfm returns wrong results, this can not be fixed
+by placing a error because it is a valid pattern given by the user. In order to fix this the reference
+\pu needs to be able to handle ranges that are 0.
+
+
+
+\section{Benchmark comparison}
 
 \newpage
 \printbibliography
@@ -581,21 +658,21 @@ Multiple bases	& "ACCGT" & ACCGTNNN & Match at 1 & Match at 1 \\ \hline
 \subsection{Correctnes test results}
 
 
-\subsubsection{Individual \pu}
 
-
-\subsubsubsection{Sequence}
+\subsubsection{Sequence}
 To create exhaustive equivalence classes for the \pu sequence, there are multiple scenarios needed to be proven.
 A sequence can be exact by having no mismatches, insertions or deletions, it can be loose fitting by having 
 mismatches, insertions and deletions or it can be combined with ambiguous bases.
-The equivalence class for the exact sequence, needs a test at 0, the smallest possible length and one with multiple
-bases:
+The equivalence class for the exact sequence, needs a test at 0, the smallest possible length and one with multiple bases:
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
+\rowcolor{lightred}
 Empty string		& " " & ACGTNNN & suiting error message & No matches \\ \hline
-Single base 		& "A" & ANNN & Match at 1 & Match at 1\\ \hline
-Multiple bases	& "ACCGT" & ACCGTNNN & Match at 1 & Match at 1 \\ \hline
+\rowcolor{lightgreen}
+Single base 		& "A" & ANNN & Match at 1 "A" & Match at 1 "A"\\ \hline
+\rowcolor{lightgreen}
+Multiple bases	& "ACCGT" & ACCGTNNN & Match at 1 "ACCGT" & Match at 1 "ACCGT" \\ \hline
 \end{tabular}
 \end{table}
 
@@ -610,26 +687,43 @@ be tested.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-MID 0			& "ACGT[0,0,0]" & ACGTNNN & Match at 1 & \\ \hline
-MID 1 miss		& "ACC[1,0,0]" & ACGNNN & Match at 1 & Match at 1\\ \hline
-MID 1 del		& "ATG[0,1,0]" & AGNNN & Match at 1 & Match at 1 \\ \hline
-MID 1 ins		& "ACC[0,0,1]" & ATCCNNN & Match at 1 & Match at 1\\ \hline
-MID 2 			& "AGGT[1,1,0]" & ACTNNN & Match at 1 & \\ \hline
-MID 2			& "ACGT[1,0,1]" & AGTGTNNN & Match at 1 & \\ \hline
-MID 2 			& "ATTGT[0,1,1]" & ATCGTNNN & Match at 1 & \\ \hline
-MID 3			& "AACGT[1,1,1]" & CAGGTNNN & Match at 1 & \\ \hline
-MID miss multiple & "ACCT[2,0,0]" & ATTTNNN & Match at 1 & \\ \hline
-MID del multiple & "AGTTT[0,2,0]" & AGTNNN & Match at 1 & \\ \hline
-MID ins multiple & "ACGT[0,0,2]" & ACTTGTNNN & Match at 1 & \\ \hline 
-MID multiple		& "ACTTT[1,2,0]" & GCTNNN & Match at 1 & Match at 1\\ \hline
-MID multiple		& "TCGAT[3,0,2]" & CGCTTATNNN & Match at 1 & \\ \hline
-MID multiple		& "TCGGT[0,2,3]" & GGGGGTNNN & Match at 1 & \\ \hline
-MID all			& "ATTCCCTT[2,2,1]" & TTCCGTAN NN & Match at 1 & Match at 1\\ \hline
+\rowcolor{lightgreen}
+MID 0			& "ACGT[0,0,0]" & ACGTNNN & Match at 1 "ACGT" & Match at 1 "ACGT" \\ \hline
+\rowcolor{lightgreen}
+MID 1 miss		& "ACC[1,0,0]" & ACGNNN & Match at 1 "ACG" & Match at 1 "ACG" \\ \hline
+\rowcolor{lightgreen}
+MID 1 del		& "ATG[0,1,0]" & AGNNN & Match at 1 "AG" & Match at 1 "AG" \\ \hline
+\rowcolor{lightgreen}
+MID 1 ins		& "ACC[0,0,1]" & ATCCNNN & Match at 1 "ATCC" & Match at 1 "ATCC"\\ \hline
+\rowcolor{lightgreen}
+MID 2 			& "AGGT[1,1,0]" & ACTNNN & Match at 1 "ACT" & Match at 1 "ACT" \\ \hline
+\rowcolor{lightgreen}
+MID 2			& "ACGT[1,0,1]" & AGTGTNNN & Match at 1 "AGTGT" & Match at 1 "AGTGT" \\ \hline
+\rowcolor{lightgreen}
+MID 2 			& "ATTGT[0,1,1]" & ATCGTNNN & Match at 1 "ATCGT" & Match at 1 "ATCGT" \\ \hline
+\rowcolor{lightgreen}
+MID 3			& "AACGT[1,1,1]" & CAGGTNNN & Match at 1 "CAGGT" & Match at 1 "CAGGT" \\ \hline
+\rowcolor{lightgreen}
+MID miss multiple & "ACCT[2,0,0]" & ATTTNNN & Match at 1 "ATTT" & Match at 1 "ATTT" \\ \hline
+\rowcolor{lightgreen}
+MID del multiple & "AGTTT[0,2,0]" & AGTNNN & Match at 1 "AGT" & Match at 1 "AGT" \\ \hline
+\rowcolor{lightgreen}
+MID ins multiple & "ACGT[0,0,2]" & ACTTGTNNN & Match at 1 "ACTTGT" & Match at 1 "ACTTGT" \\ \hline 
+\rowcolor{lightgreen}
+MID multiple		& "ACTTT[1,2,0]" & GCTNNN & Match at 1 "GCT" & Match at 1 "GCT"\\ \hline
+\rowcolor{lightgreen}
+MID multiple		& "TCGAT[3,0,2]" & CGCTTATNNN & Match at 1 "CGCTTAT" & Match at 1 "CGCTTAT" \\ \hline
+\rowcolor{lightgreen}
+MID multiple		& "TCGGT[0,2,3]" & GGGGGTNNN & Match at 1 "GGGGGT" & Match at 1 "GGGGGT" \\ \hline
+\rowcolor{lightgreen}
+MID all			& "ATTCCCTT[2,2,1]" & TTCCGTAN NN & Match at 1 "TTCCGTA" or "TTCCGTAN" & Match at 1 "TTCCGTAN"\\ \hline
+\rowcolor{lightgreen}
 MID more del		& "ATTC[0,6,0]" & CCCCCCNNN & A unknown number of matches not equal to 0
 \footnote{Since the code does not specify a order of used deletions, the 
 length of the match can be everywhere from 0 to 4, making it hard to predict a result. 
-This does not mean that different results can't all be correct. } & \\ \hline
-MID more mis		& "ATTCG[8,0,0]" & GGGGTNNN & Match at 1 & \\ \hline
+This does not mean that different results can't all be correct. } & Match at 1, 2, 3, 4, 5, and 6 "C" \\ \hline
+\rowcolor{lightgreen}
+MID more mis		& "ATTCG[8,0,0]" & GGGGTNNN & Match at 1 "GGGGT" & Match at 1 "GGGGGT" \\ \hline
 \end{tabular}
 \end{table}
 
@@ -641,9 +735,14 @@ shown to work individually.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Single ambiguous base & "R"(R is A or G) & ATTGNNN & Match at 1 and 4 & Match at 1 and 4 \\ \hline
-Ambiguous bases	& "RRGGWW" & AAGGTANN N & Match at 1 & Match at 1 \\ \hline
-All ambiguous bases & "UMMRRWWS SYYKKBBB DDDHHHVV VNNNN" & TACAGATC GCTGTCGT AGTACTAC GACTGNNN & Match at 1 & \\ \hline
+\rowcolor{lightgreen}
+Single ambiguous base & "R"(R is A or G) & ATTGNNN & Match at 1 "A" and 4 "G" & Match at 1 "A" and 4 "G" \\ \hline
+\rowcolor{lightgreen}
+Ambiguous bases	& "RRGGWW" & AAGGTANN N & Match at 1 "AAGGTA" & Match at 1 "AAGGTA" \\ \hline
+\rowcolor{lightred}
+All ambiguous bases & "UMMRRWWS SYYKKBBB DDDHHHVV VNNNN" & TACAGATC GCTGTCGT AGTACTAC GACTGNNN & Match at 1 & no Match \\ \hline
+\rowcolor{lightgreen}
+All ambiguous bases except u & "MMRRWWS SYYKKBBB DDDHHHVV VNNNN" & ACAGATC GCTGTCGT AGTACTAC GACTGNNN & Match at 1 & Match at 1 \\ 
 \end{tabular}
 \end{table}
 
@@ -652,29 +751,34 @@ to show that the smallest mixed scenario and a average scenario works correctly.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Smallest mix		& "AM" & ACAA & Match at 1 and 3 & \\ \hline
-Average mix		& "TTATMTNYY" & TTATATGTC & Match at 1 & 
+\rowcolor{lightgreen}
+Smallest mix		& "AM" & ACAA & Match at 1 "AC" and 3 "AA" & Match at 1 "AC" and 3 "AA" \\ \hline
+\rowcolor{lightgreen}
+Average mix		& "TTATMTNYY" & TTATATGTC & Match at 1 "TTATATGTC" & Match at 1 "TTATATGTC"
 \end{tabular}
 \end{table}
 
 
-\subsubsubsection{Range}
+\subsubsection{Range}
 Range by itself does not make room for a large difference in possibilities, in order to create a 
 equivalence class only a few scenarios are needed, the smallest possible cases, a 0 case and a average case.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Range from 0...0	& "0...0" & ACCNNN & Match at 1, 2 and 3 & Never ending loop \\ \hline
-Smallest range 	& "0...1" & ACCNNN & Match at 1, 2 and 3 & Never ending loop \\ \hline
-Smallest range without 0 & "1...1" & AGTNNN & Match at 1, 2, 3, 4, 5 and 6 & \\ \hline
-Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1, 5 and 9
+\rowcolor{lightred}
+Range from 0...0	& "0...0" & ACCNNN & Suiting error & Never ending loop \\ \hline
+\rowcolor{lightred}
+Smallest range 	& "0...1" & ACCNNN & Match at all bases & Never ending loop \\ \hline
+\rowcolor{lightgreen}
+Smallest range without 0 & "1...1" & AGTNNN & Match at 1, 2, 3, 4, 5 and 6 & Match at 1, 2, 3, 4, and 5 \\ \hline
+\rowcolor{lightgreen}
+Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1 "AAAA"
 \end{tabular}
 \end{table} 
 
 
-\subsubsection{Multiple \pus}
 
-\subsubsubsection{Reference}
+\subsubsection{Reference}
 
 Reference can't be tested and proved correct as a individual \pu since it needs to refer to another \pu
 to function. 
@@ -684,12 +788,18 @@ scenarios.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-0 reference with 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 & Match at 1 \\ \hline
-Smallest reference with 	& "p1=1...1 2...2 p1" & ACCANNN & Match at 1 & Match at 1 \\ \hline
-Standard case with	& "p1=3...5 2...2 p1" & CCCCAACC CCNNN & Match at 1 & Match at 1\\ \hline
-0 reference without	& "p1=0...0 p1" & TTGTANNN & Undefined & \\ \hline
-1...1 reference without & "p1=1...1 p1" & AANNN & Match at 1 & \\ \hline
-Standard case without & "p1=3...5 p1" & CACCCACC NNN & Match at 1 & Match at 1\\ \hline
+\rowcolor{lightred}
+0 reference with 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 "ACCC" & Match at 1 "ACCCN" \\ \hline
+\rowcolor{lightgreen}
+Smallest reference with 	& "p1=1...1 2...2 p1" & ACCANNN & Match at 1 "ACCA" & Match at 1 "ACCA" \\ \hline
+\rowcolor{lightgreen}
+Standard case with	& "p1=3...5 2...2 p1" & CCCCAACC CCNNN & Match at 1 "CCCCAACCCC" & Match at 1 "CCCCAACCCC"\\ \hline
+\rowcolor{lightred}
+0 reference without	& "p1=0...0 p1" & TTGTANNN & Undefined & Match at 1 "T", 2 "T", 3 "G", 4 "T", 5 "A", 6 "N", 7 "N", and 8 "N"\\ \hline
+\rowcolor{lightgreen}
+smallest reference without & "p1=1...1 p1" & AANNN & Match at 1 "AA" & Match at 1 "AA" \\ \hline
+\rowcolor{lightgreen}
+Standard case without & "p1=3...5 p1" & CACCCACC NNN & Match at 1 "CACCCACC" & Match at 1 "CACCCACC" \\ \hline
 \end{tabular}
 \end{table}
 
@@ -698,12 +808,18 @@ as the equivalence class showing the simple reference scenario.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Complementary 0 reference & "p1=0...0 2...2 \textapprox p1" & AAAANNN & Match at 1, 2, 3 and 4 & Match at 1 and 4\\ \hline
-Complementary smallest reference & "p1=1...1 2...2 \textapprox p1" & ACCTNNN & Match at 1 & Match at 1\\ \hline
-Complementary standard case & "p1=3...5 2...2 \textapprox p1" & AATTCCAA TTNNN & Match at 1 & Match at 1\\ \hline
-Complementary 0 reference without & "p1=0...0 \textapprox p1" & AATNNN & Undefined behaviour & \\ \hline
-Complementary smallest reference withour & "p1=1...1 \textapprox p1 & ATNNN & Match at 1 & \\ \hline 
-Complementary reference after assignment & "p1=3...3 \textapprox p1" & AAATTTNN N & Match at 1 & Match at 1\\ \hline
+\rowcolor{lightred}
+Complementary 0 reference & "p1=0...0 2...2 \textapprox p1" & AAAANNN & Match at 1 , 2, 3 and 4 & Match at 1 "AAA"\\ \hline
+\rowcolor{lightgreen}
+Complementary smallest reference & "p1=1...1 2...2 \textapprox p1" & ACCTNNN & Match at 1 "ACCT" & Match at 1 "ACCT"\\ \hline
+\rowcolor{lightgreen}
+Complementary standard case & "p1=3...5 2...2 \textapprox p1" & AATTCCAA TTNNN & Match at 1 "AATTCCAATT" & Match at 1 "AATTCCAATT"\\ \hline
+\rowcolor{lightred}
+Complementary 0 reference without & "p1=0...0 \textapprox p1" & AATNNN & Undefined behaviour & Match at 1 "A", 2 "A", 3 "T", 4 "N", 5 "N", and 6 "N" \\ \hline
+\rowcolor{lightgreen}
+Complementary smallest reference withour & "p1=1...1 \textapprox p1 & ATNNN & Match at 1 "AT" & Match at 1 "AT" \\ \hline 
+\rowcolor{lightgreen}
+Complementary reference after assignment & "p1=3...3 \textapprox p1" & AAATTTNN N & Match at 1 "AAATTT" & Match at 1 "AAATTT"\\ \hline
 \end{tabular}
 \end{table}
 
@@ -714,12 +830,18 @@ used.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Reference MID 0 & "p1=0...0 2...2 p1[1,2,1]" & AACTGNNN & Undefined & \\ \hline
-Reference MID smallest & "p1=1...1 2...3 p1[1,1,2]" & AACCNNN & Match at 1 & \\ \hline
-Reference MID & "p1=3...4 2...2 p1[2,1,1]" & AAAATTCG TANNN & Match at 1 & Match at 1\\ \hline
-Reference MID 0 without & "p1=0...0 p1[1,1,1]" & ACTNNN & Undefined & \\ \hline
-Reference MID smallest without & "p1=1...1 p1[2,1,2]" & ACGTNNN & Match at 1 & \\ \hline
-Reference MID without & "p1=3...5 p1[2,1,1]" & ACTTACNNN & Match at 1 & \\ \hline
+\rowcolor{lightred}
+Reference MID 0 & "p1=0...0 2...2 p1[1,2,1]" & AACTGNNN & Undefined & Match at 1 "AAC" \\ \hline
+\rowcolor{lightgreen}
+Reference MID smallest & "p1=1...1 2...2 p1[1,0,0]" & AACCNNN & Match at 1 "AACC" & Match at 1 "AACC" \\ \hline
+\rowcolor{lightgreen}
+Reference MID & "p1=3...4 2...2 p1[2,1,1]" & AAAATTCG TANNN & Match at 1 "AAAATTCG" or "AAAATTCGTA" or "AAAATTC" & Match at 1 "AAAATTC"\\ \hline
+\rowcolor{lightred}
+Reference MID 0 without & "p1=0...0 p1[1,1,1]" & ACTNNN & Undefined & Match at 1 "A", 2 "C", 3 "T", 4 "N", 5 "N", and 6 "N" \\ \hline
+\rowcolor{lightgreen}
+Reference MID smallest without & "p1=1...1 p1[2,1,2]" & ACGTNNN & Match at 1 "AC" or "ACG" or "ACGT" or "A" & Match at 1 "ACGT" \\ \hline
+\rowcolor{lightgreen}
+Reference MID without & "p1=3...5 p1[2,1,1]" & ACTTACNNN & Match at 1 "ACTTAC" or "ACTTA" or "ACTTACN" & Match at 1 "ACTTAC" \\ \hline
 \end{tabular}
 \end{table}
 
@@ -730,12 +852,18 @@ Because of that we test with the same scenarios as the simple reference tests, t
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Reference MID complementary 0 & "p1=0...0 2...3 \textapprox p1[1,2,1]" & ACGTGNNN & Undefined & \\ \hline
-Reference MID complementary smallest & "p1=1...1 2...3 \textapprox p1[0,1,0]" & ACGGGNNN & Match at 1 & Match at 1 and 4 \\ \hline
-Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCC TNNN & Match at 1 & Match at 1 \\ \hline
-Reference MID complementary 0 without & "p1=0...0 \textapprox p1[0,1,2] & ACCTNNN & Undefined & \\ \hline 
-Reference MID complementary smallest without & "p1=1...1 \textapprox p1[0,0,2] & CTTCNNN & Match at 1 & \\ \hline
-Reference MID complementary without & "p1=3...4 \textapprox p1[1,0,0]" & AAATACTT NNN & Match at 1 & Match at 1 \\ \hline
+\rowcolor{lightred}
+Reference MID complementary 0 & "p1=0...0 2...3 \textapprox p1[1,2,1]" & ACGTGNNN & Undefined & Match at 1 "ACG" \\ \hline
+\rowcolor{lightgreen}
+Reference MID complementary smallest & "p1=1...1 2...3 \textapprox p1[0,1,0]" & ACGGGNNN & Match at 1 "ACG" & Match at 1 "ACG" \\ \hline
+\rowcolor{lightgreen}
+Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCC TNNN & Match at 1 "ACCTTGCCT" & Match at 1 "ACCTTGCCT" \\ \hline
+\rowcolor{lightred}
+Reference MID complementary 0 without & "p1=0...0 \textapprox p1[0,1,2] & ACCTNNN & Undefined & Match at 1 "AC" \\ \hline 
+\rowcolor{lightgreen}
+Reference MID complementary smallest without & "p1=1...1 \textapprox p1[0,0,2] & CTGCNNN & Match at 1 "CTG" & Match at 1 "CTG" \\ \hline
+\rowcolor{lightgreen}
+Reference MID complementary without & "p1=3...4 \textapprox p1[1,0,0]" & AAATACTT NNN & Match at 1 "AAATACTT" & Match at 1 "AAATACTT" \\ \hline
 \end{tabular}
 \end{table}
 
@@ -747,13 +875,25 @@ statistically approximation to this by looking at the scenarios that are most li
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
-Multiple exacts 	& "ACGT TGCA" & ACGTTGCA NNN & Match at 1 & Match at 1\\ \hline
-Range MID		& "4...5 TTTT[1,1,1]" & AAAAATTC GNNN & Match at 1 & Match at 1\\ \hline
-Backtracking MID & "TTTT[0,1,1] TTA" & TTTTTAAN NN & Match at 1 & Match at 1\\ \hline
-Multiple references & "p1=2...3 p2=2...2 p1 p2" & TTTCCTTT CCNNN & Match at 1 & Match at 1\\ \hline
+\rowcolor{lightgreen}
+Multiple exacts 	& "ACGT TGCA" & ACGTTGCA NNN & Match at 1 "ACGTTGCA" & Match at 1 "ACGTTGCA"\\ \hline
+\rowcolor{lightgreen}
+Range MID		& "4...5 TTTT[1,1,1]" & AAAAATTC GNNN & Match at 1 "AAAAATTC" or "AAAAATT" & Match at 1 "AAAAATT" \\ \hline
+\rowcolor{lightgreen}
+Backtracking MID & "TTTT[0,1,1] TTA" & TTTTTAAN NN & Match at 1 "TTTTTA" & Match at 1 "TTTTTA"\\ \hline
+\rowcolor{lightgreen}
+Multiple references & "p1=2...3 p2=2...2 p1 p2" & TTTCCTTT CCNNN & Match at 1 "TTTCCTTTCC" & Match at 1 "TTTCCTTTCC" \\ \hline
+\rowcolor{lightgreen}
 Mulitple complementary reffenreces & p1=3...3 p2=2...3 2...3 \textapprox p2 \textapprox p1" & 
-AAATTCCT TAATTTNN N & Match at 1 & Match at 1 \\ \hline
-0 refference with bounding \pus & "AATCC p1=0...1 0...3 p1 TTG" & AATCCTTGGGGGGGNNN & Match at 1 & \\ \hline
+AAACCGTTTCGGTTT NNN & Match at 1 "AAACCGTTTCGGTTT" & Match at 1 "AAACCGTTTCGGTTT" \\ \hline
+\rowcolor{lightred}
+0 refference with bounding \pus & "AATCC p1=0...1 0...3 p1 TTG" & AATCCTTGGGGGGGNNN & Match at 1 & Not terminating\\ \hline
+\rowcolor{lightgreen}
+Range from 0 & "ATC 0...3 TTC" & ATCTTCNNN & Match at 1 "ATCTTC" & Match at 1 "ATCTTC" \\ \hline
+\rowcolor{lightgreen}
+reference with to many deletion & "p1=2...4 ATTT p1[0,6,0] TTT" & TTTATTTNNN & No match & No matches \\ \hline
+\rowcolor{lightgreen}
+sequence with more deletions than bases & "TTTT ACC[0,6,0] TT" & TTTTACNNN & no matches & No matches
 \end{tabular}
 \end{table} 
 \end{document}
