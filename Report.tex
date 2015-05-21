@@ -7,8 +7,13 @@
 \usepackage{xcolor,colortbl}
 \DeclareUnicodeCharacter{00A0}{~}
 \usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{calc}
 \usepackage{array}
+\usepackage[noend]{algpseudocode}
+\usepackage{pifont}
 \usepackage{courier}
 \usepackage{relsize}
 \usepackage{float}
@@ -19,7 +24,6 @@
 \newcommand{\textapprox}{\raisebox{0.5ex}{\texttildelow}}
 %\usepackage{pgfgantt}
 \usepackage{hyperref}
-\usepackage{graphicx}
 \usepackage{upquote}
 \usepackage{natbib}
 % Natlib ignore hack start
@@ -41,8 +45,9 @@
 \newcommand{\Red}{\tikz\draw[red,fill=red] (0,0) circle (1 ex);}
 \renewcommand*\contentsname{Table of contents}
 \newcommand{\scm}{\texttt{scan\_for\_matches} }
-\newcommand{\scmp}{\texttt{scan\_for\_matches.}}
+\newcommand{\scmp}{\texttt{scan\_for\_matches.} }
 \newcommand{\sfm}{\texttt{scanfm} }
+\newcommand{\sfmp}{\texttt{scanfm.}}
 \newcommand{\pu}{PU }
 \newcommand{\pus}{PU's }
 \newcommand{\pusp}{PU's. }
@@ -114,8 +119,10 @@ huge amounts of data makes it inefficient to manually find these patterns~\cite{
 and efficient software to do this. \\ \\
 \scm ~\cite{scm} is a piece of software that serves this purpose, but big improvements in performance can be made.
 On top that, the code is poorly documented, lacks version control and is hard to read and maintain. \\ \\
-Our goal is therefore to re-implement \scm to contain the useful parts,
-while optimizing the algorithms to improve performance, and have version control and documentation.
+Our goal is therefore to implement a documented program with version control 
+that can search for patterns in large data files consisting of a letter sequence
+with letters from the alphabet A,T,C and G, with guaranteed correctness
+and high speed, but using the same complex way of defining patterns as \scmp 
 \section{Methods}
 \subsection{Defining patterns in \scm}
 \scm provides a simple and limited domain-specific language for defining patterns to look for in a text file consisting
@@ -134,25 +141,25 @@ position for the first \pu and tries again. It continues like this until the end
 for matching.
 The different formats of \pus and some of the extra features are described in the list below.
 \begin{itemize}
-\item An exact \pu consists of a specific sequence of letters from the alphabet which will
+\item a sequence \pu consists of a specific sequence of letters from the alphabet which will
 only match if the compared sub-sequence in data has the exact same letters in the exact same order as the 
-exact \pu. \\ \\
-Example of exact \pu : \texttt{AGGT}
+sequence \pu. \\ \\
+Example of sequence \pu : \texttt{AGGT}
 \item A range \pu consists of 2 positive integers separated by three dots, where the first integer is less than or
 equal to the second. The \pu matches any combination of
 letters from the alphabet that has a length that is equal to one of the integers or any integer in between those integers. \\ \\
 Example of range \pu : \texttt{4...8} which matches any letter combination of length 4,5,6,7 or 8.
-\item A variable can be assigned either a range \pu or an exact \pu for later reference. The variable is specified by 
+\item A variable can be assigned either a range \pu or a sequence \pu for later reference. The variable is specified by 
 any user defined name
-followed by an equality symbol and then followed by a range \pu or an exact \pup \\ \\
-The range or exact PU functions normally, but at run-time the letter combination that it matches
+followed by an equality symbol and then followed by a range \pu or a sequence \pup \\ \\
+The range or sequence PU functions normally, but at run-time the letter combination that it matches
 in data is saved, and one can reference it in a later \pu by simply writing the name of the variable. That is a
-reference \pu and functions as an exact \pu but uses the specific saved 
+reference \pu and functions as a sequence \pu but uses the specific saved 
 letter combination to match with. \\ \\
 Example using variable/reference \pu : \texttt{p1=4...6\; ATG\; p1}, where
 the first \pu is the range \pu with added variable functionality, 
 and the third being the reference \pu that is linked to the first \pup
-\item Any exact or reference \pu can be made flexible by allowing a number of specified
+\item Any sequence or reference \pu can be made flexible by allowing a number of specified
 single-letter edits; insertions, deletions and mismatches. \\ \\
 A mismatch allows one letter from the \pu to match one letter in the data even though they're not the same.
 An insertion allows for a temporary insert of one letter in the \pu letter combination that matches one letter in
@@ -160,8 +167,8 @@ the data, thus lengthening the \pup A deletion allows for temporarily ignoring o
 and jumping straight the next letter, thus shortening the \pup \\
 An example of each edit is shown in Figure 1. \\ \\
 Example using single-letter edits : \texttt{p1=TGTGTCT[1,0,3]\; ATTCC[1,1,2]\; p1[2,2,2]} 
-where the first exact \pu is allowed 1 mismatch, 0
-deletions and 3 insertions, the middle exact \pu is allowed 1 mismatch, 1 deletion and 2 insertion 
+where the first sequence \pu is allowed 1 mismatch, 0
+deletions and 3 insertions, the middle sequence \pu is allowed 1 mismatch, 1 deletion and 2 insertion 
 and the reference \pu is allowed 2 of each.
 \item Putting a $\sim$ in front of a reference \pu means that \scm tries to match the reverse 
 complement of the letter-sequence saved in the variable. 
@@ -170,7 +177,7 @@ is substituted with its complementary counterpart (A swaps with T and vice versa
 Example using the $\sim$ feature : \texttt{p1=3...4\; GG\; $\sim$p1} would match the data sub-sequence:
 "TCACGGGTGA" since "GTGA" is the reverse complement of "TCAC".
 \item Ambiguous letters~\cite{ambi} are letters other than the standard letters of the used alphabet. These letters are used
-in exact \pus to allow matching with one of multiple of the standard letters in the alphabet.
+in sequence \pus to allow matching with one of multiple of the standard letters in the alphabet.
 In \scm the letter "Y" in a \pu matches either a "C" or a "T" in data, a "D" matches either "A" or "G" or "T" 
 and "N" matches any of the standard letters. There is a letter for each different combination of the
 four standard letters. \\ \\
@@ -193,48 +200,6 @@ alphabet, instead of the standard rules (A pairs with T and C with G). \\
 substituted for a T. In the second example the pattern is AGA but matches the sub-sequence AGTA in data by insertion of a
 T. In the third example the pattern AGTA matches the data AGA by deleting the T.}}
 \end{figure}
-%\begin{figure}[H]
-%\begin{tikzpicture}
-%[->,node distance=1.5cm and 0.2cm, main node/.style={rectangle,fill=blue!8,draw,font=\sffamily\bfseries}] 
-%\node[main node](1)    {A};
-%\node[main node](2) [right= of 1] {G};
-%\node[main node](3) [right= of 2] {G};
-%\node[main node](4) [right= of 3] {A};
-%
-%\node[main node](5) [below= of 1] {A};
-%\node[main node](6) [below= of 2] {G};
-%\node[main node](7) [below= of 3] {T};
-%\node[main node](8) [below= of 4] {A};
-%
-%\node[main node](9) [right= of 4, xshift=+2cm] {A};
-%\node[main node](10) [right= of 9] {G};
-%\node[main node](11) [right= of 10] {--};
-%\node[main node](12) [right= of 11] {A};
-%
-%\node[main node](13) [right= of 8, xshift=+2cm] {A};
-%\node[main node](14) [right= of 13] {G};
-%\node[main node](15) [right= of 14] {T};
-%\node[main node](16) [right= of 15] {A};
-%
-%\node[main node](17) [right= of 12, xshift=+2cm] {A};
-%\node[main node](18) [right= of 17] {G};
-%\node[main node](19) [right= of 18] {T};
-%\node[main node](20) [right= of 19] {A};
-%
-%\node[main node](21) [right= of 16, xshift=+2cm] {A};
-%\node[main node](22) [right= of 21] {G};
-%\node[main node](23) [right= of 22] {--};
-%\node[main node](24) [right= of 23] {A};
-%
-%\path[every node/.style={font=\sffamily\small}]
-%(3) edge node [left] {mismatch} (7)
-%(11) edge node [left] {insertion} (15)
-%(19) edge node [left] {deletion} (23);
-%\end{tikzpicture}
-%\caption{\textit{The top character sequences are the patterns and the bottom the data. In the first example the G is simply
-%substituted for a T. In the second example the pattern is AGA but matches the sub-sequence AGTA in data by insertion of a
-%T. In the third example the pattern AGTA matches the data AGA by deleting the T.}}
-%\end{figure}
 \subsection{Backtracking}
 Finding a match between data and a \pu with allowed edits often requires trying 
 different combinations of uses of the edits, and \emph{backtracking} is a sort of algorithm that offers this functionality.
@@ -262,7 +227,7 @@ shows how using a deletion to delete the C in} \texttt{AGCA} \textit{would match
 when moving forward to the next} \pu \texttt{CG} \textit{will match} \texttt{CG}}
 \end{figure}
 \noindent There are two different ways for a \pu to have multiple different matches with a sub-sequence in data. 
-Either it's an exact or reference \pu with allowed mismatches,
+Either it's a sequence or reference \pu with allowed mismatches,
 insertions and deletions, or it is a range \pup
 Whenever backtracking to one of these, another of the possibilities will be chosen and the algorithm continues to the
 subsequent \pu again. The amount of checks that the algorithm would need to perform in order to try out
@@ -368,7 +333,7 @@ The other backtracking system happens internally in the pattern matching of a si
 mismatches, insertions and deletions. Figuring out a way to utilize the allowed edits to possibly find a match, requires
 trying out a lot of combinations so this part of the program is the most computationally heavy. 
 \subsubsection{Multi-level backtracking}
-Exact or reference \pus that has allowed mismatches, insertions or deletions are handled in a very specific way by \scmp
+Sequence or reference \pus that has allowed mismatches, insertions or deletions are handled in a very specific way by \scmp
 Starting from left going right in the \pu
 and data, the algorithm greedily matches as many characters as possible without using allowed edits.
 Every time a character doesn't match, \scm spends an edit and uses a stack structure to keep track of which
@@ -394,11 +359,11 @@ so \scm uses dominance relation to rule out many of the permutations and speed u
 In other words, whenever \scm
 encounters a character that matched the character in data, spending a mismatch, insertion or deletion is never
 considered and never tried out, because the property of dominance relation promises that spending an edit
-here is not necessary for finding a match. \\ \\
+here is not necessary for finding a match. 
 Figure 5 shows an example of a match between pattern and data that uses edits where it was not required,
 and how one can transform this into a match that uses its first edit at the first mismatching characters.
 The pattern is \texttt{ATTTTG[0,2,0]} and the data is "ATTG".
-\begin{figure}
+\begin{figure}[H]
 \begin{center}
 \includegraphics[scale=0.6]{Diagrams/shunt.png}
 \end{center}
@@ -412,40 +377,89 @@ With an outer backtracking system it is often times required that several if not
 order to find the overall match. Some \pus of the overall pattern may be required to be of a specific length in order to
 match the whole pattern, and the only way such a \pu can obtain the required length may very well be using unnecessary
 edits. Trying to match a \pu with allowed edits, \scm will always accept the first way of matching, and even if
-subsequent \pus fail and we backtrack to this \pu again, the same match with the same length will be found. \\ \\
+subsequent \pus fail and we backtrack to this \pu again, the same match with the same length will be found. 
 It is therefore not guaranteed that \scm will find all the matches it's supposed to find. In fact every sub-sequence
 of data that should match with the pattern, but requires for one or more of its \pus to have a length only
-acquirable by using unnecessary edits, \scm will not find! \\ \\
-Figure 6 shows an example of an overall pattern that will only match the data if unnecessary edits are used in a \pup
-The pattern is: \texttt{AAA[0,2,0] AT} and the data is "AAAT". Only by using an unnecessary deletion in the first
-\pu will the second \pu match.
+acquirable by using unnecessary edits, \scm will not find!
+Figure 6 shows the flow of \scm in pseudocode that illustrates the 
+inexhaustive way \scm glues the outer and inner backtracking together.
+\begin{figure}[H]
+\begin{center}
+\begin{algorithmic}[1]
+  \Procedure{Scan\_for\_matches}{list$<$PU$>$ PUs, string data}
+    \For{int i = 0 to length(data)}
+      \If{\Call{matchPUs}{PUs, data, i}}
+        \State print i
+      \EndIf
+    \EndFor
+  \EndProcedure \\
+  \Procedure{matchPUs}{list$<$PU$>$ PUs, string data, int i}
+    \For{j = head(PUs).min\_range to head(PUs).max\_range}
+      \If{\Call{findmatch}{head(PUs), data, i}}
+        \If{\Call{matchPUs}{tail(PUs), data, i + j}}
+          \State \Return true
+	    \EndIf
+	  \EndIf
+    \EndFor
+    \State \Return false
+  \EndProcedure \\
+  \Procedure{findmatch}{PU p, string data, int i}
+    \State \Return the endpoint of the first match found using PU p, data and start position i
+  \EndProcedure
+\end{algorithmic}
+\end{center}
+\caption{\textit{Pseudocode that shows simplified flow of} \scmp \textit{The .min\_range and .max\_range attributes
+contain the minimum and maximum length of a range \pup They are 0 for non-range PU's in which case the loop runs
+only once.}}
+\end{figure}
+\noindent The first procedure handles the traversing through the data. The third procedure finds only one match (and always 
+the same) given a PU, data and a starting position, and thus other possible matches with different lengths than the
+one found on line 8 will not be tried. Consider the example in Figure 7 where
+the pattern is: \texttt{AAA[0,2,0] AT} and the data is "AAAT". Only by using an unnecessary deletion in the first
+\pu will the second \pu match. The call on line 8 will return only 3.
 \begin{figure}[H]
 \begin{center}
 \includegraphics[scale=0.3]{Diagrams/scnfail.png}
 \end{center}
-\caption{\textit{The top sequences are the \pus and the bottom the data.}}
+\caption{\textit{The top sequences are the \pus and the bottom the data.} \scm \textit{would not find this match!}}
 \end{figure}
-
-
-
+\noindent Not only does \scm not find matches where unnecessary edits are required, \scm doesn't  
+find overall matches that requires a certain combination of uses of edits in a \pu if a match was found for this
+\pu using a different combination of edits, and this combination is tried before the one that yields the overall match.
+As previously stated the order in which the edits are tried is: mismatches, deletions, insertions, so if
+a \pu is allowed 1 mismatch and 1 deletion and can match the data using either one of the two, the match using the
+mismatch edit will always be chosen, and if the subsequent \pu requires the first \pu to match 1 character less
+in the data (which could have been done using the deletion instead of the mismatch), 
+the overall match will not be found by \scm even though it was supposed to. And example of exactly this is shown in
+Figure 8, where the pattern is \texttt{AGGT[1,1,0] TCA} and the data is "AGTTCAG".
+\begin{figure}
+\begin{center}
+\includegraphics[scale=0.8]{Diagrams/fail2.png}
+\end{center}
+\caption{\textit{The example on the left shows the way} \scm \textit{would always try to match given the pattern and the data.
+The rightmost example shows how to match the first \pu in order to make the whole pattern match.}}
+\end{figure}
 \subsection{Design}
 Our re-implementation of \scm called \sfm is developed in C++ rather than C, which was used to develop 
 \texttt{scan\_for\_matches}. We have used C++ classes instead of C structs as the base structure for the PU's. \\ \\ 
 Figure 7 shows the class structure of \texttt{scanfm}. The "Sequence" and "Range" classes inherit from the overall
 class "PUnit", and the "Reference" class inherit from the "Sequence" class, since a reference \pu works exactly like a 
 sequence \pu at run-time when it has collected its letter sequence from either a sequence \pu or a range \pup \\ \\
+\sfm has been implemented to support every core feature of \scm as described previously except the one
+that allows for a reference \pu to refer to a sequence \pu variable, i.e. \sfm only supports the variable/reference
+functionality with variables being assigned range \pusp \\ \\
+The syntax for defining patterns in \sfm is the same as in \scm but the pattern is supplied to \sfm through 
+the command-line call to \sfmp
+\subsubsection{Flow of \sfm}
 The control flow of \sfm is similar in idea to \scm but very different in implementation. While \scm uses a case/switch
 and GOTO statements, \sfm uses an outer loop to call the "search" function of the \pus and then either
-forward to the subsequent \pu on success or backtrack to the previous \pup \\
-Passing parameters between the calls and returns of the "search" functions sets the criteria for the particular search, for
-instance the search for the first \pu where the "search" function is told to search and increment data until a match is \\
-found.
-
-
-\subsubsection{Correctness of \sfm}
+forward to the subsequent \pu on success or backtrack to the previous \pup \\ \\
+The control flow of \sfm was originally intended to be very neatly separated into classes and class functions that
+didn't encapsulate too much and varying functionality, but in several cases sacrificing a little modularity
+was necessary to boost the performance of \sfmp \\ \\
 \begin{figure}[H]
 \begin{center}
-\includegraphics[scale=0.7]{Diagrams/classdia.png}
+\includegraphics[scale=0.65]{Diagrams/classdia.png}
 \end{center}
 \caption{\textit{A simplified class diagram which only shows the most important varibles and functions.
 There is one generic} \pu \textit{class called "PUnit". This class holds a lot of the common variables
@@ -454,8 +468,85 @@ and flags that are needed no matter what kind of} \pup
 Each class (except the "PUnit" class itself) defines the method "search", which searches for a match given a start position. 
 The function "loosematch" is used for trying to find a match when single-character edits are allowed.}}
 \end{figure}
-
-
+\noindent As an example, it was originally intended that an outer loop traversed the data file, 
+and for each starting position called the search function of the first \pu object to try to match
+at that starting position and if there was a match, the outer loop would call the next \pu object's search function
+with the new starting position obtained from incrementing the old starting position with the length of the first \pu match
+and so on. If there was no match, the previous \pu was tried again to find a possible alternate match and if 
+the first \pu didn't match, the starting position was incremented with 1. \\ \\
+If the first \pu is a sequence \pu most starting positions in a data file will not be able to produce a match
+and thus the flow will contain a lot of unnecessary calling and returning of the search function. Consider
+an example where the first match for the first \pu is a starting position 4. The flow would proceed as follows: \\
+Outer loop calls search function of first \pu with starting position 1. Search function of first \pu doesn't find a match
+and returns. Outer loop increments starting position to 2 and calls search function again. Again no match is found
+and the search function returns again. This continues until the search starts at position 4. For each starting position
+we call the search function, return from the search function and increment the starting position (plus the code
+in the search function is executed). \\ \\
+Performing an unnecessary call to a function and a return from this function with each starting position amounts
+to a lot of extra instructions and decreases the performance significantly on large data files. 
+\sfm is designed to avoid this overhead by telling the search function of the given first \pu that it should
+continue searching until a match is found, i.e. the first \pu now increase the starting position itself so 
+traversing the data file until finding a match for the first \pu now only requires incrementing the starting position
+and checking for match. \\ \\
+Several optimizations of this sort is implemented in \sfm to speed up the performance, and a structure containing relevant
+information is passed back and forth between the calls to the search functions in order to keep track of when special
+cases and performance enhancing tricks can be applied. \\ \\
+The perhaps most important difference between \scm and \sfm is the way \sfm glues outer and inner backtracking together
+to ensure that no possible match is missed, which is shown in simplified pseudocode for \sfm in Figure 10.
+Whenever \sfm encounters a sequence of reference \pu with allowed edits
+\sfm finds all possible matches for this \pu on the given starting position in data. The different
+lengths of the matches are saved in a list such that each length only occur once in the list. For example, if 
+there are 6 ways for the \pu to match the data and the lengths of the matches are: 5,5,7,6,4,7 then the list would
+look like [5,7,6,4] (the order is irrelevant). If the list is not empty (there was at least one match)
+\sfm continues to the subsequent \pu with the new starting position being first element in the list. If at some
+point \sfm backtracks to this \pu the next element in the list is chosen for the new starting position and \sfm
+continues to the subsequent \pu again and so on. Creating the list of lengths \emph{does} take into account lengths reached using
+unnecessary edits so the \pu \texttt{AAA[0,1,1]} on data "AAAG" would produce a list of lengths [2,3,4]. \\ \\
+In this way \sfm makes sure that every possible length of match with a \pu is tried out before giving up on said \pu
+and backtracking. In case of range \pus the different lengths of matches are easier and much faster to calculate, 
+they're simply the lengths that lie within the range supplied by the range \pu, i.e. the \pu \texttt{3...6}
+would produce a list of lengths [3,4,5,6]. Sequence or reference \pus with no allowed edits produce a list
+of lengths with only one element which is the length of the PU, and thus we have covered each type of \pu and ensured
+that they all try every possible length of match before backtracking to previous \pusp This is true for every
+\pu in the pattern so at any given starting position in data, the procedure \textsc{\small matchPUs} is
+guaranteed to find an overall match if one exists!
+\begin{figure}[H]
+\begin{center}
+\begin{algorithmic}[1]
+  \Procedure{Scanfm}{list$<$PU$>$ PUs, string data}
+    \For{int i = 0 to length(data)}
+      \If{\Call{matchPUs}{PUs,data,i}}
+        \State print i
+      \EndIf
+    \EndFor
+  \EndProcedure \\
+  \Procedure{matchPUs}{list$<$PU$>$ PUs, string data, int i}
+    \State list$<$int$>$ endpoints = \Call{match}{head(PUs), data, i}
+    \For{ep in endpoints}
+      \If{\Call{matchPUs}{tail(PUs), data, ep}}
+        \State \Return true
+      \EndIf
+    \EndFor
+    \State \Return false
+  \EndProcedure \\
+  \Procedure{match}{PU p, string data, int i}
+    \State list$<$int$>$ endpoints = [ ]
+    \For{each possible match $m$ at starting position i}
+      \If{not i + length($m$) in endpoints}
+        \State endpoints.append(i + length($m$))
+      \EndIf
+    \EndFor
+    \State \Return endpoints
+  \EndProcedure
+\end{algorithmic}
+\end{center}
+\caption{Pseudocode that shows simplified flow of \sfm}
+\end{figure}
+\noindent Although the pseudocode indicates that \textsc{\small matchPUs} is called for every single starting position
+in data, this is not entirely true. If a match is found, the starting position is incremented with the length of 
+the match found before continuing the search, effectively ignoring overlapping matches, so the guarantee of the correctness of \sfm can be summed up like 
+this: \\ \\
+\sfm is guaranteed to find every possible non-overlapping match in given data searching for a given pattern.
 \subsubsection{Optimizing character comparison using bitwise operations}
 One of the great tricks used in \scm is the use of bitwise operations in performance critical parts of the code.
 Comparing single characters is the most used operations and maximizing the speed of this particular operation 
@@ -471,7 +562,7 @@ bit field is stored in the leftmost bit field, e.g. G would look like 0010 0100 
 be used in a comparison. This leftmost bit field is used when comparing a complementary reference \pu instead
 of transforming back and forth between the letters every time a complementary \pu is encountered. \\ \\
 We are using this exact technique in \sfm to achieve the same optimal way of comparing characters.
-\begin{figure}
+\begin{figure}[H]
 \begin{center}
 \begin{lstlisting}
 int build_conversion_tables()
@@ -516,8 +607,6 @@ int build_conversion_tables()
 \textit{The last 8 or so lines of code is where the left 4 bits is being set to the complementary of the letter
 represented in the rightmost 4 bits.}}
 \end{figure}
-
-
 \subsubsection{Why not Levenshtein distance?}
 The Levenshtein distance between two strings is defined as \textit{the minimum amount of single-character edits required
 to change on string into the other.}~\cite{leve} \\ \\
@@ -541,25 +630,71 @@ up to the additional requirements of a maximum of either of the different edits.
 (1 deletion, 1 insertion) as the leftmost example shows. If the pattern is allowed 1 deletion and 1 mismatch, then
 the two strings can not match, as the rightmost examples show, even though this also would be a sum of 2 edits.}}
 \end{figure}
-
-
 \subsubsection{Optimizing order of \pu matching}
 A possible optimization that \scm does \textit{not} exploit, is choosing an order of \pus to be searched for.
-Some \pus are more exclusive and rare to find in data than others. Specifically the sequence \pu with the most
+Some \pus are more exclusive and rare to find in data than others. Generally the sequence \pu with the most
 letters is the \pu that is probably found least times in a big data file. If starting the search by
 identifying this rarest \pu the search would save a lot of instructions. \scm starts every search with the 
 first \pu in the pattern, and it is therefore often guaranteed to run slower than if it used the other approach.
-As Figure 10 shows, this optimization presents a potential huge increase in running time of the program. \newpage
+As Figure 10 shows, this optimization presents a potential huge increase in performance of the program.
 \begin{figure}[H]
 \begin{center}
 \includegraphics[scale=0.8]{Diagrams/opti.png}
 \end{center}
-\caption{\textit{A pattern that consists of two} \pus \textit{where the second (say} \texttt{CTCGAATAG[1,0,0]}
-\textit{) is more rare in the data than the first} \pu \textit{(say(}\texttt{GGT}\textit{). Searching for the 
+\caption{\textit{A pattern that consists of two} \pus \textit{where the second \\(say}
+\texttt{CTCGAATAG}\textit{) is more rare in the data than the first} \pu \textit{(say }\texttt{GGTTCA[1,0,0]}\textit{). 
+Searching for the 
 second} \pu \textit{first needs three checks (with three additional check afterwards to verify the whole pattern)
-while choosing the look for the first} \pu \textit{needs 6 checks (with 6 following checks to verify whole pattern).}}
+while choosing to look for the first} \pu \textit{needs 8 checks (with 8 following checks to verify whole pattern).}}
 \end{figure}
-
+\noindent This optimization is introduced in \sfm by calculating a score for each \pu after parsing and before
+the search begins. The \pu that received the highest score is called the \emph{optimal} \pu and is 
+the \pu that is searched for first. The maximum
+distance between the starting position of an overall match and the beginning of the chosen \pu is also calculated, i.e.
+the maximum length of each \pu from the start of the overall pattern up to the chosen \pu is summed. The minimum
+distance is calculated as well. \\ \\
+Whenever a match is found for the chosen PU, the starting position is decremented with the maximum distance and 
+\sfm searches for the whole pattern (from the first \pu to the last) in a traditional manner. If there exists an overall
+match that contains the match found for the chosen PU, it starts at a position within the maximum distance and 
+minimum distance backwards from where the match for the chosen \pu begins, so this traditional match is only carried
+out on starting positions within this interval. When the search for an overall match for this interval is done,
+the search for the chosen \pu continues throughout the rest of the data. \\ \\
+Figure 14 shows how the score of a \pu is calculated. Two factors are considered when finding the optimal PU;
+the rarity, i.e. how few times the \pu would match in data, and how quickly \sfm can search for the \pup
+Having just a few insertions and/or deletions allowed for a \pu greatly increases the time it takes to look for it,
+so \sfm is implemented to never consider \pu containing these as optimal, giving them a score of 0.
+\begin{figure}[H]
+\begin{displaymath}
+   score(PU) = \left\{
+     \begin{array}{ll}
+       0 & : ins > 0\;or\;del > 0\\
+       len-(5+mis+amb) & : mis>0 \\
+       len+1000-amb & : len-amb>8 \\
+       len-amb & : otherwise
+     \end{array}
+   \right.
+\end{displaymath}
+\caption{\textit{ins, del and mis refer to the number of insertions, deletion and mismatches that the given} \pu
+\textit{has allowed. The variable amb refers to the number of ambiguous letters contained in the} \pup} 
+\end{figure}
+\noindent Searching for a \pu that only has allowed mismatches is still slower than for a \pu 
+with no edits at all, but it is much
+faster than with insertions and deletions. Having any mismatches allowed executes a different and slower part of \sfm
+so the difference between no mismatches and any mismatches allowed has a far greater impact on running time than the amount of
+mismatches. If any mismatches are allowed the penalty in the score is therefore set quite high to 5, but the number of 
+mismatches only counts as a penalty of 1 each. The longer the sequence of the \pu is, the better, so the score
+is calculated as the length subtracted any penalties. Ambiguous letters make the \pu less precise and therefore less
+rare in the data, so a penalty of 1 i subtracted for each ambiguous letter as well. \\ \\
+If a \pu has no allowed edits and the length subtracted the number of ambiguous letters is greater than 8, 
+the \pu is considered strict enough to be better than any \pu with allowed edits, giving it a bonus of 1000 points to
+ensure that no \pu with allowed edits can surpass it in score. \\ \\
+If a \pu that has no allowed edits does not meet the requirement that $len-amb>8$ then a \pu with allowed
+mismatches may get a better score. This is done in order to avoid a very short \pu being chosen over a much longer
+and rare \pu just because the longer \pu had allowed mismatches, e.g. the \pu\; \texttt{AT}\; should \emph{not} be chosen
+over \\
+\texttt{GCTAGTCGGCGTCAGTCGTGATAT[2,0,0]}. The former \pu may be faster to search for, but it would match so many
+places in data that the number of times the traditional search would be invoked would result in a much bigger
+slowdown than the extra time it takes to search for the latter \pup
 \subsection{Clean code}
 Writing clean code is meant as writing understandable code, that provides overview of the programs
 structure. This is necessary when dealing with code that needs to be updated, further developed,
@@ -576,8 +711,6 @@ the class. \\ \\
 Unit tests in \sfm would further help provide a certainty of correctness to the program, but because
 of the complexity of outputs and inputs in \sfm creating unit tests would be very time consuming and
 has not been done currently. 
-
-
 \section{Correctness Test}
 In order to show that each \pu works and returns the correct and expected results, they need to be tested individually and in specific combinations. This is done with the use of equivalence classes, this means proving that the edge scenarios of each 
 \pu and average scenarios returns the expected result, and by doing so providing a by statistically solid foundation that 
@@ -642,18 +775,8 @@ by placing a error because it is a valid pattern given by the user. In order to 
 \section{Benchmark comparison}
 
 \newpage
-\printbibliography
-
-
-
-
-
-
-
-
-
+\printbibliography \newpage
 \section{Appendics}
-
 
 \subsection{Correctnes test results}
 
@@ -779,7 +902,6 @@ Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1 "AAAA"
 
 
 \subsubsection{Reference}
-
 Reference can't be tested and proved correct as a individual \pu since it needs to refer to another \pu
 to function. 
 In order to make sure the reference \pu works correctly the equivalence class needs to obtain references with and
