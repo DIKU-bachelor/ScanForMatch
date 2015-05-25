@@ -271,7 +271,10 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       }
       mis = atoi(mis_s.c_str());
       ins = atoi(ins_s.c_str());
-      del = atoi(del_s.c_str());     
+      del = atoi(del_s.c_str());
+      cout << "mis: " << mis << "\n";
+      cout << "del: " << del << "\n";
+      cout << "ins: " << ins << "\n"; 
     }
 
     // Checks if it's an Exact or Reference type punit
@@ -367,6 +370,9 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
   retu->bst = 1;
   advance(it, opt->opt_index);
   retu->len = data_len;
+
+  it = pat_list.begin();
+
 //  cout << opt->max_start_dist << "\n";
 //  cout << opt->min_start_dist << "\n";
   // Each iteration in loop finds optimal pu and tries to match PU's around it
@@ -374,6 +380,9 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
 //    cout << retu->startp << "\n";
 //    cout << "search best\n";
     retu = (*it)->search(retu);
+//    cout << "found best at: " << retu->startp << "\n";
+//    cout << "retu->startp: " << retu->startp << "\n";
+
     if (retu->startp) { 
       if ((*it)->prev - data <= opt->max_start_dist) {
         retu->startp = data;
@@ -391,6 +400,7 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
 //      cout << "distance to startp: " << (retu->startp - start_of_data) << "\n";
       // Now we match every PU around the found one
       while (true) {
+//        cout << "OUTER before search\n";
         retu = (*it)->search(retu);
         if (retu->startp) {
 //          cout << "PU match!!\n";
@@ -404,9 +414,9 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
             dist_to_match = (retu->startp - comb_mlen) - start_of_data;
             if (dist_to_match - prev_dist_to_match >= prev_comb_mlen) {
               printf("%i  %.*s\n", dist_to_match + 1, comb_mlen, real_data + dist_to_match);
-            }
-            prev_comb_mlen = comb_mlen;
-            prev_dist_to_match = dist_to_match;
+              prev_comb_mlen = comb_mlen;
+              prev_dist_to_match = dist_to_match;
+            } 
             comb_mlen = 0;
             it = pat_list.begin();
             advance(it, opt->opt_index);

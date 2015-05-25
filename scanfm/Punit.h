@@ -99,9 +99,9 @@ class Exact: public Punit {
     char* code_s;
     int i, nxtent, one_len, two_len, del_nxt, ins_nxt;
     //Integer array holding all tested match lengths
-    int match_lens [1000];
+    int match_lens[1000];
     //list of the found match lengths
-    char* match_list [1000];
+    char* match_list[1000];
     int match_list_len;
     //Stack with all matches
     stackent* match_stack;
