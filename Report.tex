@@ -630,6 +630,17 @@ up to the additional requirements of a maximum of either of the different edits.
 (1 deletion, 1 insertion) as the leftmost example shows. If the pattern is allowed 1 deletion and 1 mismatch, then
 the two strings can not match, as the rightmost examples show, even though this also would be a sum of 2 edits.}}
 \end{figure}
+
+\subsubsection{Knuth Morris Pratt algorithm}
+The algorithm Knuth, Morris and Pratt invented to find substrings in strings in O(m+n) time where m is the substring and n is the string it is looked for in. Where the normal backtracking algorithms gives a worst case time of O(n*m). This can be a huge improvement in cases where there are few different letters and a lot of repetitions, such as most DNA sequences.
+
+The algorithm uses a pre computed sequence, based on the subsequence looked for to determine how far ahead in the string the algorithm can jump when there are close matches.
+
+This could help finding exact matches even quicker in the data, but the real question is whether it could be used to calculate mismatches, insertions and deletions faster, since that is the place in the code the largest improvement is needed.
+
+The Knuth Morris Pratt algorithm has already been formed to calculate a fuzzy match where mismatches are allowed, but a open soudo code is not out there using it for calculating a Levenshtein distance. Calculating the Levenstein distance with this algorithm could potentially give a large improvement in running time.
+ 
+
 \subsubsection{Optimizing order of \pu matching}
 A possible optimization that \scm does \textit{not} exploit, is choosing an order of \pus to be searched for.
 Some \pus are more exclusive and rare to find in data than others. Generally the sequence \pu with the most
