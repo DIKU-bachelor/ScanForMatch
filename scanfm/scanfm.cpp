@@ -217,7 +217,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       pu = pu.substr(brac + 1);
       com = pu.find(',');
       if (com != string::npos) {
-        ins_s = pu.substr(0, com);
+        mis_s = pu.substr(0, com);
         pu = pu.substr(com + 1);
       } else {
         cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
@@ -227,7 +227,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       }
       com = pu.find(',');
       if (com != string::npos) {
-        mis_s = pu.substr(0, com);
+        del_s = pu.substr(0, com);
         pu = pu.substr(com + 1);
       } else {
         cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
@@ -237,7 +237,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       }
       brac = pu.find(']');
       if (brac != string::npos) {
-        del_s = pu.substr(0, brac);
+        ins_s = pu.substr(0, brac);
       } else {
         cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
           << "Mismatches, insertions and deletions must be declared in format:\n<punit>[?,?,?]\n";
@@ -272,9 +272,6 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       mis = atoi(mis_s.c_str());
       ins = atoi(ins_s.c_str());
       del = atoi(del_s.c_str());
-      cout << "mis: " << mis << "\n";
-      cout << "del: " << del << "\n";
-      cout << "ins: " << ins << "\n"; 
     }
 
     // Checks if it's an Exact or Reference type punit
@@ -367,7 +364,6 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
   int prev_comb_mlen = 0;
   int comb_mlen = 0;
   char* best_prev;
-  retu->bst = 1;
   advance(it, opt->opt_index);
   retu->len = data_len;
 
@@ -379,7 +375,9 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
   while (true) {
 //    cout << retu->startp << "\n";
 //    cout << "search best\n";
+    retu->bst = 1;
     retu = (*it)->search(retu);
+    retu->bst = 0;
 //    cout << "found best at: " << retu->startp << "\n";
 //    cout << "retu->startp: " << retu->startp << "\n";
 
@@ -440,6 +438,7 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
         }
       }
     } else {
+      cout << "DONE\n";
       return;
     }
   }

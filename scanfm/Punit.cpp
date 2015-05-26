@@ -127,14 +127,14 @@ bool Punit::matches(char C1, char C2) {
 * type : A integer corresponding to the type of the pattern unit
 */
 Exact::Exact(char* data_s, char* data_e, int data_len, int le, char* c, 
-             int i, int d, int m, int f, int type) : Punit(data_s, data_e, data_len, c, type){
+             int m, int d, int i, int f, int type) : Punit(data_s, data_e, data_len, c, type){
     len = le;
     ins = i;
     del = d;
     mis = m;
     flex = f;
-    c_ins = ins;
-    c_del = del;
+    c_ins = del;
+    c_del = ins;
     c_mis = mis;
     c_flex = flex;
 //    match_lens = new int[100000];
@@ -236,10 +236,6 @@ ret_t* Exact::search(ret_t* retu){
     if (retu->opt) {
       opti = 1;
       retu->opt = 0;
-    }
-    if (retu->bst) {
-      best = 1;
-      retu->bst = 0;
     }
     prev = retu->startp;
     len_s = len;
@@ -383,7 +379,9 @@ ret_t* Exact::search(ret_t* retu){
     int i;
     int c = 0;
     ret_t* new_retu = new ret_t;
-
+    if (retu->bst > 0) {
+      match_list_len = 0;
+    }
 //    char* prev_s = prev;
     if (quick_ref) {
       if (comp) {
@@ -427,6 +425,7 @@ ret_t* Exact::search(ret_t* retu){
       }
     } else {
       if (match_list_len > 0) {
+//        cout << "matchlistlen: " << match_list_len << "\n";
         new_retu = loose_match(retu, new_retu);
         return new_retu;
       }
@@ -457,6 +456,7 @@ ret_t* Exact::search(ret_t* retu){
 * new_retu : The return variable the calling function is returning
 */
 ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
+//  cout << "LOOSE MATCH begin\n";
   //Backtracking
   if(retu->startp == NULL){
     if(match_list_len >= 0){
@@ -482,13 +482,12 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
     p2 = prev;
     flex = ins + del + mis;
     c_mis = mis;
-    c_ins = ins;
-    c_del = del;
+    c_ins = del;
+    c_del = ins;
     nxtent = 0;
     found_matches = 0;
     memset(match_lens, 0, sizeof(match_lens));
     match_list_len = 0;
-    cout << c_mis << "\n";
     //Search
     //Special-case for ins=del=0 
     if ((c_ins == 0) && (c_del == 0)){
@@ -516,6 +515,7 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
     }
     // With insertions and deletions
     while (1){
+//      cout << "LOOSE while\n";
       //Match
       if (!del_nxt && !ins_nxt 
           && (two_len && one_len >= 1 && known_char((*p2)&15) 
@@ -568,6 +568,7 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
       }
     }
     int n;
+    
 // match_list is list of pointers that points to different new starting positions
     if(found_matches-- > 0){
       for(found_matches; found_matches >= 0; found_matches--){
@@ -615,8 +616,8 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
 */
 void Exact::reset(void) {
   mlen = 0;
-  c_ins = ins;
-  c_del = del;
+  c_ins = del;
+  c_del = ins;
   c_mis = mis;
   c_flex = flex;
 }
@@ -634,7 +635,7 @@ int Exact::get_score() {
 * Returns the minimum length the pattern unit can optain
 */
 int Exact::get_min_len() {
-  return len - ins;
+  return len - del;
 }
 
 /**
@@ -642,7 +643,7 @@ int Exact::get_min_len() {
 * Returns the maximum lenght the pattern unit can optain
 */
 int Exact::get_max_len() {
-  return len + del;
+  return len + ins;
 }
 
 /**
