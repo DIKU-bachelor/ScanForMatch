@@ -4,17 +4,22 @@
 \usepackage[utf8]{inputenc}
 %\usepackage[T1]{fontenc}
 %\usepackage{textcomp}
-\usepackage{xcolor,colortbl}
+\usepackage[xcdraw]{xcolor,colortbl}
 \DeclareUnicodeCharacter{00A0}{~}
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{tablefootnote}
+\usepackage{pbox}
+\usepackage[titletoc,title]{appendix}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{tabu}
 \usepackage{calc}
 \usepackage{array}
 \usepackage[noend]{algpseudocode}
 \usepackage{pifont}
 \usepackage{courier}
+\usepackage{hhline}
 \usepackage{relsize}
 \usepackage{float}
 \usepackage{amssymb}
@@ -47,7 +52,7 @@
 \newcommand{\scm}{\texttt{scan\_for\_matches} }
 \newcommand{\scmp}{\texttt{scan\_for\_matches.} }
 \newcommand{\sfm}{\texttt{scanfm} }
-\newcommand{\sfmp}{\texttt{scanfm.}}
+\newcommand{\sfmp}{\texttt{scanfm.} }
 \newcommand{\pu}{PU }
 \newcommand{\pus}{PU's }
 \newcommand{\pusp}{PU's. }
@@ -85,6 +90,7 @@
 	commentstyle=\color[rgb]{0.133,0.545,0.133},
 	stringstyle=\color[rgb]{0.627,0.126,0.941},
 }
+
 \begin{document}
 \begin{titlepage}
 \begin{center}
@@ -127,28 +133,18 @@ and high speed, but using the same complex way of defining patterns as \scmp
 \subsection{Defining patterns in \scm}
 \scm provides a simple and limited domain-specific language for defining patterns to look for in a text file consisting
 of a specific alphabet, e.g. the four letters (A, T, C and G) representing bases in a DNA sequence. \\ \\
-The language revolve around a basic building block called the pattern (\pu) which can take different forms
+The language revolves around a basic building block called the pattern (PU) which can take different forms
 and be used in combination to define an overall pattern to search for. \\ \\
-Each \pu can either match or not match a sub-sequence of data, but it may be able to match the data in several different ways.
-To declare an overall match, \scm has to be able to match each \pu in the given order with a consecutive sub-sequence in the
-data. It does so by trying to match the \pus one at a time going left to right with a specific starting position in data. 
-The algorithm uses backtracking which means that whenever a \pu (call it p2) is not able to match, the algorithm goes back to the
-previous \pu (call it p1) to try and find a different match for p1. If successful the algorithm continues to p2 again. The
-different way of matching p1 may have resulted in a different starting position for p2, which may enable p2 to 
-actually find a match this time. If there was not way of finding an overall match the algorithm increments the starting
-position for the first \pu and tries again. It continues like this until the end of the data file. \\ \\
-\scm offers some features besides the use of just \pusp These features apply to the \pus and alter their criteria
-for matching.
-The different formats of \pus and some of the extra features are described in the list below.
+The below list describe the different types of \pusp
 \begin{itemize}
 \item a sequence \pu consists of a specific sequence of letters from the alphabet which will
 only match if the compared sub-sequence in data has the exact same letters in the exact same order as the 
-sequence \pu. \\ \\
+sequence PU. \\ \\
 Example of sequence \pu : \texttt{AGGT}
 \item A range \pu consists of 2 positive integers separated by three dots, where the first integer is less than or
 equal to the second. The \pu matches any combination of
 letters from the alphabet that has a length that is equal to one of the integers or any integer in between those integers. \\ \\
-Example of range \pu : \texttt{4...8} which matches any letter combination of length 4,5,6,7 or 8.
+Example of range \pu : \texttt{4...8} which matches any letter combination of length 4, 5, 6, 7, or 8.
 \item A variable can be assigned either a range \pu or a sequence \pu for later reference. The variable is specified by 
 any user defined name
 followed by an equality symbol and then followed by a range \pu or a sequence \pup \\ \\
@@ -159,12 +155,17 @@ letter combination to match with. \\ \\
 Example using variable/reference \pu : \texttt{p1=4...6\; ATG\; p1}, where
 the first \pu is the range \pu with added variable functionality, 
 and the third being the reference \pu that is linked to the first \pup
+\end{itemize}
+\scm offers some features besides the use of just \pusp These features apply to the \pus and alter their criteria
+for matching.
+Some of the extra features are described in the list below.
+\begin{itemize}
 \item Any sequence or reference \pu can be made flexible by allowing a number of specified
 single-letter edits; insertions, deletions and mismatches. \\ \\
 A mismatch allows one letter from the \pu to match one letter in the data even though they're not the same.
 An insertion allows for a temporary insert of one letter in the \pu letter combination that matches one letter in
 the data, thus lengthening the \pup A deletion allows for temporarily ignoring one letter in the \pu letter combination
-and jumping straight the next letter, thus shortening the \pup \\
+and jumping straight the next letter, thus shortening the \pup \\ \\
 An example of each edit is shown in Figure 1. \\ \\
 Example using single-letter edits : \texttt{p1=TGTGTCT[1,0,3]\; ATTCC[1,1,2]\; p1[2,2,2]} 
 where the first sequence \pu is allowed 1 mismatch, 0
@@ -174,7 +175,7 @@ and the reference \pu is allowed 2 of each.
 complement of the letter-sequence saved in the variable. 
 The reverse complement of a letter sequence is a sequence of same length, where it has been reversed and every letter
 is substituted with its complementary counterpart (A swaps with T and vice versa, G swaps with C and vice versa).\\ \\
-Example using the $\sim$ feature : \texttt{p1=3...4\; GG\; $\sim$p1} would match the data sub-sequence:
+Example using the $\sim$ feature: \texttt{p1=3...4\; GG\; $\sim$p1} would match the data sub-sequence:
 "TCACGGGTGA" since "GTGA" is the reverse complement of "TCAC".
 \item Ambiguous letters~\cite{ambi} are letters other than the standard letters of the used alphabet. These letters are used
 in sequence \pus to allow matching with one of multiple of the standard letters in the alphabet.
@@ -192,13 +193,34 @@ allows either of the two sides of the \text{\textbar} to match.
 \item Custom pairing rules can be defined, with which the user can define custom letter pairings of in the given
 alphabet, instead of the standard rules (A pairs with T and C with G). \\
 \end{itemize}
+Each \pu can either match or not match a sub-sequence of data, but it may be able to match the data in several different ways.
+To declare an overall match, \scm has to be able to match each \pu in the given order with a consecutive sub-sequence in the
+data. It does so by trying to match the \pus one at a time going left to right with a specific starting position in data. \\ \\
+The algorithm uses backtracking which means that if we have \pus p1 and p2 in that order, then whenever 
+a p2 is not able to match, the algorithm goes back to the
+previous \pu p1 to try and find a different match for p1. If successful the algorithm continues to p2 again. The
+different way of matching p1 may have resulted in a different starting position for p2, which may enable p2 to 
+actually find a match this time. If there was not way of finding an overall match the algorithm increments the starting
+position for the first \pu and tries again. It continues like this until the end of the data file. \\ \\
 \begin{figure}[H]
-\begin{center}
-\includegraphics[scale=0.6]{Diagrams/midex.png}
-\end{center}
-\caption{\textit{The top character sequences are the patterns and the bottom the data. In the first example the G is simply
-substituted for a T. In the second example the pattern is AGA but matches the sub-sequence AGTA in data by insertion of a
-T. In the third example the pattern AGTA matches the data AGA by deleting the T.}}
+\centering
+\begin{subfigure}[b]{0.2 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/mismatch.png}
+\caption{Mismatch}
+\end{subfigure}
+\hspace{12mm}
+\begin{subfigure}[b]{0.2 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/insertion.png}
+\caption{Insertion}
+\end{subfigure}
+\hspace{12mm}
+\begin{subfigure}[b]{0.2 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/deletion.png}
+\caption{Deletion}
+\end{subfigure}
+\caption{\textit{The top character sequences are the patterns and the bottom the data. In the first example (a) the G is simply
+substituted for a T. In (b) the pattern is AGA but matches the sub-sequence AGTA in data by insertion of a
+T. In (c) the pattern AGTA matches the data AGA by deleting the T.}}
 \end{figure}
 \subsection{Backtracking}
 Finding a match between data and a \pu with allowed edits often requires trying 
@@ -210,19 +232,26 @@ match for a particular \pu with allowed single-character edits. One possible com
 edits used to find a match for one particular \pu may result in a valid match of the whole pattern, 
 where other combinations that makes a particular \pu match, may prevent a whole match from being possible.
 It is therefore necessary for our particular \pu to be able to find more than one way to make a valid match (if these are
-possible). Consider the example in Figure 2 where the pattern is \\ \\
+possible). Consider the example in Figure 2 where the pattern is
 \texttt{CT\; AGCA[2,1,0]\; CG}, i.e. 2 mismatches and
-one deletion allowed for the second PU, and the data is \\ \\
+one deletion allowed for the second PU, and the data is
 "CTAGACGT"
 \begin{figure}[H]
-\begin{center}
-\includegraphics[scale=0.8]{Diagrams/back.png}
-\end{center}
-\caption{\textit{In the leftmost example the} \pu \texttt{AGCA} \textit{chooses to use 2 mismatches to match the 
+\centering
+\begin{subfigure}[b]{0.4 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/realback1.png}
+\caption{Fail}
+\end{subfigure}
+\hspace{12mm}
+\begin{subfigure}[b]{0.448 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/realback2.png}
+\caption{Success}
+\end{subfigure}
+\caption{\textit{In (a) the} \pu \texttt{AGCA} \textit{chooses to use 2 mismatches to match the 
 data sub-sequence} "AGAC" \textit{and then move on the next} \pup \textit{The next} \pu
 \textit{would then have to match it's letters} \texttt{CG} \textit{with the data sub-sequence} "GT"
 \textit{which it can't do without edits. The overall algorithm would have to backtrack the the second
-} \pu \textit{to try another possible match (if any) to see if that would make a difference. The rightmost example
+} \pu \textit{to try another possible match (if any) to see if that would make a difference. (b)
 shows how using a deletion to delete the C in} \texttt{AGCA} \textit{would match data} "AGA" \textit{and
 when moving forward to the next} \pu \texttt{CG} \textit{will match} \texttt{CG}}
 \end{figure}
@@ -266,7 +295,7 @@ Many of the sub-paths in a tree like this may yield the same result on the sub-p
 level in the tree there may be several identical nodes, and the children of these identical nodes will of course be
 identical as well, so when counting towards the number of \emph{different} overall matches, only one of these identical
 branches should be considered. \\ \\
-Let us define the function $children(\pu)$ to take the a \pu as input and return the amount of possible matches with	
+Let us define the function $children(\pu)$ to take a \pu as input and return the amount of possible matches with	
 \textit{different lengths} on any data, that the input \pu can have.
 In case of mismatches insertions and deletions, the number of characters a match can differ is determined by 
 the sum of the insertions (use of these makes the match longer)
@@ -288,13 +317,13 @@ Consider the pattern \texttt{AGGT[0,1,1]\; 4...5\; TTCTAA[0,2,1]} called $p1$: \
 $comb(p1,n)=\mathlarger{\mathlarger{\prod}_{i=1}^{3}\;children(p1[i])}= \\ \\
 children(\texttt{AGGT[0,1,1]})\;\cdot \;children(\texttt{4...5})\;\cdot \;children(\texttt{TTCTAA[0,2,1]})=
 3\cdot 2\cdot 4=24$ \\ \\
-A total of 24 leaves on the tree. \\
+A total of 24 leaves on the tree. \\ \\
 As mentioned this is the maximum amount of checks that would need to be performed in order to determine if there is a 
 possible match at a specific starting position in the data. Even if a tree has a homogeneous 
 height, the probability of checking the correct branch lastly is low.
 The average actual running time of an algorithm that uses these principles would therefore be significantly better, 
-but worst case is: \\ \\
-$comb(p,n)$ given a pattern $p$ and the the number of \pus $n$ in that $p$.
+but worst case is
+$comb(p,n)$ given a pattern $p$ and the number of \pus $n$ in that $p$.
 \subsection{Flow of \scm}
 \scm uses backtracking functionality~\cite{back} on two different levels to find the matches. 
 One is the outer backtracking system that backtracks between \pus, and the other is a backtracking algorithm
@@ -303,16 +332,8 @@ for matching a single \pu if it has been allowed any mismatches, insertions or d
 move forward to the next \pu if the current \pu matched, or backtrack to the previous \pu if there was no match.
 When backtracking to a previous \pu the next possibility (if any) for matching is chosen and the algorithm moves
 forward again. This problem would normally be solved with recursion and/or loops, but \scm uses GOTO statements which has 
-both pros and cons. \\
-\begin{figure}[H]
-\begin{center}
-\includegraphics[scale=0.4]{Diagrams/ScanfmFlow.png}
-\end{center}
-\caption{\textit{Simplistic flow chart of} \scmp \textit{The blue rectangles indicate a process being executed, 
-the purple diamonds indicate decisions being made, the green rounded rectangles indicate start and end of the program
-and the orange parallelogram indicates output.}}
-\end{figure}
-\noindent The use of GOTO statements avoids some of the risks associated with the use of recursion like stack overflow. 
+both pros and cons. \\ \\
+The use of GOTO statements avoids some of the risks associated with the use of recursion like stack overflow. 
 How deep the recursion would go would depend on the size of the pattern, and it would therefore be hard to control and
 unsafe to use with respect to unwanted termination. Analyzing the possible depth of recursion and rejecting a queried search
 if too deep is hardly an option, as it may be necessary to find these large patterns. \\ \\
@@ -332,6 +353,14 @@ starting position in data is incremented accordingly so the search for other mat
 The other backtracking system happens internally in the pattern matching of a single \pu if that \pu has allowed
 mismatches, insertions and deletions. Figuring out a way to utilize the allowed edits to possibly find a match, requires
 trying out a lot of combinations so this part of the program is the most computationally heavy. 
+\begin{figure}[h]
+\begin{center}
+\includegraphics[scale=0.4]{Diagrams/ScanfmFlow.png}
+\end{center}
+\caption{\textit{Simplistic flow chart of} \scmp \textit{The blue rectangles indicate a process being executed, 
+the purple diamonds indicate decisions being made, the green rounded rectangles indicate start and end of the program
+and the orange parallelogram indicates output.}}
+\end{figure}
 \subsubsection{Multi-level backtracking}
 Sequence or reference \pus that has allowed mismatches, insertions or deletions are handled in a very specific way by \scmp
 Starting from left going right in the \pu
@@ -347,7 +376,7 @@ Dominance relation can be applied in many combinatorial problems, and allows for
 space of a problem to be dismissed as it can never be an optimal solution due to a "dominant" other part of the solution space. 
 A good example is the classic knapsack problem~\cite{knap}; 
 Given a set of items that each has a weight and value assigned to them,
-and then a bag that can contain items up to a certain weight limit, determine how many of the different items to
+and a bag that can contain items up to a certain weight limit, determine how many of the different items to
 include in order to maximize the total value but keeping the weight under the limit. If one of the items $I_1$ weighs
 X and is worth Y, but a combination of other items (say $I_2$ and $I_3$) weighs less than X and is worth more than Y, 
 then item $I_1$ can never be part of an optimal solution to this problem, since in any solution that contains $I_1$, 
@@ -364,10 +393,17 @@ Figure 5 shows an example of a match between pattern and data that uses edits wh
 and how one can transform this into a match that uses its first edit at the first mismatching characters.
 The pattern is \texttt{ATTTTG[0,2,0]} and the data is "ATTG".
 \begin{figure}[H]
-\begin{center}
-\includegraphics[scale=0.6]{Diagrams/shunt.png}
-\end{center}
-\caption{\textit{The leftmost example uses its two deletions where it was not necessary, and the rightmost example shows
+\centering
+\begin{subfigure}[b]{0.30 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/shunt1.png}
+\caption{Before}
+\end{subfigure}
+\hspace{12mm}
+\begin{subfigure}[b]{0.3 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/shunt2.png}
+\caption{After}
+\end{subfigure}
+\caption{\textit{(a) uses its two deletions where it was not necessary, and (b) shows
 the same match where the use of the deletions have been postponed as much as possible before being used.}}
 \end{figure}
 \noindent Using dominance relation \scm always finds a match for a \pu if it exists, but when used in combination
@@ -394,6 +430,9 @@ inexhaustive way \scm glues the outer and inner backtracking together.
     \EndFor
   \EndProcedure \\
   \Procedure{matchPUs}{list$<$PU$>$ PUs, string data, int i}
+  	\If{PUs is empty}
+  	  \State \Return true
+  	\EndIf
     \For{j = head(PUs).min\_range to head(PUs).max\_range}
       \If{\Call{findmatch}{head(PUs), data, i}}
         \If{\Call{matchPUs}{tail(PUs), data, i + j}}
@@ -433,11 +472,18 @@ in the data (which could have been done using the deletion instead of the mismat
 the overall match will not be found by \scm even though it was supposed to. And example of exactly this is shown in
 Figure 8, where the pattern is \texttt{AGGT[1,1,0] TCA} and the data is "AGTTCAG".
 \begin{figure}
-\begin{center}
-\includegraphics[scale=0.8]{Diagrams/fail2.png}
-\end{center}
-\caption{\textit{The example on the left shows the way} \scm \textit{would always try to match given the pattern and the data.
-The rightmost example shows how to match the first \pu in order to make the whole pattern match.}}
+\centering
+\begin{subfigure}[b]{0.4 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/fail21.png}
+\caption{Fail}
+\end{subfigure}
+\hspace{12mm}
+\begin{subfigure}[b]{0.455 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/fail22.png}
+\caption{Fail}
+\end{subfigure}
+\caption{\textit{(a) shows the way} \scm \textit{would always try to match given the pattern and the data.
+(b) shows how to match the first \pu in order to make the whole pattern match.}}
 \end{figure}
 \subsection{Design}
 Our re-implementation of \scm called \sfm is developed in C++ rather than C, which was used to develop 
@@ -521,6 +567,9 @@ guaranteed to find an overall match if one exists!
     \EndFor
   \EndProcedure \\
   \Procedure{matchPUs}{list$<$PU$>$ PUs, string data, int i}
+  	\If{PUs is empty}
+  	  \State \Return true
+  	\EndIf
     \State list$<$int$>$ endpoints = \Call{match}{head(PUs), data, i}
     \For{ep in endpoints}
       \If{\Call{matchPUs}{tail(PUs), data, ep}}
@@ -544,7 +593,8 @@ guaranteed to find an overall match if one exists!
 \end{figure}
 \noindent Although the pseudocode indicates that \textsc{\small matchPUs} is called for every single starting position
 in data, this is not entirely true. If a match is found, the starting position is incremented with the length of 
-the match found before continuing the search, effectively ignoring overlapping matches, so the guarantee of the correctness of \sfm can be summed up like 
+the match found before continuing the search, effectively ignoring overlapping matches, 
+so the guarantee of the correctness of \sfm can be summed up like 
 this: \\ \\
 \sfm is guaranteed to find every possible non-overlapping match in given data searching for a given pattern.
 \subsubsection{Optimizing character comparison using bitwise operations}
@@ -554,12 +604,12 @@ means everything for the performance of the program. Figure 8 shows how \scm tra
 a custom 4-bit code. These 4 bits are used to represent each of the four letters (A,T,C and G) by having a 1 in one of
 the slots and 0 in the other three. The letter G for example is represented as 0100. All possible permutations of 
 combining these letters are also represented by a permutation of the bit field, e.g.\ the letter V is written in a \pu 
-represents either A,C or G and therefore has the bit field 0111 since A is 0001 and C is 0010. \\
+represents either A,C or G and therefore has the bit field 0111 since A is 0001 and C is 0010. \\ \\
 Prior to searching, the data input is of course also transformed to 4-bit representations.
 When comparing two characters \scm uses the bitwise AND operator and if the result is not 0000 the characters matches. \\ \\
 \scm actually stores 4 more bits (left of our 4-bit field) The complementary letter of the letter represented in the rightmost
-bit field is stored in the leftmost bit field, e.g. G would look like 0010 0100 although only on of the 4-bit fields would
-be used in a comparison. This leftmost bit field is used when comparing a complementary reference \pu instead
+bit field is stored in the leftmost bit field, e.g. G would look like 0010 0100 although only the 4-bit field on the right 
+would be used in a comparison. This leftmost bit field is used when comparing a complementary reference \pu instead
 of transforming back and forth between the letters every time a complementary \pu is encountered. \\ \\
 We are using this exact technique in \sfm to achieve the same optimal way of comparing characters.
 \begin{figure}[H]
@@ -610,7 +660,7 @@ represented in the rightmost 4 bits.}}
 \subsubsection{Why not Levenshtein distance?}
 The Levenshtein distance between two strings is defined as \textit{the minimum amount of single-character edits required
 to change on string into the other.}~\cite{leve} \\ \\
-Calculating the Levenshtein distance can be done quite efficiently, at least faster than our implementation calculates
+Calculating the Levenshtein distance can be done faster than our implementation calculates
 every possible match given the specific three amounts of single-character edits. One could think that a faster 
 implementation would be just summing
 the number of allowed mismatches, insertions and deletions, calculating the Levenshtein distance between data sub-sequence
@@ -619,28 +669,25 @@ calculating the Levenshtein distance does not include requirements for the distr
 single-character edits, it just finds the minimum \textit{sum} of them. \\ \\
 If the task at hand is to determine whether two strings are within a maximum allowed Levenshtein distance of each other,
 then simply calculating the Levenshtein distance would be enough. 
-If however the task is to determine whether one string can be changed into another string with a maximum amount of $X$  mismatches, $Y$ insertions and $Z$ deletions one can \textit{not} simply calculate the Levenshtein distance of the two
-strings and compare the number to the sum of the different edits ($X+Y+Z$) since the Levenshtein distance may not live
+If however the task is to determine whether one string can be changed into another string with a maximum amount of m 
+mismatches, i insertions and d deletions one can \textit{not} simply calculate the Levenshtein distance of the two
+strings and compare the number to the sum of the different edits (m + i + d) since the Levenshtein distance may not live
 up to the additional requirements of a maximum of either of the different edits. An example of this is shown in Figure 9. \\
 \begin{figure}[H]
-\begin{center}
-\includegraphics[scale=0.8]{Diagrams/leven.png}
-\end{center}
+\centering
+\begin{subfigure}[b]{0.4 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/leven1.png}
+\caption{del + ins}
+\end{subfigure}
+\hspace{12mm}
+\begin{subfigure}[b]{0.4 \textwidth}
+\includegraphics[width=\textwidth]{Diagrams/leven2.png}
+\caption{del + ins}
+\end{subfigure}
 \caption{\textit{The Levenshtein distance between the pattern ACTGCA and the data ATGTCA is 2 
-(1 deletion, 1 insertion) as the leftmost example shows. If the pattern is allowed 1 deletion and 1 mismatch, then
-the two strings can not match, as the rightmost examples show, even though this also would be a sum of 2 edits.}}
+(1 deletion, 1 insertion) as (a) shows. If the pattern is allowed 1 deletion and 1 mismatch, then
+the two strings can not match, as (b) shows, even though this also would be a sum of 2 edits.}}
 \end{figure}
-
-\subsubsection{Knuth Morris Pratt algorithm}
-The algorithm Knuth, Morris and Pratt invented to find substrings in strings in O(m+n) time where m is the substring and n is the string it is looked for in. Where the normal backtracking algorithms gives a worst case time of O(n*m). This can be a huge improvement in cases where there are few different letters and a lot of repetitions, such as most DNA sequences.
-
-The algorithm uses a pre computed sequence, based on the subsequence looked for to determine how far ahead in the string the algorithm can jump when there are close matches.
-
-This could help finding exact matches even quicker in the data, but the real question is whether it could be used to calculate mismatches, insertions and deletions faster, since that is the place in the code the largest improvement is needed.
-
-The Knuth Morris Pratt algorithm has already been formed to calculate a fuzzy match where mismatches are allowed, but a open soudo code is not out there using it for calculating a Levenshtein distance. Calculating the Levenstein distance with this algorithm could potentially give a large improvement in running time.
- 
-
 \subsubsection{Optimizing order of \pu matching}
 A possible optimization that \scm does \textit{not} exploit, is choosing an order of \pus to be searched for.
 Some \pus are more exclusive and rare to find in data than others. Generally the sequence \pu with the most
@@ -658,9 +705,12 @@ Searching for the
 second} \pu \textit{first needs three checks (with three additional check afterwards to verify the whole pattern)
 while choosing to look for the first} \pu \textit{needs 8 checks (with 8 following checks to verify whole pattern).}}
 \end{figure}
-\noindent This optimization is introduced in \sfm by calculating a score for each \pu after parsing and before
-the search begins. The \pu that received the highest score is called the \emph{optimal} \pu and is 
-the \pu that is searched for first. The maximum
+\noindent This optimization is introduced in \sfm by calculating a score for each sequence \pu after parsing and before
+the search begins. 
+The \pu that received the highest score is called the \emph{optimal} \pu and is 
+the \pu that is searched for first. In the rest of this section and in choosing an optimal PU, only sequence \pus
+are considered. \\ \\
+The maximum
 distance between the starting position of an overall match and the beginning of the chosen \pu is also calculated, i.e.
 the maximum length of each \pu from the start of the overall pattern up to the chosen \pu is summed. The minimum
 distance is calculated as well. \\ \\
@@ -706,327 +756,431 @@ over \\
 \texttt{GCTAGTCGGCGTCAGTCGTGATAT[2,0,0]}. The former \pu may be faster to search for, but it would match so many
 places in data that the number of times the traditional search would be invoked would result in a much bigger
 slowdown than the extra time it takes to search for the latter \pup
-\subsection{Clean code}
-Writing clean code is meant as writing understandable code, that provides overview of the programs
-structure. This is necessary when dealing with code that needs to be updated, further developed,
-checked for correctness, and debugged. \\ \\
-Clean code has been valued when creating \sfm, by dividing responsibilities into classes, and splitting 
-those classes into suitable methods. This being said in cases where dividing into different methods 
-started to cost running time, the fastest solution has been chosen. This has lead to a larger number of if statements where it can be more difficult to understand the larger picture of certain pieces algorithms. \\ \\
-The structure of the \pus has been constructed in a way that it should be possible without to much understanding of the other individual \pus code to create a new \pu. This is so further updating and
-development should be as easy as possible. \\ \\
-Correctness can be a very strong ally when creating code that needs to be used scientifically, but also
-just in cases where correct outputs are important. Splitting the responsibilities into smaller classes 
-can make it easier to find faults in the code. It can also be used to create unit tests for each method in
-the class. \\ \\
-Unit tests in \sfm would further help provide a certainty of correctness to the program, but because
-of the complexity of outputs and inputs in \sfm creating unit tests would be very time consuming and
-has not been done currently. 
+\subsubsection{Knuth Morris Pratt algorithm}
+Donald Knuth, James H. Morris and Vaughan Pratt invented an algorithm to find substrings in strings in $O(m+n)$
+time where m is the length of the substring and n is the length of the string searched in. 
+Where the normal backtracking algorithms gives a worst case time of $O(mn)$. This can be a huge improvement in cases where there are few different letters and a lot of repetitions, such as most DNA sequences. \\ \\
+The algorithm uses a pre computed sequence, based on the subsequence looked for to determine how far ahead in the string the algorithm can jump when there are close matches. \\ \\
+This could help finding exact matches even quicker in the data, but the real question is whether it could be used to calculate mismatches, insertions and deletions faster, since that is the place in the code the largest improvement is needed. \\ \\
+The Knuth Morris Pratt algorithm has already been formed to calculate a fuzzy match where mismatches are allowed, but a open soudo code is not out there using it for calculating a Levenshtein distance. Calculating the Levenstein distance with this algorithm could potentially give a large improvement in running time.
+\subsection{Cleaner code and version control}
+Developing \sfm to be a "cleaner" program with "prettier" code than \scm was one of the goals.
+This would provide an overview of the program's
+structure which is necessary if it needs to be updated, further developed,
+checked for correctness, and debugged in the future. \\ \\
+\sfm was created by dividing the required functionality into classes with suitable methods to try and keep the flow
+properly structured. The only thing that was not allowed to be compromised was the running time, 
+so the fast solution was many times chosen over the pretty one. \\ \\
+The conceptual algorithm of \sfm as shown in Figure 10 has already been discussed and concluded to be correct, 
+but the actual code contains far more variables, flags and special cases, which opens up possibilities for errors.
+The following section investigates the correctness of \sfm by performing a thorough set of tests to try
+and make the correctness of \sfm probable. The analytical and the empirical approach combined renders the correctness
+of \sfm very likely. \\ \\
+Unit testing \sfm would further support the certainty of correctness of the program, but because
+of the complexity of outputs and inputs within function calls in \texttt{scanfm}, 
+creating unit tests would be very time consuming and has not been done. \\ \\
+Having version control of \sfm ensures that users can always be updated with the newest version of \sfmp
+It makes bug fixes and extensions for the program possible with an good overview of which version contains what.
+The latest version of \sfm is available at \url{https://github.com/DIKU-bachelor/ScanForMatch}
 \section{Correctness Test}
-In order to show that each \pu works and returns the correct and expected results, they need to be tested individually and in specific combinations. This is done with the use of equivalence classes, this means proving that the edge scenarios of each 
-\pu and average scenarios returns the expected result, and by doing so providing a by statistically solid foundation that 
-the \pu is correct.
-In order to create the largest number of tested features with the least needed tests, the correctness groups has been constructed to create the largest equivalence classes possible. 
-
+\sfm was tested for correctness by testing each individual \pu separately and combination with each other.
+Since the number of possible combinations of \pus and number of variations of the \pus themselves are infinite,
+equivalence classes were defined to generalize expected behavior so correctness testing was feasible. \\ \\
+Test cases were grouped by type of \pu tested (the last group contains combinations of PU's). The
+groups and the results are shown in Table 1. \\ \\
+Each group contains several equivalence classes. The first two groups has "empty sequence" as an "edge case" 
+equivalence class. Whether an empty letter sequence matches nowhere or everywhere is a question of definition,
+and "nowhere" was chosen for the test, i.e. the expected result for empty sequence \pus is "no matches".
+Another case for the first two groups is sequences of 1 length, and lastly the equivalence class "lengths above 1" covers
+every other sequence, so only one example of this is needed to state approximate correctness. \\ \\
+The third group covers single sequence \pus with allowed edits. The set of equivalence classes were here made to
+contain none of the three sorts of edits, 1 mismatch only, 1 insertion only, 1 deletion only, 1 mismatch and 1 insertion
+and so forth. Same procedure as mentioned but with a higher amount of instances of the edits, made out even
+more unique equivalence classes. \\ \\
+A single range \pu has only equivalence classes \texttt{0...0}, \texttt{0...1}, \texttt{1...1} and \texttt{min...max}
+where min$\leq$ max. \\ \\
+For range/reference patterns equivalence classes follow same idea as before with the notable extension that
+\sfm may react differently when a reference comes directly after the referenced PU, so different equivalence classes
+were made covering both formats: \\\texttt{p1=min...max p1} and \texttt{p1=min...max <some PU's> p1}.
+The same equivalence classes were made for complementary reference PU's, and for each of these equivalence classes
+where the reference \pu is allowed edits.
 \begin{table}[H]
-\begin{tabular}{p{2cm}|p{3cm}|p{5cm}|p{4.5cm}}
-Feature grouping & Example & Explained & Result  \\ \hline
-
-Simple sequence		& "ACCG"  & A sequence of bases only consisting of basic bases & Empty sequence returns unexpected results\\ \hline
-
-MID sequence 		& "GGGT[2,1,1]" & A sequence og bases with the possibility of mismatches, insertions, and deletions & Pass \\ \hline
-
-Ambiguous base sequence	& "MMNN" & A sequence consisting of only ambiguous bases & Ambiguous base "U" does not function\\ \hline
-
-Ambiguous and basic bases & "MSGGTM" & A sequence consisting of both ambiguous and basic bases & Ambiguous base " does not function\\ \hline
-
-Range & "4...8" & A range of jumps in the data & Range with 0 does not terminate\\ \hline
-
-Simple reference & "p1=3...5 p1" & A reference being made and then searched for  & Ranges with 0 results in wrong found matches\\ \hline
-
-Compleme- ntary reference & "p1=4...7 \textapprox p1" & A reference being made and then the complementary is searched for & Ranges with 0 results in wrong found matches \\ \hline
-
-MID reference & "p1=5...6 p1[2,1,3]" & A reference being made and then searched for with the possibility for mismatches, insertions and deletions & Ranges with 0 results in wrong found matches\\ \hline
-
-MID complementary reference & "p1=3...8 \textapprox p1[1,2,1]" & A reference being made and then the complementary is searched for with the possibility of mismatches, insertions and deletions & Ranges with 0 results in wrong found matches\\ \hline
-
-Multiple \pus & "ACCGMG[1,1,1] 2...8 ACC" & Multiple \pus in a single pattern & Multiple errors described below
-
+\begin{tabular}{p{4cm}|p{3cm}|p{1.5cm}|p{7cm}}
+\textbf{Group} & \textbf{Example} & \textbf{Passed/
+Total} & \textbf{Comment} \\ \hline
+Simple sequence PU's without edits & "ACCG" & 3/3 & Empty string should yield no matches \\ \hline
+Ambiguous letter sequence PU's & "MYNN" & 5/5 & \\ \hline
+Sequence PU's with edits & "GGGT[2,1,1]" & 17/18 & Single sequence with equal or more deletions than length has
+possible length 0 and no matches should be found.\\ \hline
+Range PU's & 1...4 & 2/4 & Range PU's "0...0" and "0...1" causing errors. Ranges with 0 as minimum length
+prevents termination if no other PU's in pattern. \\ \hline
+Simple patterns with reference PU & "p1=2...3 2...2 p1" & 8/16 & Ranges with 0 as minimum length assigned a 
+variable causes error when referenced. The reference PU seems to require a match length of 1 even though it should 
+accept 0. Undefined behavior for overall matches with possible length 0 such as "p1=0...0 p1". \\ \hline
+Reference PU's with edits & "p1=2...3 2...2 \textapprox p1" & 8/12 & 
+Undefined behavior for overall matches with possible length 0 such as "p1=0...0 \textapprox p1". \\ \hline
+Combining different PU's in overall pattern & "AGT[1,1,0] p1=2...3 TT \textapprox p1" & 8/9 &
+The error was in a pattern with reference to range PU with minimum length 0.
 \end{tabular}
+\caption{Groups of test shown along with examples number passed tests out of total number of tests and 
+comments describing observed errors.}
 \end{table}
-\subsection{Found errors}
-When performing the correctness tests certain errors emerged. None of the found errors where alone
-enough to argue that the program is not correct, but if future development ever occurs they would
-need attention.
-In order to explain what these errors does in a search and how they could be fixed, they are put into
-categories:
+\noindent Due to an infinite amount of combinations of PU's, a select few combinations were included in the last group.
+Cases that might behave differently because they "stick out" or test certain parts of the functionality in different ways.
+Some of the cases include:
+\begin{itemize}
+\item Test no. 3 in group 7 tests the outer backtracking system, since mismatches are tried before deletions. If the
+outer backtracking system does not work properly, the test should not produce a match.
+\item Test no. 4 in group 7 uses several different variables and references to test whether \sfm keeps proper
+track on the different variables.
+\item Test no. 9 in group 7 tests that having too many deletions in a \pu does not somehow "delete into" other \pus
+resulting in false matches.
+\end{itemize}
+\subsection{Errors}
+Several errors emerged during the correctness test, many of which share cause and has therefore been put into
+categories and are dealt with in the following sections.
+\subsubsection{Overall pattern with possible length 0}
+When the overall pattern has a possible length of 0, it is a question of definition whether it should match nowhere or
+everywhere. Since the latter results in an infinite amount of matches, the former was chosen.
+Several of the tests failed at this, i.e. \sfm reported matches where it should not have reported any, e.g.
+patterns like \texttt{p1=0...4} \textapprox \texttt{p1} or \texttt{GGCTA[0,5,0]}.
+This is not a very serious error since it is not meaningful to search for a pattern with a possible length of 0 anyway,
+which makes it a matter of returning an error message to the user or not. \sfm should be fixed to report an error
+message of the pattern has a possible length of 0.
+\subsubsection{Reference to range \pu with minimum length 0}
+The rest of the errors can be explained with a problem with reference \pus that reference a range \pu with minimum
+length 0. It seems as if the reference \pu require to match at least 1 character, and in cases where it should have 
+length 0 and match, it "claims" a character from the data anyway. As an example the \pu \texttt{p1=0...1 2...2 p1} and
+data "TAA" should match the sub-sequence "TA" (the range and reference has length 0 and the \texttt{2...2} \pu
+matches "TA) but \sfm matches with "TAA". \\ \\
+It \emph{is} meaningful to define patterns of this sort, so the problem is more severe. \sfm should be fixed to
+be able to match a reference \pu with length 0, i.e. the reference \pu match is of length 0 and claims none of the
+data characters before continuing to subsequent \pusp
+\section{Benchmarking}
+\sfm already contains a big improvement over \scm in that \sfm finds every possible non-overlapping match, i.e.
+every possible match between the provided pattern and data is returned by \sfm unless the match overlaps a previous match.
+\scm is \emph{not} guaranteed to do so when certain edits (insertions and deletion) are allowed in a pattern, but is \sfm
+also faster than \texttt{scan\_for\_matches}?
+This section will investigate running time of both programs and compare results to find if and when \sfm is faster
+than \scmp \\ \\
+In order for \sfm to be correct, each time \sfm attempts to match a \pu with allowed edits, every possible way of 
+matching must be found. \scm stops when the first way of matching is found, and much computation is therefore skipped 
+(and correctness sacrificed). \sfm is therefore expected to run slower with patterns where many edits are allowed, simply
+because \sfm is exhaustive and \scm is not. However, if the allowed edits are distributed on the \pus in such a way
+that there is at least one sequence \pu that has few or no edits allowed and is reasonably long (over 5 letters say),
+then \sfm is expected to run much faster than it otherwise would because of the pattern unit order optimization 
+implemented in \sfmp \\ \\
+The human chromosome 10 fasta file (chr10.fa - 106 MB) and human chromosome 21 fasta file (chr21.fa - 25 MB) 
+were used as data in a series
+of searches with different patterns covering all types of \pus and modifiers. The series were run on both files,
+and all results are shown in Appendix B.
+\subsection{Results}
+Table 2 shows the running time of both programs on different patterns run in chr10.fa. \\ \\
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=1.05]{Diagrams/barplot.png}
+\end{center}
+\caption{\textit{Barplot showing the running time in seconds of} \scm \textit{and} \sfm \textit{in pairs 
+for the 8 first} \pus \textit{having no edits allowed.}}
+\end{figure}
+\begin{table}[H]
+\begin{tabular}{c|l|l|c|c}
+\textbf{Test no.} &\textbf{Pattern} & \textbf{Data} & \textbf{\scm} & \textbf{\sfm} \\
+1&\pbox{14cm}{\vspace{2mm}ATTCTCGAGTT\vspace{2mm}} & chr10.fa & 2.429 & 1.672 \\ \hline
+2&\pbox{14cm}{\vspace{2mm}TGCTATGA 3...19 ATATTA \vspace{2mm}} & chr10.fa &2.424 & 1.649 \\ \hline
+3&\pbox{14cm}{\vspace{2mm} GCT 2...40 ACC 4...28 G 2...73 CAC \\ 8...17 TGA 3...3 T \vspace{2mm}} & 
+chr10.fa & 8.121 & 3.619 \\ \hline
+4&\pbox{10cm}{\vspace{2mm}ATTTA 6...140 ATA 4...198 GA \\5...223 CG 2...4 TTTTT 1...3 AA \vspace{2mm}}& 
+chr10.fa & 38.096 & 9.979 \\ \hline
+5&\pbox{10cm}{\vspace{2mm} ATTG p1=4...14 5...76 p1 GG \textapprox p1\vspace{2mm}} & chr10.fa & 12.171 & 3.648 \\\hline
+6&\pbox{10cm}{\vspace{2mm} p1=4...8 ATG p1 p2=8...15 \textapprox p2 p1\vspace{2mm}} & chr10.fa & 10.769 & 2.507 \\ \hline
+7&\pbox{10cm}{\vspace{2mm} p1=14...15 3...9 \textapprox p1\vspace{2mm}} & chr10.fa & 42.078 & 21.201 \\ \hline
+8&\pbox{10cm}{\vspace{2mm} p1=8...14 5...10 \textapprox p1 7...13 p1\vspace{2mm}} & chr10.fa & 116.930 & 53.443 \\ \hline
+9&\pbox{10cm}{\vspace{2mm} p1=10...12 p2=3...19 4...8 p2 \textapprox p2 p1 \vspace{2mm}} & chr10.fa & 978.715 & 277.733 \\ \hline
+10&\pbox{10cm}{\vspace{2mm} AGGTAGCTATTAGCTT[2,8,6] 4...8 \\ ATAGGAGTGT \vspace{2mm}} & 
+chr10.fa & 2097.732 & 29,737 \\ \hline
+11&\pbox{10cm}{\vspace{2mm} AGGTAGCTATTAGCTT[2,7,5] 4...8 \\ ATAGGAGTGT[1,0,0] \vspace{2mm}} & 
+chr10.fa & 2137.164 & 35.306 \\ \hline
+12&\pbox{10cm}{\vspace{2mm} AGGTAGCTATTAGCTT[2,5,4] 4...8 \\ ATAGGAGTGT[1,1,2] \vspace{2mm}} & 
+chr10.fa & 1767.285 & 299.062 \\ \hline
+13&\pbox{10cm}{\vspace{2mm} AGGTAGCTATTAGCTT[1,4,4] 4...8 \\ ATAGGAGTGT[1,2,2] \vspace{2mm}} & 
+chr10.fa & 717.334 & 975.805 \\ \hline
+14&\pbox{10cm}{\vspace{2mm} AGGTAGCTATTAGCTT[1,3,3] 4...8 \\ ATAGGAGTGT[3,3,2] \vspace{2mm}} & 
+chr10.fa & 234.421 & 277.332 \\ \hline
+15&\pbox{10cm}{\vspace{2mm} AGGTAGCTATTAGCTT[1,2,2] 4...8 \\ ATAGGAGTGT[3,4,3] \vspace{2mm}} & 
+chr10.fa & 64.674 & 89.320 \\ \hline
+16&\pbox{10cm}{\vspace{2mm} AGGTAGCTATTAGCTT[1,1,0] 4...8 \\ ATAGGAGTGT[3,6,4] \vspace{2mm}} & 
+chr10.fa & 9.127 & 27.410 \\ \hline
+17&\pbox{10cm}{\vspace{2mm} p1=13...19 AGTTGAGTG p1[2,3,1] \vspace{2mm}} & 
+chr10.fa & 15.737 & 1.937 \\ \hline
+18&\pbox{10cm}{\vspace{2mm} p1=19...24 5...7 CCTC \textapprox p1[2,4,4] \vspace{2mm}} & 
+chr10.fa & 107.788 & 80.474 \\ \hline
+19&\pbox{10cm}{\vspace{2mm} ATGCTAGC[1,1,0] p1=2...4 p1 \\ ATGG p2=4...7 \textapprox p1[0,1,1] \textapprox p2[1,0,0]
+\vspace{2mm}} & chr10.fa & 9.186 & 27.852 \\ \hline
+\end{tabular}
+\caption{\textit{Benchmarking table that shows pattern searched for, file searched in and running time of} \scm 
+\textit{and} \sfm \textit{in seconds.}}
+\end{table}
+\noindent \sfm was faster than \scm on every pattern not allowing edits in any \pusp 
+Using only sequence PU's, range PU's, reference
+PU's and the complementary modifier on reference \pus \sfm seems to be significantly faster than \scmp
+Figure 15 shows a barplot of the running time of \sfm and \scm on the first 8 patterns of the type described above. \\ \\
+Patterns 10-16 in Table 2 are designed to expose the importance of the distribution of edits over the \pusp
+Pattern 10 has a lot of edits in the first \pu and just one in the last \pup Going through the patterns from 10 to 16 
+the only thing that changes is that the number of edits allowed in the first \pu becomes smaller and smaller, and the
+number of edits allowed in the last \pu becomes larger and larger. As stated earlier the expected running time
+of \sfm is much better if there is just one \pu (no matter where in the pattern) that has very few edits allowed, whereas
+the running time of \scm is completely dependent on the order of the \pusp On the other hand \scm runs much faster 
+through a \pu with allowed edits than \sfm does, so running times of pattern 10-16 should shift from \sfm being faster
+at first to \scm being fastest with the later patterns. \\ \\
+This is exactly the tendency that the data shows. In the first 3 patterns (pattern no. 10, 11, and 12) the running time
+of \sfm is much lower, and from 13-16 \scm beats \sfmp However, the improvement in running time for \sfm due to
+the \pu order optimization seems to be far more potent than the fact that \scm goes through \pus with edits faster than
+\sfmp The amount of seconds \scm is faster than \sfm in the patterns 13-16 is much less than the amount of seconds
+\sfm is faster than \scm in patterns 10-12. Figure 16 shows the running time for \scm and \sfm on patterns 10-16
+and the difference is huge when the order of matching is unfavorable for \scm while not so big when the \pu order
+optimization is obsolete (because the optimal pattern chosen is the first anyway). \\ \\
+In cases where the optimal \pu chosen is the first \pu in the pattern, the \pu order optimization is obsolete.
+Assuming we have $n$ sequence \pus in a pattern $p$ where one of the $n$ \pus is optimal and assuming that
+which of the $n$ \pus is the optimal one follows a uniform distribution, the probability
+of the first \pu being optimal becomes less when the number $n$ grows. Patterns 10-16 are fairly small (only 3 PU's)
+and only the first and last \pus are sequence PU's, so the probability of the \pu order optimization being obsolete
+is 50\% if edits are randomly distributed on the two PU's, 
+since either the first of the last \pu is optimal. As the pattern grows bigger (with more sequence PU's) the
+probability of the \pu order optimization being obsolete becomes less and less, and so larger pattern
+makes \scm run slower than optimal with a higher probability while \sfm always runs as fast as optimal no matter the size
+of $n$. \\ \\
+The importance of the optimal order of matching becomes bigger the more variance there is in the number of edits in the
+\pusp If every \pu in a pattern has approximately the same amount of edits then there is no optimal \pu or the optimal
+is not much better than the second best, and the optimization plays almost no role. If the there are large fluctuations
+in the number of edits between the \pus then the optimization may play a huge role as pattern 10 in Table 2 shows. \\ \\
 
-\subsubsection{Empty sequences}
-If a empty sequence occurs in a pattern, the parser should return a error, this does not happen.
-This should be changed in the parser, if 2 spaces occurs without anything in between a error message
-should be written explaining empty sequences are not allowed.
-
-\subsubsection{Ranges from 0 to 0}
-Ranges that does not move the pattern will alone cause a never ending loop. This is not a 
-pattern that can be used to find a meaningful match and should not be allowed by the scanfm.
-A potent solution would then be to return a error.
-
-\subsubsection{Ranges from 0}
-Range from 0 without a \pu after results in a never ending loop. This should not be the case, if a the last
-\pu of a pattern is a range from 0, a parse error should occur, since it does not give a meaningful solution
-since everything reaching that \pu is true. Another way of handling the error could be to always return successful in the event it reaches the range from 0.
-
-\subsubsection{References with ranges from 0}
-In the event a reference contains a range from 0, scanfm returns wrong results, this can not be fixed
-by placing a error because it is a valid pattern given by the user. In order to fix this the reference
-\pu needs to be able to handle ranges that are 0.
-
-
-
-\section{Benchmark comparison}
-
+\begin{figure}[H]
+\begin{center}
+\includegraphics[scale=1.0]{Diagrams/optigraf.png}
+\end{center}
+\caption{\textit{Graph showing running time in seconds of} \scm \textit{and} \sfm \textit{for each pattern 10-16.}}
+\end{figure}
 \newpage
 \printbibliography \newpage
-\section{Appendics}
-
-\subsection{Correctnes test results}
-
-
-
-\subsubsection{Sequence}
-To create exhaustive equivalence classes for the \pu sequence, there are multiple scenarios needed to be proven.
-A sequence can be exact by having no mismatches, insertions or deletions, it can be loose fitting by having 
-mismatches, insertions and deletions or it can be combined with ambiguous bases.
-The equivalence class for the exact sequence, needs a test at 0, the smallest possible length and one with multiple bases:
+\begin{appendices}
+\section{Correctnes test results}
+\subsection{Group 1: Sequence}
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
+\rowcolor{lightgreen} 
+Empty string		& " " & ACGTNNN & No matches & No matches \\ \hline
+\rowcolor{lightgreen}
+Single letter 		& "A" & ANNN & Match at 1 "A" & Match at 1 "A"\\ \hline
+\rowcolor{lightgreen}
+Multiple letters	& "ACCGT" & ACCGTNNN & Match at 1 "ACCGT" & Match at 1 "ACCGT" \\ \hline
+\end{tabular}
+\end{table}
+\subsection{Group 2: Ambiguous}
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+\rowcolor{lightgreen}
+Single ambiguous letter & "R"(R is A or G) & ATTGNNN & Match at 1 "A" and 4 "G" & Match at 1 "A" and 4 "G" \\ \hline
+\rowcolor{lightgreen}
+Ambiguous letters	& "RRGGWW" & AAGGTANN N & Match at 1 "AAGGTA" & Match at 1 "AAGGTA" \\ \hline
+\rowcolor{lightgreen}
+All ambiguous letters & "MMRRWWS SYYKKBBB DDDHHHVV VNNNN" & ACAGATC GCTGTCGT AGTACTAC GACTGNNN & Match at 1 & 
+Match at 1 \\ \hline
+\rowcolor{lightgreen}
+Mixing ambiguous and non-ambiguous (smallest)& "AM" & ACAA & Match at 1 "AC" and 3 "AA" & Match at 1 "AC" and 3 "AA" \\ \hline
+\rowcolor{lightgreen}
+Mixing ambiguous and non-ambiguous (large)& "TTATMTNYY" & TTATATGTC & Match at 1 "TTATATGTC" & Match at 1 "TTATATGTC"
+\end{tabular}
+\end{table}
+\subsection{Group 3: Sequence with edits}
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
+Case 			& Pattern & Data & Expected Result & Result \\ \hline
+\rowcolor{lightgreen}
+No edits			& "ACGT[0,0,0]" & ACGTNNN & Match at 1 "ACGT" & Match at 1 "ACGT" \\ \hline
+\rowcolor{lightgreen}
+1 mismatch		& "ACC[1,0,0]" & ACGNNN & Match at 1 "ACG" & Match at 1 "ACG" \\ \hline
+\rowcolor{lightgreen}
+1 deletion		& "ATG[0,1,0]" & AGNNN & Match at 1 "AG" & Match at 1 "AG" \\ \hline
+\rowcolor{lightgreen}
+1 insertion		& "ACC[0,0,1]" & ATCCNNN & Match at 1 "ATCC" & Match at 1 "ATCC"\\ \hline
+\rowcolor{lightgreen}
+1 mismatch, 1 deletion 			& "AGGT[1,1,0]" & ACTNNN & Match at 1 "ACT" & Match at 1 "ACT" \\ \hline
+\rowcolor{lightgreen}
+1 mismatch, 1 insertion			& "ACGT[1,0,1]" & AGTGTNNN & Match at 1 "AGTGT" & Match at 1 "AGTGT" \\ \hline
+\rowcolor{lightgreen}
+1 deletion, 1 insertion 			& "ATTGT[0,1,1]" & ATCGTNNN & Match at 1 "ATCGT" & Match at 1 "ATCGT" \\ \hline
+\rowcolor{lightgreen}
+1 of each			& "AACGT[1,1,1]" & CAGGTNNN & Match at 1 "CAGGT" & Match at 1 "CAGGT" \\ \hline
+\rowcolor{lightgreen}
+Multiple mismatches only & "ACCT[2,0,0]" & ATTTNNN & Match at 1 "ATTT" & Match at 1 "ATTT" \\ \hline
+\rowcolor{lightgreen}
+Multiple deletions only & "AGTTT[0,2,0]" & AGTNNN & Match at 1 "AGT" & Match at 1 "AGT" \\ \hline
+\rowcolor{lightgreen}
+Multiple insertions only & "ACGT[0,0,2]" & ACTTGTNNN & Match at 1 "ACTTGT" & Match at 1 "ACTTGT" \\ \hline 
+\rowcolor{lightgreen}
+Multiple mismatches and deletions		& "ACTTT[1,2,0]" & GCTNNN & Match at 1 "GCT" & Match at 1 "GCT"\\ \hline
+\rowcolor{lightgreen}
+Multiple mismatches and insertions		& "TCGAT[3,0,2]" & CGCTTATNNN & Match at 1 "CGCTTAT" & Match at 1 "CGCTTAT" \\ \hline
+\rowcolor{lightgreen}
+Multiple deletions and insertions		& "TCGGT[0,2,3]" & GGGGGTNNN & Match at 1 "GGGGGT" & Match at 1 "GGGGGT" \\ \hline
+\rowcolor{lightgreen}
+Multiple of each		& "ATTCCCTT[2,2,1]" & TTCCGTAN NN & Match at 1 "TTCCGTA" or "TTCCGTAN" & Match at 1 "TTCCGTAN"\\ \hline
+\end{tabular}
+\end{table}
+\begin{table}[H]
+\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
 \rowcolor{lightred}
-Empty string		& " " & ACGTNNN & suiting error message & No matches \\ \hline
+Many deletions		& "ATTC[0,6,0]" & CCCCCCNNN & No matches & Match at 1, 2, 3, 4, 5, and 6 "C" \\ \hline
 \rowcolor{lightgreen}
-Single base 		& "A" & ANNN & Match at 1 "A" & Match at 1 "A"\\ \hline
+Many mismatches		& "ATTCG[8,0,0]" & GGGGTNNN & Match at 1 "GGGGT" & Match at 1 "GGGGGT" \\ \hline
 \rowcolor{lightgreen}
-Multiple bases	& "ACCGT" & ACCGTNNN & Match at 1 "ACCGT" & Match at 1 "ACCGT" \\ \hline
+Many insertions		& "ATTCG[0,0,7]" & ACGTTGCATTTGNNN & Match at 1 "ACGTTGCATTTG" & Match at 1 "ACGTTGCATTTG" \\ \hline
 \end{tabular}
 \end{table}
-
-The equivalence class for the loose sequence, with mismatches, insertions and deletions has more edge scenarios.
-A case with 0 is needed, but in this class there are multiple scenarios for the smallest possible amount of 
-mismatches, insertions and deletions, since these are not equivalent they are all needed to be tested. Also the 
-combinations of the mismatches, insertions and deletions needs to be tested with both the smallest possible
-scenarios and average cases. Finally the scenarios with all of the possible mismatches, insertions and deletions 
-being used needs to be tested with both the smallest scenario and a average case.
-With deletions and mismatches there are also the scenario where they exceed the pattern length. This also needs to 
-be tested.
-\begin{table}[H]
-\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
-Case 			& Pattern & Data & Expected Result & Result \\ \hline
-\rowcolor{lightgreen}
-MID 0			& "ACGT[0,0,0]" & ACGTNNN & Match at 1 "ACGT" & Match at 1 "ACGT" \\ \hline
-\rowcolor{lightgreen}
-MID 1 miss		& "ACC[1,0,0]" & ACGNNN & Match at 1 "ACG" & Match at 1 "ACG" \\ \hline
-\rowcolor{lightgreen}
-MID 1 del		& "ATG[0,1,0]" & AGNNN & Match at 1 "AG" & Match at 1 "AG" \\ \hline
-\rowcolor{lightgreen}
-MID 1 ins		& "ACC[0,0,1]" & ATCCNNN & Match at 1 "ATCC" & Match at 1 "ATCC"\\ \hline
-\rowcolor{lightgreen}
-MID 2 			& "AGGT[1,1,0]" & ACTNNN & Match at 1 "ACT" & Match at 1 "ACT" \\ \hline
-\rowcolor{lightgreen}
-MID 2			& "ACGT[1,0,1]" & AGTGTNNN & Match at 1 "AGTGT" & Match at 1 "AGTGT" \\ \hline
-\rowcolor{lightgreen}
-MID 2 			& "ATTGT[0,1,1]" & ATCGTNNN & Match at 1 "ATCGT" & Match at 1 "ATCGT" \\ \hline
-\rowcolor{lightgreen}
-MID 3			& "AACGT[1,1,1]" & CAGGTNNN & Match at 1 "CAGGT" & Match at 1 "CAGGT" \\ \hline
-\rowcolor{lightgreen}
-MID miss multiple & "ACCT[2,0,0]" & ATTTNNN & Match at 1 "ATTT" & Match at 1 "ATTT" \\ \hline
-\rowcolor{lightgreen}
-MID del multiple & "AGTTT[0,2,0]" & AGTNNN & Match at 1 "AGT" & Match at 1 "AGT" \\ \hline
-\rowcolor{lightgreen}
-MID ins multiple & "ACGT[0,0,2]" & ACTTGTNNN & Match at 1 "ACTTGT" & Match at 1 "ACTTGT" \\ \hline 
-\rowcolor{lightgreen}
-MID multiple		& "ACTTT[1,2,0]" & GCTNNN & Match at 1 "GCT" & Match at 1 "GCT"\\ \hline
-\rowcolor{lightgreen}
-MID multiple		& "TCGAT[3,0,2]" & CGCTTATNNN & Match at 1 "CGCTTAT" & Match at 1 "CGCTTAT" \\ \hline
-\rowcolor{lightgreen}
-MID multiple		& "TCGGT[0,2,3]" & GGGGGTNNN & Match at 1 "GGGGGT" & Match at 1 "GGGGGT" \\ \hline
-\rowcolor{lightgreen}
-MID all			& "ATTCCCTT[2,2,1]" & TTCCGTAN NN & Match at 1 "TTCCGTA" or "TTCCGTAN" & Match at 1 "TTCCGTAN"\\ \hline
-\rowcolor{lightgreen}
-MID more del		& "ATTC[0,6,0]" & CCCCCCNNN & A unknown number of matches not equal to 0
-\footnote{Since the code does not specify a order of used deletions, the 
-length of the match can be everywhere from 0 to 4, making it hard to predict a result. 
-This does not mean that different results can't all be correct. } & Match at 1, 2, 3, 4, 5, and 6 "C" \\ \hline
-\rowcolor{lightgreen}
-MID more mis		& "ATTCG[8,0,0]" & GGGGTNNN & Match at 1 "GGGGT" & Match at 1 "GGGGGT" \\ \hline
-\end{tabular}
-\end{table}
-
-
-
-In order to create a equivalence class for ambiguous bases in a exact sequence \pu, the same
-scenarios as a exact sequence is needed with the addition that all ambiguous bases needs to be
-shown to work individually. 
-\begin{table}[H]
-\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
-Case 			& Pattern & Data & Expected Result & Result \\ \hline
-\rowcolor{lightgreen}
-Single ambiguous base & "R"(R is A or G) & ATTGNNN & Match at 1 "A" and 4 "G" & Match at 1 "A" and 4 "G" \\ \hline
-\rowcolor{lightgreen}
-Ambiguous bases	& "RRGGWW" & AAGGTANN N & Match at 1 "AAGGTA" & Match at 1 "AAGGTA" \\ \hline
-\rowcolor{lightred}
-All ambiguous bases & "UMMRRWWS SYYKKBBB DDDHHHVV VNNNN" & TACAGATC GCTGTCGT AGTACTAC GACTGNNN & Match at 1 & no Match \\ \hline
-\rowcolor{lightgreen}
-All ambiguous bases except u & "MMRRWWS SYYKKBBB DDDHHHVV VNNNN" & ACAGATC GCTGTCGT AGTACTAC GACTGNNN & Match at 1 & Match at 1 \\ 
-\end{tabular}
-\end{table}
-
-In order to make sure that ambiguous bases work correctly with the defined bases, a equivalence class is needed
-to show that the smallest mixed scenario and a average scenario works correctly.
-\begin{table}[H]
-\begin{tabular}{p{4cm}|p{3.6cm}|p{2.5cm}|p{2.2cm}|p{2.2cm}}
-Case 			& Pattern & Data & Expected Result & Result \\ \hline
-\rowcolor{lightgreen}
-Smallest mix		& "AM" & ACAA & Match at 1 "AC" and 3 "AA" & Match at 1 "AC" and 3 "AA" \\ \hline
-\rowcolor{lightgreen}
-Average mix		& "TTATMTNYY" & TTATATGTC & Match at 1 "TTATATGTC" & Match at 1 "TTATATGTC"
-\end{tabular}
-\end{table}
-
-
-\subsubsection{Range}
-Range by itself does not make room for a large difference in possibilities, in order to create a 
-equivalence class only a few scenarios are needed, the smallest possible cases, a 0 case and a average case.
+\subsection{Group 4: Range}
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 \rowcolor{lightred}
-Range from 0...0	& "0...0" & ACCNNN & Suiting error & Never ending loop \\ \hline
+Zero range	& "0...0" & ACCNNN & Suiting error & Never ending loop \\ \hline
 \rowcolor{lightred}
 Smallest range 	& "0...1" & ACCNNN & Match at all bases & Never ending loop \\ \hline
 \rowcolor{lightgreen}
 Smallest range without 0 & "1...1" & AGTNNN & Match at 1, 2, 3, 4, 5 and 6 & Match at 1, 2, 3, 4, and 5 \\ \hline
 \rowcolor{lightgreen}
-Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1 "AAAA"
+Standard case	& "4...9" & AAAAAAAA AANNN & Match at 1 and 5 & Match at 1 "AAAA" \\ \hline
 \end{tabular}
 \end{table} 
-
-
-
-\subsubsection{Reference}
-Reference can't be tested and proved correct as a individual \pu since it needs to refer to another \pu
-to function. 
-In order to make sure the reference \pu works correctly the equivalence class needs to obtain references with and
-without another \pu between the refereed \pu and the reference \pu. Both a 0, edge and average case is needed for both
-scenarios.
+\subsection{Group 5: Reference}
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 \rowcolor{lightred}
-0 reference with 	& "p1=0...0 2...4 p1" & ACCCNNN & Match at 1 "ACCC" & Match at 1 "ACCCN" \\ \hline
-\rowcolor{lightgreen}
-Smallest reference with 	& "p1=1...1 2...2 p1" & ACCANNN & Match at 1 "ACCA" & Match at 1 "ACCA" \\ \hline
-\rowcolor{lightgreen}
-Standard case with	& "p1=3...5 2...2 p1" & CCCCAACC CCNNN & Match at 1 "CCCCAACCCC" & Match at 1 "CCCCAACCCC"\\ \hline
+Reference zero range, not adjacent 	& "p1=0...0 3...3 p1" & ACCCNNN & Match at 1 "ACC" & Match at 1 "ACCC" \\ \hline
 \rowcolor{lightred}
-0 reference without	& "p1=0...0 p1" & TTGTANNN & Undefined & Match at 1 "T", 2 "T", 3 "G", 4 "T", 5 "A", 6 "N", 7 "N", and 8 "N"\\ \hline
+Reference smallest range, not adjacent	& "p1=0...1 3...3 p1" & AATGNNN & Match at 1 "AAT" & Match at 1 "AATG" \\ \hline
 \rowcolor{lightgreen}
-smallest reference without & "p1=1...1 p1" & AANNN & Match at 1 "AA" & Match at 1 "AA" \\ \hline
+Reference smallest range no 0, not adjacent & "p1=1...1 2...2 p1" & ACCANNN & Match at 1 "ACCA" & Match at 1 "ACCA" \\ \hline
 \rowcolor{lightgreen}
-Standard case without & "p1=3...5 p1" & CACCCACC NNN & Match at 1 "CACCCACC" & Match at 1 "CACCCACC" \\ \hline
+Reference standard, not adjacent& "p1=3...5 2...2 p1" & CCCCAACC CCNNN & Match at 1 "CCCCAACCCC" & 
+Match at 1 "CCCCAACCCC"\\ \hline
+\rowcolor{lightred}
+Reference zero range, adjacent	& "p1=0...0 p1" & TTGTANNN & No matches & Match at 1 "T", 2 "T", 3 "G", 4 "T", 
+5 "A", 6 "N", 7 "N", and 8 "N"\\ \hline
+\rowcolor{lightred}
+Reference smallest range, adjacent	& "p1=0...1 p1" & TTGTANNN & No matches & 
+Match at 1 "TT", 3 "GT", 5 "AN", 7 "N", 8 "N"\\ \hline
+\rowcolor{lightgreen}
+Reference smallest range no 0, adjacent & "p1=1...1 p1" & AANNN & Match at 1 "AA" & Match at 1 "AA" \\ \hline
+\rowcolor{lightgreen}
+Reference standard case, adjacent & "p1=3...5 p1" & CACCCACC NNN & Match at 1 "CACCCACC" & Match at 1 "CACCCACC" \\ \hline
 \end{tabular}
 \end{table}
-
-In order to show correctness of complementary reference \pu a equivalence class needs to contain the same scenarios
-as the equivalence class showing the simple reference scenario.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 \rowcolor{lightred}
-Complementary 0 reference & "p1=0...0 2...2 \textapprox p1" & AAAANNN & Match at 1 , 2, 3 and 4 & Match at 1 "AAA"\\ \hline
-\rowcolor{lightgreen}
-Complementary smallest reference & "p1=1...1 2...2 \textapprox p1" & ACCTNNN & Match at 1 "ACCT" & Match at 1 "ACCT"\\ \hline
-\rowcolor{lightgreen}
-Complementary standard case & "p1=3...5 2...2 \textapprox p1" & AATTCCAA TTNNN & Match at 1 "AATTCCAATT" & Match at 1 "AATTCCAATT"\\ \hline
+Complementary reference zero range, not adjacent & "p1=0...0 3...3 \textapprox p1" & 
+AAAANNN & Match at 1 "AAA" & Match at 1 "AAAA"\\ \hline
 \rowcolor{lightred}
-Complementary 0 reference without & "p1=0...0 \textapprox p1" & AATNNN & Undefined behaviour & Match at 1 "A", 2 "A", 3 "T", 4 "N", 5 "N", and 6 "N" \\ \hline
+Complementary reference smallest range, not adjacent & "p1=0...1 3...3 \textapprox p1" & AAAANNN & 
+Match at 1 "AAA" & Match at 1 "AAAA"\\ \hline
 \rowcolor{lightgreen}
-Complementary smallest reference withour & "p1=1...1 \textapprox p1 & ATNNN & Match at 1 "AT" & Match at 1 "AT" \\ \hline 
+Complementary reference smallest range no 0, not adjacent & "p1=1...1 2...2 \textapprox p1" & ACCTNNN & 
+Match at 1 "ACCT" & Match at 1 "ACCT"\\ \hline
 \rowcolor{lightgreen}
-Complementary reference after assignment & "p1=3...3 \textapprox p1" & AAATTTNN N & Match at 1 "AAATTT" & Match at 1 "AAATTT"\\ \hline
+Complementary reference standard range, not adjacent & "p1=3...5 2...2 \textapprox p1" & AATTCCAA TTNNN & 
+Match at 1 "AATTCCAATT" & Match at 1 "AATTCCAATT"\\ \hline
+\rowcolor{lightred}
+Complementary reference zero range, adjacent & "p1=0...0 \textapprox p1" & AATNNN & No matches & 
+Match at 1 "A", 2 "A", 3 "T", 4 "N", 5 "N", and 6 "N" \\ \hline
+\rowcolor{lightred}
+Complementary reference smallest range, adjacent	& "p1=0...1 \textapprox p1" & TANNNN &
+ Match at 1 "TA" & Match at 1 "TA", 3 "NN", 5 "N"\\ \hline
+\rowcolor{lightgreen}
+Complementary reference smallest range no 0, adjacent & "p1=1...1 \textapprox p1 & ATNNN & 
+Match at 1 "AT" & Match at 1 "AT" \\ \hline 
+\rowcolor{lightgreen}
+Complementary reference standard range, adjacent & "p1=3...3 \textapprox p1" & AAATTTNN N & 
+Match at 1 "AAATTT" & Match at 1 "AAATTT"\\ \hline
 \end{tabular}
 \end{table}
-
-Reference with mismatches, insertions and deletions equivalence class has the same basic steps as the simple reference
-scenario, but because MID are all ready tested in the sequence, there is no difference in the reference and we don't
-need to test with every single case of mismatches, insertions and deletions. Instead the use of the standard scenario is 
-used.
+\subsection{Group 6: Reference with edits}
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 \rowcolor{lightred}
-Reference MID 0 & "p1=0...0 2...2 p1[1,2,1]" & AACTGNNN & Undefined & Match at 1 "AAC" \\ \hline
+Reference zero range, not adjacent & "p1=0...0 2...2 p1[1,2,1]" & AACTGNNN & Match at 1 "AA", 4 "CT" & 
+Match at 1 "AAC", 4 "TGN" \\ \hline
 \rowcolor{lightgreen}
-Reference MID smallest & "p1=1...1 2...2 p1[1,0,0]" & AACCNNN & Match at 1 "AACC" & Match at 1 "AACC" \\ \hline
+Reference smallest range no 0, not adjacent & "p1=1...1 2...2 p1[1,0,0]" & AACCNNN & Match at 1 "AACC" & 
+Match at 1 "AACC" \\ \hline
 \rowcolor{lightgreen}
-Reference MID & "p1=3...4 2...2 p1[2,1,1]" & AAAATTCG TANNN & Match at 1 "AAAATTCG" or "AAAATTCGTA" or "AAAATTC" & Match at 1 "AAAATTC"\\ \hline
+Reference standard range, not adjacent & "p1=3...4 2...2 p1[2,1,1]" & AAAATTCG TANNN & 
+Match at 1 "AAAATTCG" or "AAAATTCGTA" or "AAAATTC" & Match at 1 "AAAATTC"\\ \hline
 \rowcolor{lightred}
-Reference MID 0 without & "p1=0...0 p1[1,1,1]" & ACTNNN & Undefined & Match at 1 "A", 2 "C", 3 "T", 4 "N", 5 "N", and 6 "N" \\ \hline
+Reference zero range, adjacent & "p1=0...0 p1[1,1,1]" & ACTNNN & No matches & 
+Match at 1 "A", 2 "C", 3 "T", 4 "N", 5 "N", and 6 "N" \\ \hline
 \rowcolor{lightgreen}
-Reference MID smallest without & "p1=1...1 p1[2,1,2]" & ACGTNNN & Match at 1 "AC" or "ACG" or "ACGT" or "A" & Match at 1 "ACGT" \\ \hline
+Reference smallest range, adjacent & "p1=1...1 p1[2,1,2]" & ACGTNNN & 
+Match at 1 "AC" or "ACG" or "ACGT" or "A" & Match at 1 "ACGT" \\ \hline
 \rowcolor{lightgreen}
-Reference MID without & "p1=3...5 p1[2,1,1]" & ACTTACNNN & Match at 1 "ACTTAC" or "ACTTA" or "ACTTACN" & Match at 1 "ACTTAC" \\ \hline
+Reference standard range, adjacent & "p1=3...5 p1[2,1,1]" & ACTTACNNN & 
+Match at 1 "ACTTAC" or "ACTTA" or "ACTTACN" & Match at 1 "ACTTAC" \\ \hline
 \end{tabular}
 \end{table}
-
-
-Complementary reference with mismatches, insertions and deletions, in this case we make the same assumptions as above
-that mismatches, insertions and deletions are proved to be correct in the individual cases from the sequence test.
-Because of that we test with the same scenarios as the simple reference tests, to obtain a exhaustive equivalence class.
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 \rowcolor{lightred}
-Reference MID complementary 0 & "p1=0...0 2...3 \textapprox p1[1,2,1]" & ACGTGNNN & Undefined & Match at 1 "ACG" \\ \hline
+Complementary reference zero range, not adjacent & "p1=0...0 2...3 \textapprox p1[1,2,1]" & ACGTGNNN & 
+Match at 1 "AC", 4 "GT" & Match at 1 "ACG", 4 "TGN" \\ \hline
 \rowcolor{lightgreen}
-Reference MID complementary smallest & "p1=1...1 2...3 \textapprox p1[0,1,0]" & ACGGGNNN & Match at 1 "ACG" & Match at 1 "ACG" \\ \hline
+Complementary reference smallest range no 0, not adjacent & "p1=1...1 2...3 \textapprox p1[0,1,0]" & 
+ACGGGNNN & Match at 1 "ACG" & Match at 1 "ACG" \\ \hline
 \rowcolor{lightgreen}
-Reference MID complementary & "p1=3...4 2...3 \textapprox p1[1,0,1]" & ACCTTGCC TNNN & Match at 1 "ACCTTGCCT" & Match at 1 "ACCTTGCCT" \\ \hline
+Complementary reference standard range, not adjacent& "p1=3...4 2...3 \textapprox p1[1,0,1]" &
+ACCTTGCC TNNN & Match at 1 "ACCTTGCCT" & Match at 1 "ACCTTGCCT" \\ \hline
 \rowcolor{lightred}
-Reference MID complementary 0 without & "p1=0...0 \textapprox p1[0,1,2] & ACCTNNN & Undefined & Match at 1 "AC" \\ \hline 
+Complementary reference zero range, adjacent & "p1=0...0 \textapprox p1[0,1,2] & 
+ACCTNNN & No matches & Match at 1 "AC" \\ \hline 
 \rowcolor{lightgreen}
-Reference MID complementary smallest without & "p1=1...1 \textapprox p1[0,0,2] & CTGCNNN & Match at 1 "CTG" & Match at 1 "CTG" \\ \hline
+Complementary reference smallest range no 0, adjacent & "p1=1...1 \textapprox p1[0,0,2] & 
+CTGCNNN & Match at 1 "CTG" & Match at 1 "CTG" \\ \hline
 \rowcolor{lightgreen}
-Reference MID complementary without & "p1=3...4 \textapprox p1[1,0,0]" & AAATACTT NNN & Match at 1 "AAATACTT" & Match at 1 "AAATACTT" \\ \hline
+Complementary reference standard range, adjacent & "p1=3...4 \textapprox p1[1,0,0]" & AAATACTT NNN & Match at 1 "AAATACTT" & Match at 1 "AAATACTT" \\ \hline
 \end{tabular}
 \end{table}
-
-
-In order to make a exhaustive equivalence class for multiple \pus or multiple exhaustive equivalence classes for \pus
-a great number of different combinations and scenarios would be needed. Instead the following tests performed gives a 
-statistically approximation to this by looking at the scenarios that are most likely to produce false results.
-
+\subsection{Group 7: Combining PU's}
 \begin{table}[H]
 \begin{tabular}{p{4cm}|p{3cm}|p{2.5cm}|p{2.5cm}|p{2.5cm}}
 Case 			& Pattern & Data & Expected Result & Result \\ \hline
 \rowcolor{lightgreen}
 Multiple exacts 	& "ACGT TGCA" & ACGTTGCA NNN & Match at 1 "ACGTTGCA" & Match at 1 "ACGTTGCA"\\ \hline
 \rowcolor{lightgreen}
-Range MID		& "4...5 TTTT[1,1,1]" & AAAAATTC GNNN & Match at 1 "AAAAATTC" or "AAAAATT" & Match at 1 "AAAAATT" \\ \hline
+Range/sequence combination& "4...5 TTTT[1,1,1]" & AAAAATTC GNNN & Match at 1 "AAAAATTC" or "AAAAATT" & 
+Match at 1 "AAAAATT" \\ \hline
 \rowcolor{lightgreen}
-Backtracking MID & "TTTT[0,1,1] TTA" & TTTTTAAN NN & Match at 1 "TTTTTA" & Match at 1 "TTTTTA"\\ \hline
+Forcing backtracking with edits & "TTTT[0,1,1] TTA" & TTTTTAAN NN & Match at 1 "TTTTTA" & Match at 1 "TTTTTA"\\ \hline
 \rowcolor{lightgreen}
 Multiple references & "p1=2...3 p2=2...2 p1 p2" & TTTCCTTT CCNNN & Match at 1 "TTTCCTTTCC" & Match at 1 "TTTCCTTTCC" \\ \hline
 \rowcolor{lightgreen}
-Mulitple complementary reffenreces & p1=3...3 p2=2...3 2...3 \textapprox p2 \textapprox p1" & 
-AAACCGTTTCGGTTT NNN & Match at 1 "AAACCGTTTCGGTTT" & Match at 1 "AAACCGTTTCGGTTT" \\ \hline
+Multiple complementary references & p1=3...3 p2=2...3 2...3 \textapprox p2 \textapprox p1" & 
+AAACCGTTT
+CGGTTT NNN & Match at 1 "AAACCGTTTCGGTTT" & Match at 1 "AAACCGTTTCGGTTT" \\ \hline
 \rowcolor{lightred}
-0 refference with bounding \pus & "AATCC p1=0...1 0...3 p1 TTG" & AATCCTTGGGGGGGNNN & Match at 1 & Not terminating\\ \hline
+0 refference with bounding \pus & "AATCC p1=0...1 0...3 p1 TTG" & AATCCTTGG
+GGGGGNNN & Match at 1 & Not terminating\\ \hline
 \rowcolor{lightgreen}
 Range from 0 & "ATC 0...3 TTC" & ATCTTCNNN & Match at 1 "ATCTTC" & Match at 1 "ATCTTC" \\ \hline
 \rowcolor{lightgreen}
-reference with to many deletion & "p1=2...4 ATTT p1[0,6,0] TTT" & TTTATTTNNN & No match & No matches \\ \hline
+Reference with too many deletions & "p1=2...4 ATTT p1[0,6,0] TTT" & TTTATTTNNN & No match & No matches \\ \hline
 \rowcolor{lightgreen}
-sequence with more deletions than bases & "TTTT ACC[0,6,0] TT" & TTTTACNNN & no matches & No matches
+Sequence with too many deletions & "TTTT ACC[0,6,0] TT" & TTTTACNNN & no matches & No matches \\ \hline
 \end{tabular}
 \end{table} 
+\end{appendices}
 \end{document}

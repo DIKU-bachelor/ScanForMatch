@@ -14,7 +14,7 @@
 using namespace std;
 
 #define fsize 250000000
-#define patsize 1000
+#define patsize 10000
 
 // Splits text into substrings by delimiter del and returns a list of these
 list<string> split_str(string text, const char del) {
@@ -142,7 +142,6 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       pat_list.clear();
       return pat_list;
     }
-
     // Exact type punit, checks validity of each letter and converts to 4-BIT charfields
     let_count = 0;
     for (int i = 0; i < pu.length(); i++) {
@@ -156,8 +155,9 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       until_brac = pu.length();
     }
     if (let_count == until_brac) {
-      conv_code = new char[1000];
-      temp_p = new char[until_brac + 1];
+      conv_code = new char[10000];
+//      temp_p = new char[until_brac + 1];
+      temp_p = new char[10000];
       strcpy(temp_p, pu.c_str());
       for(int i = 0; i < until_brac; i++){
         conv_code[i] = punit_to_code[temp_p[i]];
@@ -276,8 +276,10 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
 
     // Checks if it's an Exact or Reference type punit
     if (ex_len == let_count) {
+
       Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) until_brac, 
         conv_code, mis, del, ins, 0, 1);
+
       pat_list.push_back(ex);
       if (save_next == 1) {
         va_tmp->nxt_punit = ex;
@@ -352,7 +354,6 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
 
   int data_len = end_of_data - data;
   char* start_of_data = data;
-
   // Initializing return package that is passed and returned between punits
   ret_t* retu = new ret();
   retu->startp = data;
@@ -374,13 +375,11 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
   // Each iteration in loop finds optimal pu and tries to match PU's around it
   while (true) {
 //    cout << retu->startp << "\n";
-//    cout << "search best\n";
     retu->bst = 1;
+//    cout << "before best search\n";
     retu = (*it)->search(retu);
     retu->bst = 0;
 //    cout << "found best at: " << retu->startp << "\n";
-//    cout << "retu->startp: " << retu->startp << "\n";
-
     if (retu->startp) { 
       if ((*it)->prev - data <= opt->max_start_dist) {
         retu->startp = data;
@@ -398,7 +397,6 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
 //      cout << "distance to startp: " << (retu->startp - start_of_data) << "\n";
       // Now we match every PU around the found one
       while (true) {
-//        cout << "OUTER before search\n";
         retu = (*it)->search(retu);
         if (retu->startp) {
 //          cout << "PU match!!\n";
@@ -438,7 +436,6 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
         }
       }
     } else {
-      cout << "DONE\n";
       return;
     }
   }
@@ -558,6 +555,7 @@ int main(int argc, char* argv[]) {
     cout << "ERROR: No such file: \n" << argv[arg] << "\n";
     return -1;
   }
+
   real_data.erase(remove(real_data.begin(), real_data.end(), '\n'), real_data.end());
   strcpy(rdata, real_data.c_str());
   int i;
@@ -568,7 +566,6 @@ int main(int argc, char* argv[]) {
   data[++i] = '\0';
 
   list<Punit*> pat_list = parse(pats, data, end_of_data);
-
   // If an error occured during parsing
   if (pat_list.empty()) {
     return -1;

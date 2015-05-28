@@ -139,8 +139,8 @@ Exact::Exact(char* data_s, char* data_e, int data_len, int le, char* c,
     c_flex = flex;
 //    match_lens = new int[100000];
 //    match_list = new char*[100000];
-    stack = (stackent*)malloc(sizeof(stackent)*1000000);
-    match_stack = (stackent*)malloc(sizeof(stackent)*1000000);
+    stack = (stackent*)malloc(sizeof(stackent)*10000000);
+    match_stack = (stackent*)malloc(sizeof(stackent)*10000000);
     for(i = 0; i < 1000; i++){
       match_lens[i] = 0;
     }
@@ -430,6 +430,7 @@ ret_t* Exact::search(ret_t* retu){
         return new_retu;
       }
       // If this Punit is not complementary and the previous Punit was not the variable being set
+//      cout << "before while\n";
       while (prev_s <= prev_s + run_len && prev + len < data_end) {
         new_retu = loose_match(retu, new_retu);
         if(new_retu->startp){
@@ -572,7 +573,35 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
 // match_list is list of pointers that points to different new starting positions
     if(found_matches-- > 0){
       for(found_matches; found_matches >= 0; found_matches--){
-        //Move match len with insertions
+        char* temp1 = match_stack[found_matches].p2;
+        char* temp2 = temp1 - n;
+
+        for(n = match_stack[found_matches].ins; 
+            n && temp2 - prev > 0; 
+            n--){
+          if(!match_lens[temp2 - prev]){
+            match_lens[temp2 - prev] = 1;
+            match_list[match_list_len] = temp1 - n;
+            match_list_len++;
+          }
+        }
+        //Move match len with deletions
+        for(n = match_stack[found_matches].del; n; n--){
+          if(!match_lens[temp1 - prev + n]){
+            match_lens[temp1 - prev + n] = 1;
+            match_list[match_list_len] = temp1 + n;
+            match_list_len++;
+          }
+        }
+        // save the original match length
+        if(!match_lens[temp1 - prev]){
+          match_lens[temp1 - prev] = 1;
+          match_list[match_list_len] = temp1;
+          match_list_len++;
+        } 
+
+
+/*        //Move match len with insertions
         for(n = match_stack[found_matches].ins; 
             n && match_stack[found_matches].p2 - prev - n > 0; 
             n--){
@@ -595,7 +624,7 @@ ret_t* Exact::loose_match (ret_t* retu, ret_t* new_retu){
           match_lens[match_stack[found_matches].p2 - prev] = 1;
           match_list[match_list_len] = match_stack[found_matches].p2;
           match_list_len++;
-        }
+        } */
       }
       match_list_len--;
       new_retu->startp = match_list[match_list_len--];
