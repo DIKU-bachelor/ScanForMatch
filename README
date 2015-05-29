@@ -1,0 +1,218 @@
+Scanfm
+
+
+
+Scanfm is a pattern matching application for finding patterns in
+DNA data. It uses a backtracking algorithm to exhaustively find all
+matches on a given pattern in the given data. It uses pattern units
+individual ways of finding a specific or close match to a given 
+sequence or pattern. A lot of the inspiration and some code is taken
+from Scan_for_matches, a utility created by Ross Overbeek. 
+
+
+--------------------------------------------------------------------
+Overview:
+--------------------------------------------------------------------	
+
+	- Needed files
+	- Installation
+	- Pattern Units
+	- Searching for a pattern
+	- Known bugs
+
+	
+--------------------------------------------------------------------	
+Needed files:
+--------------------------------------------------------------------
+In order for Scanfm to work you need the following files:
+	- scanfm.cpp
+	- Punit.cpp
+	- Punit.h
+	- Makefile
+
+
+--------------------------------------------------------------------	
+Installation:
+--------------------------------------------------------------------	
+The utility is created in c++, so you need a c++ compiler to compile.
+You can install a c++ compiler on ubuntu or other linux platforms by
+typing the following in your terminal:
+	
+	sudo apt-get install g++
+	
+After this you can run the makefile, by navigating to the folder you
+have downloaded the necessary files to and typing:
+
+	make 
+	
+possibly
+
+	sudo make
+	
+This should result in a executable file called; scanfm. Now you are 
+ready to run the utility.
+
+--------------------------------------------------------------------	
+Pattern Units
+--------------------------------------------------------------------	
+Patterns are compiled of pattern units, for a match to be found each
+pattern unit has to be found in the given order, without space in 
+between. The different pattern units scanfm supports are:
+	- Sequence
+		- MID
+	- Range
+	- Reference
+		- MID
+		- Complementary
+		
+Sequence:
+A sequence consists of a string containing a sequence of DNA bases:
+
+	ex: ACCGCTA
+	
+This will match if and only if all the bases are found in the data in
+the same order as given.
+ Sequences can contain ambiguous bases (bases that can match on multiple 
+other bases) these ambiguous bases are:
+	
+	- M = A | C
+	- R = A | G
+	- W = A | T
+	- S = C | G
+	- Y = C | T
+	- K = G | T
+	- B = C | G | T
+	- D = A | G | T
+	- G = A | C | T
+	- V = A | C | G
+	- N = A | C | G | T
+	
+In order to find something close to a specific sequence there is the 
+possibility of using fuzzy matching, meaning allowing, mismatches,
+deletions, or insertions. This allows to find mutated sequences or
+close matches.
+ A mismatch is a change in base:
+ 
+        ex: data =      ACCGTA              ACCGTA
+                                            ||m|||
+            pattern =   ACGGTA[1,0,0]       ACGGTA
+		
+ A deletion deletes a base from the pattern searched for:
+ 
+        ex: data =      ACGTA         AC-GTA
+                                      ||d|||
+        pattern =       ACCGTA        ACCGTA
+		
+		here a "C" is deleted from the pattern
+		
+ A insertion, inserts a base into the pattern:
+ 
+	ex: data =		ACCCGT				ACCCGT
+										|||i||
+		pattern =	ACCGT				ACC-GT
+		
+Mismatches, deletions and insertions are given in the order:
+
+	[mismatches, deletions, insertion]
+	
+A example of a sequence with mismatches, deletions and insertions is:
+
+	ex: ACCGTA[2,3,1]
+	
+Ambiguous bases are applied the same way as normal bases.
+
+
+
+Range:
+Range jumps a given number of bases in the data, from the first given 
+number to the second given number:
+
+	ex: 3...8
+	
+In a list of pattern units if a range is reached, it tests the next pattern
+unit on each of the lengths from its start position + 3 until its start position
++ 8. meaning, 3, 4, 5, 6, 7, 8.
+
+	ex: data =     CTTTTAA	               CTTTTAA
+                                               |   ||
+        pattern =      C 3...4 TA              C---TA
+	
+Here the range between the first sequence and the secound is 3.
+
+Reference:
+Reference is used to compare a saved sequence of the data and find it
+again where it can be either mutated or complementary.
+
+	ex: p1=4...7 2...3 p1
+	
+This would save the found length in the range and insert the sequence
+where p1 is:
+
+        ex: data =        ACCCTTGGGACCCTT
+                                   ||||||
+        pattern =         ======---ACCCTT
+		
+"=" refers to the saved range pattern unit, "-" refers to the not saved range 
+pattern unit.
+
+Reference can have mismatches, deletions and insertions the following way:
+
+        pattern:        p1=3...6 2...3 p1[1,2,1]
+        
+        ex: data =   ACCTCAACGT
+                           ||m|
+        pattern =    ====--ACCT
+
+Here one mismatch was needed to get match when refering ti the saved data.
+
+Reference can also find its complementary sequence meaning the paired sequence
+that would bond, in the event it was turned around and bases, found their 
+complementary bases:
+
+	A = T
+	T = A
+	C = G
+	G = C
+
+A example of a sequence and its complementary sequence is
+
+        ex: seq =           ACGTTGG 
+
+        complementary seq = CCAACGT
+
+Here you can se that it has been reversed and the bases has been paired.
+
+--------------------------------------------------------------------	
+Searching for a pattern
+--------------------------------------------------------------------
+Search for your fisrt pattern; you need to create a pattern:
+
+        ex: pattern = AACC 2...5 TCGACGT[2,1,0]
+
+You need your data file (right now .fasta [.fa] files will not work, without
+deleting the first line describing the data)
+
+data.fa = 
+
+AGATCGACTGTCGACGACTGACTGTCAGCTAGCTGCATGTACGTCAGCTGCTAGTCGACTGACTGACTCACTAGCTG
+ACGTCAGCTGGCACTGGGAAAACTCTCAGCTGACACCAGGAGCTACTGCTGACTGTACATGCACGCTCATCCCTAGC
+GAGAGGAGGCTCTCTCGAGAGGAGGGACCTTGCCTACCAGTGTGTGACATGTGCTAGCTGCATGCATGCACGTCGAG
+AGCTAGCAGTCCACTGACTGCTACGAGAGAGCTCAGCTGTA....................................
+
+You then run the utility with the command:
+
+	ex: ./scanfm -p AACC 2...5 TCGACGT[2,1,0] -d data.fa
+
+-p is your pattern and -d is you data file.
+
+--------------------------------------------------------------------	
+Known bugs:
+--------------------------------------------------------------------
+Currently version 1.1 there are a few known bugs that result in undefined
+behavior or just wrong results:
+	-Range at the end of a pattern unit including 0
+		-ex: ACTCTAT 2...3 CCTATC 0...2
+	-Reference refering to a range including 0
+		-ex: p1=0...4 2...3 p1
+	-to many spaces (or an empty pattern unit)
+		-ex: ./scanfm -p  -d data.fa
