@@ -757,12 +757,26 @@ over \\
 places in data that the number of times the traditional search would be invoked would result in a much bigger
 slowdown than the extra time it takes to search for the latter \pup
 \subsubsection{Knuth Morris Pratt algorithm}
-Donald Knuth, James H. Morris and Vaughan Pratt invented an algorithm to find substrings in strings in $O(m+n)$
+Donald Knuth, James H. Morris and Vaughan Pratt invented a bit tap algorithm to find substrings in strings in $O(m+n)$~\cite{KMP}
 time where m is the length of the substring and n is the length of the string searched in. 
-Where the normal backtracking algorithms gives a worst case time of $O(mn)$. This can be a huge improvement in cases where there are few different letters and a lot of repetitions, such as most DNA sequences. \\ \\
-The algorithm uses a pre computed sequence, based on the subsequence looked for to determine how far ahead in the string the algorithm can jump when there are close matches. \\ \\
+Where the normal backtracking algorithms gives a worst case time of $O(m*n)$.\\ 
+\\
+The algorithm uses a pre computed sequence, based on the subsequence looked for to determine how far ahead in the string the algorithm can jump when there are close matches. This does that the algorithm never backtracks in the data, but only goes back in which part of the 
+subsequence is found.\\ 
+\\
 This could help finding exact matches even quicker in the data, but the real question is whether it could be used to calculate mismatches, insertions and deletions faster, since that is the place in the code the largest improvement is needed. \\ \\
-The Knuth Morris Pratt algorithm has already been formed to calculate a fuzzy match where mismatches are allowed, but a open soudo code is not out there using it for calculating a Levenshtein distance. Calculating the Levenstein distance with this algorithm could potentially give a large improvement in running time.
+The Knuth Morris Pratt algorithm has already been formed to calculate a fuzzy match where mismatches are allowed, but a open soudo code is not out there using it for calculating a Levenshtein distance. Calculating the Levenshtein distance with this algorithm could potentially give a large improvement in running time, but would require significant time to develop potentially.\\
+\\
+Since the bit tap algorithm needs pre processing, it is not preferable in cases with references and would only be usefull with the
+sequence \pu.
+\subsubsection{Parallel and GPU}
+Using parallel processing for pattern matching could potentially give a linear increase in performance, with each processor used.
+Implementing it inside \sfm or outside could simply be done by using divide and conquer on the data.
+The only necessary modification from this is that it would be needed to also match on the intersections between the parted data.\\
+\\
+This is a potential optimization for \sfm, and would not be dependent of which patterns were used.\\
+\\
+Both GPU and parralel processing is well developed for c++, and examples can be found many places for safe implementations.
 \subsection{Cleaner code and version control}
 Developing \sfm to be a "cleaner" program with "prettier" code than \scm was one of the goals.
 This would provide an overview of the program's

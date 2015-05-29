@@ -62,10 +62,3 @@
       url = {http://en.wikipedia.org/wiki/Levenshtein_distance},
       note = {Accessed online 03-May 2015}
 }
-
-@misc{KMP,
-      title = {Knuth, Morris, Pratt algorithm},
-      url = {http://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm},
-      year = {2015}, 
-      note = {Accessed online 29-May 2015}
-}
