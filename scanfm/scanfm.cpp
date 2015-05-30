@@ -1,3 +1,20 @@
+/********************************************************
+*                 ScanFM.cpp
+* Despription : Parses the input given by the user, into
+*               a pattern and the data file.
+*               Scanfm.cpp also includes the pattern
+*               matching algorithms outer loop, searching
+*               for the patterns in the data file.
+* Functions   : split_str
+*               parse
+*               opti_info
+*               pattern_match_opti
+*               pattern_match
+*               main
+********************************************************/
+/********************************************************
+*                  Includes
+********************************************************/
 #include "Punit.h" 
 #include <fstream>
 #include <iostream>
@@ -13,10 +30,21 @@
 #include <time.h>
 using namespace std;
 
+/********************************************************
+*               Macros
+********************************************************/
 #define fsize 250000000
 #define patsize 10000
 
-// Splits text into substrings by delimiter del and returns a list of these
+/********************************************************
+*            Parsing the user input
+********************************************************/
+/********************************************************
+* Function    : split_str
+* Description : Splits the user input into substrings
+*               by delimiters, and returns them as a list
+* Returns     : A list of substrings
+********************************************************/
 list<string> split_str(string text, const char del) {
   list<string> pat_list;
   if (text.length() < 1) {
@@ -42,8 +70,15 @@ list<string> split_str(string text, const char del) {
   return pat_list;
 }
 
-
-// Parses text to find punits and returns a list of these
+/*********************************************************
+*                 Parsing the pattern
+*********************************************************/
+/********************************************************
+* Function    : parse
+* Description : Parses the user input to find the PUs
+*               and returns them as a list.
+* Returns     : A list of PUs
+********************************************************/
 list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
 
   // pat_list: contains the parsed punits to be returned
@@ -59,7 +94,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
   var_t* va_tmp;
   string var_name;
 
-  // Variables used for converting Exact punits into 4-BIT charfields
+  // Variables used for converting Sequence punits into 4-BIT charfields
   char x[] = {'A','C','G','T','U','M','R','W','S','Y','K','B','D','H','V','N'};
   list<char> known_chars (x, x + 16);
   char* conv_code;
@@ -142,7 +177,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       pat_list.clear();
       return pat_list;
     }
-    // Exact type punit, checks validity of each letter and converts to 4-BIT charfields
+    // Sequence type punit, checks validity of each letter and converts to 4-BIT charfields
     let_count = 0;
     for (int i = 0; i < pu.length(); i++) {
       if (find(known_chars.begin(), known_chars.end(), toupper(pu[i])) == known_chars.end()) {
@@ -165,7 +200,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       conv_code[pu.length()] = '\0';
     }
 
-    // ex_len is used to determine length of Exact punit before the [ char
+    // ex_len is used to determine length of Sequence punit before the [ char
     brac = pu.find('[');
     ex_len = until_brac;
     if (brac != string::npos) {
@@ -203,7 +238,7 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       }
     }
 
-    // Finds mismatches, insertions and deletions whether it's an Exact or a Reference punit
+    // Finds mismatches, insertions and deletions whether it's an Sequence or a Reference punit
     mis_s;
     ins_s;
     del_s;
@@ -274,10 +309,10 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       del = atoi(del_s.c_str());
     }
 
-    // Checks if it's an Exact or Reference type punit
+    // Checks if it's an Sequence or Reference type punit
     if (ex_len == let_count) {
 
-      Exact* ex = new Exact(start_of_data, end_of_data, data_len, (int) until_brac, 
+      Sequence* ex = new Sequence(start_of_data, end_of_data, data_len, (int) until_brac, 
         conv_code, mis, del, ins, 0, 1);
 
       pat_list.push_back(ex);
@@ -306,20 +341,31 @@ list<Punit*> parse(string text, char* start_of_data, char* end_of_data) {
       continue;
     } else {
       cout << "ERROR: Could not parse punit " << distance(split_text.begin(), it) + 1
-        << ": Invalid characters in Exact type punit\n";
+        << ": Invalid characters in Sequence type punit\n";
       pat_list.clear();
       return pat_list;
     }
   }
   return pat_list; 
 }
-
+/*********************************************************
+*                 PU optimization
+*********************************************************/
 typedef struct opti_info {
   int opt_index;
   int min_start_dist;
   int max_start_dist;
 } opti_info_t;
 
+/********************************************************
+* Function    : find_optimal
+* Description : searches through the list of PU to find
+*               the optimal PU, for first searching the
+*               data file with.
+* Returns     : opti_info = Information about the optimal
+*               PU and the start distances, it a match is
+*               found.
+********************************************************/
 opti_info_t* find_optimal(list<Punit*> pat_list) {
   list<Punit*>::iterator it;
   opti_info_t* opt = new opti_info();
@@ -347,18 +393,27 @@ opti_info_t* find_optimal(list<Punit*> pat_list) {
   return opt;
 }
 
+/*****************************************************
+*               Pattern matching
+*****************************************************/
 
-
+/********************************************************
+* Function    : pattern_match_opti
+* Description : Searches for the pattern in the given 
+*               data file using PU optimization. If
+*               a pattern is found it is printed to the
+*               standard output.
+********************************************************/
 void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char* end_of_data, opti_info_t* opt) {
   list<Punit*>::iterator it = pat_list.begin();
 
   int data_len = end_of_data - data;
   char* start_of_data = data;
   // Initializing return package that is passed and returned between punits
-  ret_t* retu = new ret();
-  retu->startp = data;
-  retu->len = data_len;
-  retu->quick_ref = 0;
+  PU_return_t* PU_ret = new PU_return();
+  PU_ret->startp = data;
+  PU_ret->len = data_len;
+  PU_ret->quick_ref = 0;
 
   int dist_to_match;
   int prev_dist_to_match = 0;
@@ -366,48 +421,36 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
   int comb_mlen = 0;
   char* best_prev;
   advance(it, opt->opt_index);
-  retu->len = data_len;
+  PU_ret->len = data_len;
 
   it = pat_list.begin();
 
-//  cout << opt->max_start_dist << "\n";
-//  cout << opt->min_start_dist << "\n";
   // Each iteration in loop finds optimal pu and tries to match PU's around it
   while (true) {
-//    cout << retu->startp << "\n";
-    retu->bst = 1;
-//    cout << "before best search\n";
-    retu = (*it)->search(retu);
-    retu->bst = 0;
-//    cout << "found best at: " << retu->startp << "\n";
-    if (retu->startp) { 
+    PU_ret->bst = 1;
+    PU_ret = (*it)->search(PU_ret);
+    PU_ret->bst = 0;
+    if (PU_ret->startp) { 
       if ((*it)->prev - data <= opt->max_start_dist) {
-        retu->startp = data;
+        PU_ret->startp = data;
       } else {
-        retu->startp = (*it)->prev - opt->max_start_dist;
+        PU_ret->startp = (*it)->prev - opt->max_start_dist;
       }
-//      cout << opt->max_start_dist << "\n";
-      retu->len = opt->max_start_dist - opt->min_start_dist;
-      retu->quick_ref = 0;
-      retu->opt = 1;
+      PU_ret->len = opt->max_start_dist - opt->min_start_dist;
+      PU_ret->quick_ref = 0;
+      PU_ret->opt = 1;
       best_prev = (*it)->prev;
       it = pat_list.begin();
-//      cout << "start pos to pass: " <<  retu->startp << "\n";
-//      cout << "BEFORE normal search\n";
-//      cout << "distance to startp: " << (retu->startp - start_of_data) << "\n";
       // Now we match every PU around the found one
       while (true) {
-        retu = (*it)->search(retu);
-        if (retu->startp) {
-//          cout << "PU match!!\n";
+        PU_ret = (*it)->search(PU_ret);
+        if (PU_ret->startp) {
           // If whole pattern matched
           if (++it == pat_list.end()) {
             for (it = pat_list.begin(); it != pat_list.end(); it++) {
               comb_mlen += (*it)->mlen;
-//              cout << "MLEN: " << (*it)->mlen << "\n";
-    //          printf("%p\n",(*it)->prev);
             }
-            dist_to_match = (retu->startp - comb_mlen) - start_of_data;
+            dist_to_match = (PU_ret->startp - comb_mlen) - start_of_data;
             if (dist_to_match - prev_dist_to_match >= prev_comb_mlen) {
               printf("%i  %.*s\n", dist_to_match + 1, comb_mlen, real_data + dist_to_match);
               prev_comb_mlen = comb_mlen;
@@ -416,20 +459,16 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
             comb_mlen = 0;
             it = pat_list.begin();
             advance(it, opt->opt_index);
-            retu->len = data_len;
-            retu->startp = best_prev + 1;
+            PU_ret->len = data_len;
+            PU_ret->startp = best_prev + 1;
             break;
           }
           continue;
         } else {
-//          cout << "PU not match...\n";
           if (it == pat_list.begin()) {
             advance(it, opt->opt_index);
-            retu->len = data_len;
-//            cout << "BEFORE INCREMENT: " << (*it)->prev << "\n";
-            retu->startp = best_prev + 1;
-//            cout << "Counter: " << (*it)->prev - start_of_data << "\n";
-//            cout << "Before break\n";
+            PU_ret->len = data_len;
+            PU_ret->startp = best_prev + 1;
             break;
           }
           it--;
@@ -445,7 +484,12 @@ void pattern_match_opti(list<Punit*> pat_list, char* data, char* real_data, char
 
 
 
-// Looks through the data string to find pattern specified in list pat_list
+/********************************************************
+* Function    : pattern_match
+* Description : Searches for the pattern in the given 
+*               data file. If a pattern is found it is 
+*               printed to the standard output.
+********************************************************/
 void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end_of_data) {
   list<Punit*>::iterator it = pat_list.begin();
 
@@ -453,39 +497,37 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   char* start_of_data = data;
 
   // Initializing return package that is passed and returned between punits
-  ret_t* retu = new ret();
-  retu->startp = data;
-  retu->len = data_len;
-  retu->quick_ref = 0;
+  PU_return_t* PU_ret = new PU_return();
+  PU_ret->startp = data;
+  PU_ret->len = data_len;
+  PU_ret->quick_ref = 0;
 
   int dist_to_match;
   int comb_mlen = 0;
 
   while (true) {
     if (it == pat_list.begin()) {
-      retu->len = data_len;
+      PU_ret->len = data_len;
     }
-    retu = (*it)->search(retu);
-    //printf("retu startp = %p \n", retu->startp);
+    PU_ret = (*it)->search(PU_ret);
     // If the punit matched
-    if (retu->startp) {
+    if (PU_ret->startp) {
       // If the whole pattern matched
       if (++it == pat_list.end()) {
         for (it = pat_list.begin(); it != pat_list.end(); it++) {
           comb_mlen += (*it)->mlen;
           cout << (*it)->mlen << "\n";
-//          printf("%p\n",(*it)->prev);
         }
-        dist_to_match = (retu->startp - comb_mlen) - start_of_data;
+        dist_to_match = (PU_ret->startp - comb_mlen) - start_of_data;
         printf("%i  %.*s\n", dist_to_match + 1, comb_mlen, real_data + dist_to_match);
         it = pat_list.begin();
-        data = retu->startp;
+        data = PU_ret->startp;
         comb_mlen = 0;
-        retu->len = data_len;
+        PU_ret->len = data_len;
         it = pat_list.begin();
         continue;
       }
-      data = retu->startp;
+      data = PU_ret->startp;
       continue;
 
     // If the punit didn't match
@@ -499,6 +541,14 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
   }
 }
 
+/***********************************************************
+*                Main function in ScanFM
+***********************************************************/
+/***********************************************************
+* Function    : main
+* Description : Runs the parser, checks if the input is valid
+*               if it is the pattern matching is run.
+***********************************************************/
 int main(int argc, char* argv[]) {
   clock_t tim = clock();
   build_conversion_tables(); 
