@@ -242,17 +242,17 @@ Sequence::Sequence(char* data_s, char* data_e, int data_len, int le, char* c,
 *               code_len = length left of the pattern sequence
 *               data_left = length left of the data
 ************************************************************/
-void Sequence::stack_next(stackent* st,int nxtE, int N, 
-                       char* code_pos, char* data, int code_len,
-                       int data_left) {
-  st[nxtE].s_code=code_pos; 
-  st[nxtE].s_data=data; 
-  st[nxtE].s_code_len=code_len;
-  st[nxtE].s_data_len=data_left;
-  st[nxtE].mis=c_mis;
-  st[nxtE].ins=c_ins; 
-  st[nxtE].del=c_del; 
-  st[nxtent++].next_choice=N;
+void Sequence::stack_next(stackent* st,int st_nxtent, int st_next_choice, 
+                       char* st_code_pos, char* st_data, int st_code_len,
+                       int st_data_left) {
+  st[st_nxtent].s_code=st_code_pos; 
+  st[st_nxtent].s_data=st_data; 
+  st[st_nxtent].s_code_len=st_code_len;
+  st[st_nxtent].s_data_len=st_data_left;
+  st[st_nxtent].mis=c_mis;
+  st[st_nxtent].ins=c_ins; 
+  st[st_nxtent].del=c_del; 
+  st[nxtent++].next_choice=st_next_choice;
 }
 
 /************************************************************
@@ -297,7 +297,7 @@ void Sequence::pop(stackent* st, int nxtent,
 * Description : Stores a found match with MIDs.
 ************************************************************/
 void Sequence::match(){
-  match_stack[found_matches].s_code=data_pos;
+  match_stack[found_matches].s_data=data_pos;
   match_stack[found_matches].mis=c_mis;
   match_stack[found_matches].ins=c_ins; 
   match_stack[found_matches++].del=c_del;
@@ -674,13 +674,12 @@ PU_return_t* Sequence::fuzzy_match (PU_return_t* PU_ret, PU_return_t* new_PU_ret
     if(found_matches-- > 0){
       for(found_matches; found_matches >= 0; found_matches--){
         char* temp_code_pos = match_stack[found_matches].s_data;
-        char* temp_data_pos = temp_code_pos - n;
-
+        //char* temp_code_pos - n;// = temp_code_pos - n;
         for(n = match_stack[found_matches].ins; 
-            n && temp_data_pos - prev > 0; 
+            n && temp_code_pos - n - prev > 0; 
             n--){
-          if(!match_lens[temp_data_pos - prev]){
-            match_lens[temp_data_pos - prev] = 1;
+          if(!match_lens[temp_code_pos - n - prev]){
+            match_lens[temp_code_pos - n - prev] = 1;
             match_list[match_list_len] = temp_code_pos - n;
             match_list_len++;
           }
@@ -699,7 +698,6 @@ PU_return_t* Sequence::fuzzy_match (PU_return_t* PU_ret, PU_return_t* new_PU_ret
           match_list[match_list_len] = temp_code_pos;
           match_list_len++;
         } 
-
       }
       match_list_len--;
       new_PU_ret->startp = match_list[match_list_len--];

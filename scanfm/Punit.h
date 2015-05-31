@@ -206,7 +206,7 @@ class Sequence: public Punit {
     int best;
     PU_return_t* fuzzy_match(PU_return_t* PU_ret, PU_return_t* new_PU_ret);
     void stack_next(stackent* st,int nxtE, int N, 
-                       char* code_pos, char* d1, int code_len,
+                       char* code_pos, char* data, int code_len,
                        int data_left);
 
     void pop(stackent* st, int nxtent, 
