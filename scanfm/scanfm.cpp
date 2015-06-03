@@ -605,15 +605,23 @@ int main(int argc, char* argv[]) {
     cout << "ERROR: No such file: \n" << argv[arg] << "\n";
     return -1;
   }
-
-  real_data.erase(remove(real_data.begin(), real_data.end(), '\n'), real_data.end());
-  strcpy(rdata, real_data.c_str());
+  //strcpy(rdata, real_data.c_str());
   int i;
+  int n = 0;
+  int end_of_line = 1;
   for (i = 0; i < real_data.size(); i++) {
-    data[i] = punit_to_code_for_data[tolower(real_data[i])];
-    end_of_data++;
+    if(real_data[i] == '\n' && end_of_line == 0){
+      end_of_line = 1;
+    } else if(real_data[i] == '>' && end_of_line == 1){
+      end_of_line = 0;
+    } else if( end_of_line == 1){
+      rdata[n] = real_data[i];
+      data[n] = punit_to_code_for_data[tolower(real_data[i])];
+      end_of_data++; n++;
+    }
   }
-  data[++i] = '\0';
+  end_of_data--;
+  data[n] = '\0';
 
   list<Punit*> pat_list = parse(pats, data, end_of_data);
   // If an error occured during parsing
