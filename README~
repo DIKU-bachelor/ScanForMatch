@@ -2,13 +2,12 @@ Scanfm
 
 
 
-Scanfm is a pattern matching utility for finding patterns in DNA 
-data. It uses a backtracking algorithm to exhaustively find all
-matches on a given pattern in in a given data file. It uses pattern 
-units a way to split up search criterias and searches for each pattern
-unit in the order given by the user. A lot of the inspiration and 
-some code is taken from Scan_for_matches, a utility created by Ross 
-Overbeek. 
+Scanfm is a pattern matching application for finding patterns in
+DNA data. It uses a backtracking algorithm to exhaustively find all
+matches on a given pattern in the given data. It uses pattern units
+individual ways of finding a specific or close match to a given 
+sequence or pattern. A lot of the inspiration and some code is taken
+from Scan_for_matches, a utility created by Ross Overbeek. 
 
 
 --------------------------------------------------------------------

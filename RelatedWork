@@ -1,0 +1,78 @@
+\section{Related Work}
+Searching for patterns or sequences in genomic data, is a computational old
+problem. A lot of utilities and algorithms exists that tries to find patterns,
+sequences or approximate sequences in genomic data. Most of these utilities
+can be split into groups, describing the approach they have taken. \\
+\\
+These approaches can be grouped on a number of different factors; performance,
+pre computation time consuption, memmory usage, difficulty of usage, and
+approximations vs. completeness.\\
+\\
+When searching for more diverse patterns, difficulty of usage becomes important
+to not waste work time. A domain specific language can solve this by making
+it possible to create both more diverse patterns and more specific 
+constructions, as described in the introduction.\\
+\\
+A heuristic approach to finding appriximate matches can give great performance
+without pre computation, making it a valuable online approach to finding 
+a pattern in genomic data. This has been done by utilities such as BLAST
+~\cite{BLAST} and fasta/fastp ~\cite{fasta}, that with great performance
+can find approximations to a given sequence in large data files, or data bases.
+But it is not guaranteed to find all close matches, and it is not possible to
+create patterns describing sequences instead of exact sequences, making it 
+usefull under very specific circumstances. \\
+\\
+Using pre computated suffix trees or suffix arrays it can be possible to
+search for patterns, sequences, and approximate sequences, with great 
+performance. This approach has been discussed a lot on the subjects of 
+performance and memmory. Since the size of genomic data is allready massive
+being counted in number of peta Bytes, a suffix tree needing even more space
+could potentially become a large problem. Currently there are allready multiple
+approaches to genomic data pattern matching such as TRELLIS ~\cite{TRELLIS} 
+which can construct a suffix tree using linear memmory, and search linearly, 
+when it has been constructed.\\
+\\
+Pattern matching is not specific to genomic data, and is used in a variaty of
+instances. Regex or regular expressions is well developed and gives the 
+possibilities of searching in a variaty of ways. Further developments to help
+relavans in genomic data has been made for languages as python with the 
+Tre~\cite{Tre} library. This makes the regular expressions extent to also find
+approximate matches. But specifically Tre runs slower than the alternatives
+such as \scm, and regex runs into troubles when trying to find some of the 
+structures requiering runtime analysis, where a domain specific language is
+designed for these.\\
+\\
+Fuzzy matching or aproximate matching is a large part og pattern matching in
+genomic data, because mutations are very relevant. These are also used for 
+text searching and corrections, and are because of that well developed, in 
+utilities such as agrep~\cite{AGrep} for unix, that can search for approximate 
+words in texts. Utilities such as agrep can be used for finding aproximate 
+matches in genomic data, but they are not created for finding large approximate
+sequences. \\
+\\
+Having a domain specific language enables creation of patterns for searching
+in genomic data, to easily have biological relevans. \scm is a utility that 
+enables the user to search for very specific or aproximate patterns. But with
+a strong specification of both. It uses a online algorithm that doesn't consume
+more memmory and doesn't require pre compilation. It finds all matches in the 
+data that fulfill all the requirements in the pattern, and doesn't overlap. It
+has a lot of room for improvement in performance, that utilities such as agrep
+~\cite{AGrep} has allready accomplised, with approximate string matching.
+
+
+
+
+
+
+
+*****************************BIBTEX*************************************
+AGrep: https://www.usenix.org/legacy/publications/library/proceedings/wu.pdf
+
+BLAST: http://www.blastalgorithm.com/
+
+tre: https://github.com/laurikari/tre/
+
+FASTA and FASTP: Rapid and sensitive sequence comparison with FASTP and FASTA by William R. Pearson
+
+TRELLIS: http://www.cs.rpi.edu/~zaki/PaperDir/SIGMOD07.pdf
+
