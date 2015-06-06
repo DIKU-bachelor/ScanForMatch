@@ -516,7 +516,7 @@ void pattern_match(list<Punit*> pat_list, char* data, char* real_data, char* end
       if (++it == pat_list.end()) {
         for (it = pat_list.begin(); it != pat_list.end(); it++) {
           comb_mlen += (*it)->mlen;
-          cout << (*it)->mlen << "\n";
+          //cout << (*it)->mlen << "\n";
         }
         dist_to_match = (PU_ret->startp - comb_mlen) - start_of_data;
         printf("%i  %.*s\n", dist_to_match + 1, comb_mlen, real_data + dist_to_match);
@@ -588,8 +588,9 @@ int main(int argc, char* argv[]) {
     }
   }
   pats[--index] = '\0';
-
-  // Read the datafile 
+/***************************************************************
+*                     Read the datafile 
+***************************************************************/
   string real_data;
   char* data = new char[fsize];
   char* rdata = new char[fsize];
@@ -605,32 +606,53 @@ int main(int argc, char* argv[]) {
     cout << "ERROR: No such file: \n" << argv[arg] << "\n";
     return -1;
   }
-  //strcpy(rdata, real_data.c_str());
-  int i;
-  int n = 0;
-  int end_of_line = 1;
-  for (i = 0; i < real_data.size(); i++) {
-    if(real_data[i] == '\n' && end_of_line == 0){
-      end_of_line = 1;
-    } else if(real_data[i] == '>' && end_of_line == 1){
-      end_of_line = 0;
-    } else if( end_of_line == 1){
-      rdata[n] = real_data[i];
-      data[n] = punit_to_code_for_data[tolower(real_data[i])];
-      end_of_data++; n++;
-    }
-  }
-  end_of_data--;
-  data[n] = '\0';
-
-  list<Punit*> pat_list = parse(pats, data, end_of_data);
-  // If an error occured during parsing
-  if (pat_list.empty()) {
+  int i = 0;
+  int n, end_of_line;
+  int end_of_last_sequence = 0;
+  if(real_data[0] != '>'){
+    printf("missing sequnce ID\n");
     return -1;
   }
-  opti_info_t* op = find_optimal(pat_list);
-  pattern_match_opti(pat_list, data, rdata, end_of_data, op);
-//  pattern_match(pat_list, data, rdata, end_of_data);
+/***************************************************************
+*      print sequence ID and covert data into PU code
+***************************************************************/
+  while(i < real_data.size()){
+    n = 0; end_of_line = 0; end_of_data;
+    for (i = end_of_last_sequence; i < real_data.size(); i++) {
+      if(real_data[i] == '\n' && end_of_line == 0){
+        printf("\n");
+        end_of_line = 1;
+      } else if(real_data[i] == '>' && end_of_line == 1){
+        end_of_last_sequence = i;
+        break;
+      } else if( end_of_line == 0 && real_data[i] == '>'){
+        printf("Sequence ID: ");
+      }  else if( end_of_line == 0){
+        printf("%c", real_data[i]);
+      } else if (real_data[i] == '\n'){
+        
+      } else if( end_of_line == 1){
+        rdata[n] = real_data[i];
+        data[n] = punit_to_code_for_data[tolower(real_data[i])];
+        end_of_data++; n++;
+      }
+    }
+    end_of_data--;
+    data[n] = '\0';
+/**************************************************************
+*         Parse PU's and find optimal PU if any exist
+**************************************************************/
+    list<Punit*> pat_list = parse(pats, data, end_of_data);
+    if (pat_list.empty()) {
+      return -1;
+    }
+    opti_info_t* op = find_optimal(pat_list);
+/**************************************************************
+*                    Pattern match
+**************************************************************/
+    pattern_match_opti(pat_list, data, rdata, end_of_data, op);
+    //pattern_match(pat_list, data, rdata, end_of_data);
+  }
   tim = clock() - tim;
   printf("Total time: %f seconds\n", ((float) tim) / CLOCKS_PER_SEC);
   return 0;

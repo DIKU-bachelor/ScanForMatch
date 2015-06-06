@@ -1,7 +1,15 @@
 CC=g++
-FLAGS=
+CFLAGS=-O2
 
+SOURCES = $(wildcard *.cpp)
+OBJECTS = $(subst .cpp,.o,$(SOURCES))
 
-scanfm: scanfm.cpp Punit.cpp Punit.h
-	$(CC) $(FLAGS) scanfm.cpp Punit.cpp -O2 -o scanfm; \
-  chmod +x scanfm
+%.o: %.cpp
+	$(CC) -c $(CFLAGS) $^ -o $@
+
+scanfm: $(OBJECTS)
+	$(CC) $(CFLAGS) $(OBJECTS) -o scanfm
+	#chmod +x scanfm
+
+clean:
+	rm -f scanfm $(OBJECTS)

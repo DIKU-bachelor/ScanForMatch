@@ -1,2 +1,4 @@
 >hello
 aaaattttattaaaaaCCTTTTTATAGTATGTTTNN
+>hello2
+AAAAGTGTGTGTGTGGTT
